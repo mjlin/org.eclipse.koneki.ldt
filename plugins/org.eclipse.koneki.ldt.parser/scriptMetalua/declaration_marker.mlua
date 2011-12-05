@@ -53,8 +53,8 @@ end
 -- @return number Node's start offset
 -- @return number Node's end offset
 mark.offsets = function(node)
-    local start = node.lineinfo and node.lineinfo.first[3] - 1 or 0
-    local _end = node.lineinfo and node.lineinfo.last[3] or 0
+    local start = node.lineinfo and node.lineinfo.first.offset - 1 or 0
+    local _end = node.lineinfo and node.lineinfo.last.offset or 0
     return start, _end
 end
 ---
