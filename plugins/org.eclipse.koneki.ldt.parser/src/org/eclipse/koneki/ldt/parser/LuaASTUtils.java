@@ -10,12 +10,9 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.parser;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
 
 import org.eclipse.dltk.ast.ASTNode;
-import org.eclipse.dltk.ast.declarations.Declaration;
-import org.eclipse.dltk.ast.declarations.MethodDeclaration;
 import org.eclipse.dltk.ast.declarations.ModuleDeclaration;
 import org.eclipse.dltk.compiler.env.IModuleSource;
 import org.eclipse.dltk.core.Flags;
@@ -26,10 +23,14 @@ import org.eclipse.dltk.core.IScriptProject;
 import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.dltk.core.IType;
 import org.eclipse.dltk.core.ModelException;
-import org.eclipse.dltk.core.SourceParserUtil;
 import org.eclipse.koneki.ldt.core.LuaUtils;
+import org.eclipse.koneki.ldt.parser.api.external.InternalTypeRef;
+import org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI;
+import org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef;
+import org.eclipse.koneki.ldt.parser.api.external.ReturnValues;
+import org.eclipse.koneki.ldt.parser.api.external.TypeDef;
+import org.eclipse.koneki.ldt.parser.api.external.TypeRef;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
-import org.eclipse.koneki.ldt.parser.ast.declarations.LuaModuleDeclaration;
 import org.eclipse.koneki.ldt.parser.ast.declarations.ModuleReference;
 import org.eclipse.koneki.ldt.parser.ast.visitor.ModuleReferenceVisitor;
 import org.eclipse.koneki.ldt.parser.ast.visitor.ScopeVisitor;
@@ -81,29 +82,52 @@ public final class LuaASTUtils {
 		}
 	}
 
-	public static Map<String, Declaration> getModuleFields(ISourceModule module) throws ModelException {
-		HashMap<String, Declaration> result = new HashMap<String, Declaration>();
-		ModuleDeclaration moduleDeclaration = SourceParserUtil.getModuleDeclaration(module);
-		if (moduleDeclaration instanceof LuaSourceRoot) {
-			LuaModuleDeclaration luaModuleDeclaration = ((LuaSourceRoot) moduleDeclaration).getDeclarationsContainer().getLuaModuleDeclaration();
-			if (luaModuleDeclaration != null)
-				for (MethodDeclaration declaration : luaModuleDeclaration.getMethods()) {
-					result.put(declaration.getName(), declaration);
-				}
+	public static IModelElement[] getModuleFields(ISourceModule module) throws ModelException {
+		LuaSourceRoot luaSourceRoot = LuaASTModelUtils.getLuaSourceRoot(module);
+		if (luaSourceRoot != null) {
+			RecordTypeDef moduleType = getModuleType(luaSourceRoot);
+			if (moduleType != null) {
+				IType type = module.getType(moduleType.getName());
+				if (type != null)
+					return type.getChildren();
+			}
 		}
-		return result;
+		return new IModelElement[0];
 	}
 
-	public static Map<String, Declaration> getModuleFields(String name, IScriptProject project) throws ModelException {
+	public static IModelElement[] getModuleFields(String name, IScriptProject project) throws ModelException {
 		IModuleSource moduleSource = LuaUtils.getModuleSource(name, project);
 		if (moduleSource instanceof ISourceModule) {
 			return getModuleFields((ISourceModule) moduleSource);
 		}
-		return new HashMap<String, Declaration>();
+		return new IModelElement[0];
 	}
 
 	public static boolean isAncestor(IModelElement element, IModelElement ancestor) {
 		return ancestor != null && element != null && (ancestor.equals(element.getParent()) || isAncestor(element.getParent(), ancestor));
+	}
+
+	public static RecordTypeDef getModuleType(LuaSourceRoot luaSourceRoot) {
+		LuaFileAPI fileapi = luaSourceRoot.getFileapi();
+		if (fileapi != null) {
+			ArrayList<ReturnValues> returns = fileapi.getReturns();
+			if (returns.size() > 0) {
+				ReturnValues returnValues = returns.get(0);
+				if (returnValues.getTypes().size() > 0) {
+					TypeRef typeRef = returnValues.getTypes().get(0);
+					if (typeRef instanceof InternalTypeRef) {
+						String typeName = ((InternalTypeRef) typeRef).getTypeName();
+						TypeDef typeDef = fileapi.getTypes().get(typeName);
+						if (typeDef instanceof RecordTypeDef) {
+							{
+								return (RecordTypeDef) typeDef;
+							}
+						}
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 }

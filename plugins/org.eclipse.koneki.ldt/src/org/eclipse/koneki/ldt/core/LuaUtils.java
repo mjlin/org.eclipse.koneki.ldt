@@ -75,7 +75,7 @@ public final class LuaUtils {
 			return moduleName;
 	}
 
-	/**
+	/*
 	 * @return the source folder full name with module dot syntax
 	 */
 	private static String getFolderFullName(IScriptFolder folder) {
@@ -121,7 +121,7 @@ public final class LuaUtils {
 		return null;
 	}
 
-	/**
+	/*
 	 * @return the {@link IModuleSource} from full name with module dot syntax
 	 */
 	private static IModuleSource getModuleSource(String name, IParent parent) throws ModelException {
@@ -189,7 +189,7 @@ public final class LuaUtils {
 		return null;
 	}
 
-	/**
+	/*
 	 * @return the {@link ISourceModule} from Absolute local file URI and a parent
 	 */
 	private static ISourceModule getSourceModuleFromAbsolutePath(URI absolutepath, IParent parent) throws ModelException {

@@ -14,8 +14,6 @@ package org.eclipse.koneki.ldt.editor.internal.completion;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.eclipse.dltk.ast.ASTNode;
 import org.eclipse.dltk.ast.declarations.Argument;
@@ -26,6 +24,7 @@ import org.eclipse.dltk.compiler.env.IModuleSource;
 import org.eclipse.dltk.compiler.util.Util;
 import org.eclipse.dltk.core.CompletionProposal;
 import org.eclipse.dltk.core.Flags;
+import org.eclipse.dltk.core.IField;
 import org.eclipse.dltk.core.IMember;
 import org.eclipse.dltk.core.IMethod;
 import org.eclipse.dltk.core.IModelElement;
@@ -36,10 +35,10 @@ import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.dltk.core.IType;
 import org.eclipse.dltk.core.ModelException;
 import org.eclipse.dltk.core.SourceParserUtil;
+import org.eclipse.koneki.ldt.core.LuaUtils;
 import org.eclipse.koneki.ldt.editor.Activator;
 import org.eclipse.koneki.ldt.editor.internal.navigation.LuaLocalDeclarationVisitor;
 import org.eclipse.koneki.ldt.parser.LuaASTUtils;
-import org.eclipse.koneki.ldt.parser.LuaSelectionEngine;
 import org.eclipse.koneki.ldt.parser.ast.declarations.FunctionDeclaration;
 import org.eclipse.koneki.ldt.parser.ast.declarations.ModuleReference;
 
@@ -169,28 +168,34 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 	}
 
 	private void addModuleFields(final ISourceModule sourceModule, final List<String> ids) {
-		if (ids.size() != 2) {
+		if (ids.size() != 2)
 			return;
-		}
+
 		// get identifier
 		final String identifierName = ids.get(0);
 		final ModuleDeclaration ast = SourceParserUtil.getModuleDeclaration(sourceModule);
 		final ModuleReference moduleref = LuaASTUtils.getModuleReferenceFromName(ast, identifierName);
+		if (moduleref == null)
+			return;
+
+		String moduleNameReference = moduleref.getModuleNameReference();
+		ISourceModule referencedModule = LuaUtils.getSourceModule(moduleNameReference, sourceModule.getScriptProject());
+		if (referencedModule == null)
+			return;
+
 		try {
-			final IModelElement definition = LuaSelectionEngine.findDefinition(moduleref, sourceModule);
-			if (definition instanceof ISourceModule) {
-				Map<String, Declaration> moduleFields = LuaASTUtils.getModuleFields((ISourceModule) definition);
-				// get field name
-				final String fieldName = ids.get(1);
-				// Update replacement position as well just insert field name without module reference name
-				this.offset = actualCompletionPosition - fieldName.length();
-				// search field
-				for (final Entry<String, Declaration> entry : moduleFields.entrySet()) {
-					IModelElement element = ((ISourceModule) definition).getElementAt(entry.getValue().sourceStart());
-					final boolean goodStart = element.getElementName().toLowerCase().startsWith(fieldName.toLowerCase());
+			IModelElement[] moduleFields = LuaASTUtils.getModuleFields((ISourceModule) referencedModule);
+			// get field name
+			final String fieldName = ids.get(1);
+			// Update replacement position as well just insert field name without module reference name
+			this.offset = actualCompletionPosition - fieldName.length();
+			// search field
+			for (final IModelElement field : moduleFields) {
+				if (field instanceof IField || field instanceof IMethod) {
+					final boolean goodStart = field.getElementName().toLowerCase().startsWith(fieldName.toLowerCase());
 					final boolean nostart = fieldName.isEmpty();
 					if (goodStart || nostart) {
-						createProposal(element.getElementName(), element);
+						createProposal(field.getElementName(), field);
 					}
 				}
 			}

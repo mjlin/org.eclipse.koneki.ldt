@@ -13,6 +13,7 @@ package org.eclipse.koneki.ldt.ui.internal.documentation;
 import java.io.Reader;
 import java.io.StringReader;
 
+import org.eclipse.dltk.ast.ASTNode;
 import org.eclipse.dltk.ast.declarations.ModuleDeclaration;
 import org.eclipse.dltk.core.IMember;
 import org.eclipse.dltk.core.IModelElement;
@@ -25,6 +26,8 @@ import org.eclipse.dltk.ui.documentation.IScriptDocumentationProviderExtension;
 import org.eclipse.dltk.ui.documentation.IScriptDocumentationProviderExtension2;
 import org.eclipse.dltk.ui.documentation.TextDocumentationResponse;
 import org.eclipse.koneki.ldt.Activator;
+import org.eclipse.koneki.ldt.internal.parser.IDocumentationHolder;
+import org.eclipse.koneki.ldt.parser.LuaASTModelUtils;
 import org.eclipse.koneki.ldt.parser.LuaASTUtils;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
 
@@ -90,6 +93,14 @@ public class LuaDocumentationProvider implements IScriptDocumentationProvider, I
 	}
 
 	private String getMemberDocumentation(IMember member) throws ModelException {
+		ASTNode astNode = LuaASTModelUtils.getASTNode(member);
+		if (astNode instanceof IDocumentationHolder)
+			return ((IDocumentationHolder) astNode).getDocumentation();
+		else
+			return getOldMemberDocumentation(member);
+	}
+
+	private String getOldMemberDocumentation(IMember member) throws ModelException {
 		ISourceModule sourceModule = member.getSourceModule();
 		if (sourceModule != null) {
 			if (LuaASTUtils.isModule(member)) {

@@ -10,62 +10,145 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.parser;
 
-import org.eclipse.dltk.ast.declarations.FieldDeclaration;
-import org.eclipse.dltk.ast.declarations.TypeDeclaration;
-import org.eclipse.dltk.ast.statements.Statement;
+import java.util.List;
+
+import org.eclipse.dltk.ast.ASTNode;
+import org.eclipse.dltk.ast.declarations.Declaration;
 import org.eclipse.dltk.compiler.IElementRequestor;
 import org.eclipse.dltk.compiler.IElementRequestor.FieldInfo;
+import org.eclipse.dltk.compiler.IElementRequestor.MethodInfo;
+import org.eclipse.dltk.compiler.IElementRequestor.TypeInfo;
 import org.eclipse.dltk.compiler.ISourceElementRequestor;
 import org.eclipse.dltk.compiler.SourceElementRequestVisitor;
-import org.eclipse.koneki.ldt.parser.ast.declarations.TableDeclaration;
+import org.eclipse.koneki.ldt.parser.api.external.FunctionTypeDef;
+import org.eclipse.koneki.ldt.parser.api.external.InternalTypeRef;
+import org.eclipse.koneki.ldt.parser.api.external.Item;
+import org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI;
+import org.eclipse.koneki.ldt.parser.api.external.Parameter;
+import org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef;
+import org.eclipse.koneki.ldt.parser.api.external.TypeDef;
 
 /**
- * TODO Comment this class
+ * traverse the Lua AST of a file to extract the DLTK model.
  */
 public class LuaSourceElementRequestorVisitor extends SourceElementRequestVisitor {
+	private LuaFileAPI luafileapi = null;
+	private RecordTypeDef currentRecord = null;
+
 	public LuaSourceElementRequestorVisitor(ISourceElementRequestor requesor) {
 		super(requesor);
 	}
 
+	/**
+	 * @see org.eclipse.dltk.ast.ASTVisitor#visit(org.eclipse.dltk.ast.ASTNode)
+	 */
 	@Override
-	public boolean endvisit(Statement statement) throws Exception {
-		if (statement instanceof FieldDeclaration) {
-			getRequestor().exitField(statement.sourceEnd());
-		}
-		return super.endvisit(statement);
-	}
-
-	public IElementRequestor getRequestor() {
-		return this.fRequestor;
+	public boolean visit(ASTNode s) throws Exception {
+		if (s instanceof Item)
+			return visit((Item) s);
+		else if (s instanceof RecordTypeDef)
+			return visit((RecordTypeDef) s);
+		else if (s instanceof LuaFileAPI)
+			return visit((LuaFileAPI) s);
+		return super.visit(s);
 	}
 
 	/**
-	 * @see org.eclipse.dltk.compiler.SourceElementRequestVisitor#visit(org.eclipse.dltk.ast.declarations.TypeDeclaration)
+	 * @see org.eclipse.dltk.ast.ASTVisitor#visit(org.eclipse.dltk.ast.ASTNode)
 	 */
 	@Override
-	public boolean visit(TypeDeclaration type) throws Exception {
-		if (type instanceof TableDeclaration && ((TableDeclaration) type).isModuleRepresentation())
-			return false;
-		else
-			return super.visit(type);
+	public boolean endvisit(ASTNode s) throws Exception {
+		if (s instanceof RecordTypeDef)
+			return endvisit((RecordTypeDef) s);
+		else if (s instanceof LuaFileAPI)
+			return endvisit((LuaFileAPI) s);
+		return super.endvisit(s);
 	}
 
-	public boolean visit(FieldDeclaration f) throws Exception {
-		FieldInfo field = new IElementRequestor.FieldInfo();
-		field.declarationStart = f.sourceStart();
-		field.modifiers = f.getModifiers();
-		field.name = f.getName();
-		field.nameSourceStart = f.getNameStart();
-		field.nameSourceEnd = f.getNameEnd();
-		getRequestor().enterField(field);
+	public boolean visit(LuaFileAPI luaAPI) throws Exception {
+		luafileapi = luaAPI;
 		return true;
 	}
 
-	@Override
-	public boolean visit(Statement s) throws Exception {
-		if (s instanceof FieldDeclaration) {
-			return visit((FieldDeclaration) s);
+	public boolean endvisit(LuaFileAPI luaAPI) throws Exception {
+		luafileapi = null;
+		return true;
+	}
+
+	public boolean visit(Item item) throws Exception {
+
+		if (item.getType() instanceof InternalTypeRef) {
+			InternalTypeRef internalTypeRef = (InternalTypeRef) item.getType();
+
+			// resolve type to know if item is a method
+			if (luafileapi != null) {
+				TypeDef typeDef = luafileapi.getTypes().get(internalTypeRef.getTypeName());
+				if (typeDef instanceof FunctionTypeDef) {
+					FunctionTypeDef funtionTypeDef = (FunctionTypeDef) typeDef;
+					List<Parameter> params = funtionTypeDef.getParameters();
+					String[] parametersName = new String[params.size()];
+					// String[] initializers = new String[params.size()];
+
+					for (int i = 0; i < params.size(); i++) {
+						Parameter param = (Parameter) params.get(i);
+						parametersName[i] = param.getName();
+					}
+
+					MethodInfo methodInfo = new ISourceElementRequestor.MethodInfo();
+					methodInfo.name = item.getName();
+					methodInfo.parameterNames = parametersName;
+					methodInfo.modifiers = Declaration.D_METHOD_DECL & Declaration.AccPublic;
+					// methodInfo.nameSourceStart = 1;
+					// methodInfo.nameSourceEnd = 2;
+					// methodInfo.declarationStart = 1;
+					// methodInfo.parameterInitializers = initializers;
+
+					this.fRequestor.enterMethod(methodInfo);
+					int declarationEnd = -1;
+					this.fRequestor.exitMethod(declarationEnd);
+					return true;
+				}
+			}
 		}
-		return super.visit(s);
+
+		FieldInfo fieldinfo = new IElementRequestor.FieldInfo();
+		fieldinfo.name = item.getName();
+		// fieldinfo.nameSourceStart = 2;
+		// fieldinfo.nameSourceEnd = 3;
+		// fieldinfo.declarationStart = 2;
+		fieldinfo.modifiers = Declaration.AccPublic & Declaration.AccPublic;
+
+		if (currentRecord == null) {
+			// global var
+		} else {
+			// field of type
+		}
+
+		this.fRequestor.enterField(fieldinfo);
+		int declarationEnd = -1;
+		this.fRequestor.exitField(declarationEnd);
+		return true;
+	}
+
+	public boolean visit(RecordTypeDef type) throws Exception {
+		// create type
+		RecordTypeDef recordtype = (RecordTypeDef) type;
+		TypeInfo typeinfo = new IElementRequestor.TypeInfo();
+		typeinfo.name = recordtype.getName();
+		// typeinfo.declarationStart = 1;
+		// typeinfo.nameSourceStart = 1;
+		// typeinfo.nameSourceEnd = 2;
+		typeinfo.modifiers = Declaration.D_TYPE_DECL;
+
+		this.fRequestor.enterType(typeinfo);
+		this.currentRecord = recordtype;
+		return true;
+	}
+
+	public boolean endvisit(RecordTypeDef type) throws Exception {
+		int declarationEnd = -1;
+		this.fRequestor.exitType(declarationEnd);
+		this.currentRecord = null;
+		return true;
 	}
 }

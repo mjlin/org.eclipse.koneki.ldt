@@ -10,8 +10,6 @@
  ******************************************************************************/
 package org.eclipse.koneki.ldt.parser;
 
-import java.util.Map;
-
 import org.eclipse.dltk.ast.ASTNode;
 import org.eclipse.dltk.ast.declarations.Declaration;
 import org.eclipse.dltk.ast.declarations.ModuleDeclaration;
@@ -166,15 +164,12 @@ public class LuaSelectionEngine extends ScriptSelectionEngine {
 					String moduleNameReference = ((ModuleReference) rootlocaldefinition).getModuleNameReference();
 					ISourceModule sourceModule = LuaUtils.getSourceModule(moduleNameReference, module.getScriptProject());
 					if (sourceModule != null) {
-						Map<String, Declaration> moduleFields = LuaASTUtils.getModuleFields(sourceModule);
-						Declaration declaration = moduleFields.get(index.getName());
-						if (declaration != null) {
-							try {
-								return sourceModule.getElementAt(declaration.sourceStart());
-							} catch (ModelException e) {
-								Activator.logWarning("Unable to get model element.", e); //$NON-NLS-1$
-							}
+						IModelElement[] moduleFields = LuaASTUtils.getModuleFields(sourceModule);
+						for (int i = 0; i < moduleFields.length; i++) {
+							if (moduleFields[i].getElementName().equals(index.getName()))
+								return moduleFields[i];
 						}
+
 					}
 				}
 			}

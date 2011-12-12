@@ -19,6 +19,8 @@ package org.eclipse.koneki.ldt.parser.ast;
 
 import java.util.Map;
 
+import org.eclipse.dltk.ast.ASTNode;
+import org.eclipse.dltk.ast.ASTVisitor;
 import org.eclipse.dltk.ast.declarations.FieldDeclaration;
 import org.eclipse.dltk.ast.declarations.MethodDeclaration;
 import org.eclipse.dltk.ast.declarations.ModuleDeclaration;
@@ -29,6 +31,14 @@ import org.eclipse.dltk.compiler.problem.DefaultProblemIdentifier;
 import org.eclipse.dltk.compiler.problem.IProblemIdentifier;
 import org.eclipse.dltk.compiler.problem.ProblemSeverity;
 import org.eclipse.dltk.utils.CorePrinter;
+import org.eclipse.koneki.ldt.parser.api.external.FunctionTypeDef;
+import org.eclipse.koneki.ldt.parser.api.external.InternalTypeRef;
+import org.eclipse.koneki.ldt.parser.api.external.Item;
+import org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI;
+import org.eclipse.koneki.ldt.parser.api.external.Parameter;
+import org.eclipse.koneki.ldt.parser.api.external.PrimitiveTypeRef;
+import org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef;
+import org.eclipse.koneki.ldt.parser.api.external.ReturnValues;
 import org.eclipse.koneki.ldt.parser.ast.declarations.DeclarationsContainer;
 
 /**
@@ -36,28 +46,82 @@ import org.eclipse.koneki.ldt.parser.ast.declarations.DeclarationsContainer;
  */
 public class LuaSourceRoot extends ModuleDeclaration {
 
-	/** Indicates if any problem occurred during parsing */
-	private DefaultProblem problem = null;
-
-	/** documentation information */
-	private String documentation;
-	private Map<String, String> memberDocumentation;
-
-	/** contains declaration of this source 'file' */
-	private DeclarationsContainer declarationscontainer;
-
-	private boolean error;
-
 	/**
-	 * Instantiates a new Lua module declaration.
-	 * 
-	 * @param sourceLength
-	 *            the source length
+	 * this is a complete representation of a lua file <br/>
+	 * External API + Local AST
 	 */
+	private static class LuaFile extends ASTNode {
+
+		// this is the API of the current Lua file.
+		LuaFileAPI fileapi;
+		ASTNode localAST;
+
+		public LuaFile() {
+			fileapi = new LuaFileAPI();
+			fileapi.setDocumentation("LUA FILE API DOCUMENTATION");
+
+			Item field = new Item();
+			field.setName("field");
+			field.setDocumentation("field documentation");
+			field.setType(new PrimitiveTypeRef("string"));
+			fileapi.getGlobalvars().put(field.getName(), field);
+
+			FunctionTypeDef functionTypeDef = new FunctionTypeDef();
+			functionTypeDef.setDocumentation("FUNCTION DOCUMENTATION");
+			functionTypeDef.getParameters().add(new Parameter("param1", new PrimitiveTypeRef("string"), "desc param 1"));
+
+			RecordTypeDef recordTypeDef = new RecordTypeDef();
+			recordTypeDef.setName("record1");
+
+			fileapi.getTypes().put("f1", functionTypeDef);
+			fileapi.getTypes().put(recordTypeDef.getName(), recordTypeDef);
+
+			Item field1 = new Item();
+			field1.setName("field1");
+			field1.setDocumentation("field 1 documentation");
+			field1.setType(new PrimitiveTypeRef("string"));
+
+			recordTypeDef.getFields().put(field1.getName(), field1);
+
+			Item field2 = new Item();
+			field2.setName("field2");
+			field2.setDocumentation("field  2 documentation");
+			field2.setType(new InternalTypeRef("f1"));
+			recordTypeDef.getFields().put(field2.getName(), field2);
+
+			ReturnValues returnValues = new ReturnValues();
+			returnValues.getTypes().add(new InternalTypeRef(recordTypeDef.getName()));
+			fileapi.getReturns().add(returnValues);
+		}
+
+		/**
+		 * @see org.eclipse.dltk.ast.ASTNode#traverse(org.eclipse.dltk.ast.ASTVisitor)
+		 */
+		@Override
+		public void traverse(ASTVisitor visitor) throws Exception {
+			if (visitor.visit(this)) {
+				fileapi.traverse(visitor);
+				visitor.endvisit(this);
+			}
+
+		}
+	}
+
+	private LuaFile luaFile;
+
 	public LuaSourceRoot(final int sourceLength) {
 		super(sourceLength);
-		declarationscontainer = new DeclarationsContainer();
-		addStatement(declarationscontainer);
+		declarationscontainer = new DeclarationsContainer(); // TODO to remove
+		luaFile = new LuaFile();
+		addStatement(luaFile);
+	}
+
+	public LuaFileAPI getFileapi() {
+		return luaFile.fileapi;
+	}
+
+	public ASTNode getLocalAST() {
+		return luaFile.localAST;
 	}
 
 	/**
@@ -70,9 +134,25 @@ public class LuaSourceRoot extends ModuleDeclaration {
 	 */
 	public LuaSourceRoot(final int length, final boolean rebuild) {
 		super(length, rebuild);
-		declarationscontainer = new DeclarationsContainer();
-		addStatement(declarationscontainer);
+		declarationscontainer = new DeclarationsContainer(); // TODO to remove
+		luaFile = new LuaFile();
+		addStatement(luaFile);
 	}
+
+	// ******************************************************//
+	// OLD CODE
+	// ******************************************************//
+	/** Indicates if any problem occurred during parsing */
+	private DefaultProblem problem = null;
+
+	/** documentation information */
+	private String documentation;
+	private Map<String, String> memberDocumentation;
+
+	/** contains declaration of this source 'file' */
+	private DeclarationsContainer declarationscontainer;
+
+	private boolean error;
 
 	public void setProblem(final int line, final int column, final int offset, final String message) {
 		final IProblemIdentifier id = DefaultProblemIdentifier.decode(offset);
