@@ -9,7 +9,7 @@
 --     Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 require ('metalua.compiler')
-local M  = {}
+local M = {}
 ---
 -- Trim white spaces before and after given string
 --
@@ -109,8 +109,6 @@ local composetyperef = function(vars)
 	local ref = { tag = 'TTyperef'}
 	-- Deal with type less type reference
 	if #vars == 0 then
-		ref.module = ""
-		ref.type = ""
 		return ref, -1
 	elseif #vars > 0 then
 		-- Store type name
@@ -131,7 +129,9 @@ local composetyperef = function(vars)
 		tmp[index] = '.'
 	end
 	-- Retrieve full module name
-	ref.module = table.concat(tmp)
+	if #tmp > 0 then
+		ref.module = table.concat(tmp)
+	end
 	return ref , sequenceend + 1
 end
 local function findreturntag(nlx)
@@ -147,27 +147,29 @@ local function findreturntag(nlx)
 	end
 	return comment, sequenceend
 end
+local extractvarandref = function (x)
+	local fieldtype = composetyperef(value(x))
+	local nameend  = x[2].lineinfo.last.offset
+	return {
+		descriptionstart = nameend +1,
+		name = value(x[2]),
+		type = fieldtype
+	}
+end
+local extractvar =function (x)
+	local token = value(x)
+	local name = value(token)
+	return {
+		descriptionstart = token.lineinfo.last.offset +1,
+		name =name,
+	}
+end
 local completefieldblock = gg.sequence({
-	builder = function (x)
-		local fieldtype = composetyperef(value(x))
-		local nameend  = x[2].lineinfo.last.offset
-		return {
-			descriptionstart = nameend +1,
-			name = value(x[2]),
-			type = fieldtype
-		}
-	end,
+	builder = extractvarandref,
 	'@','field', reference, mlp.id
 })
 local fieldblock = gg.sequence({
-	builder = function (x)
-		local token = value(x)
-		local name = value(token)
-		return {
-			descriptionstart = token.lineinfo.last.offset +1,
-			name =name,
-		}
-	end,
+	builder = extractvar,
 	'@','field', mlp.id
 })
 local function findfieldtag(nlx)
@@ -181,8 +183,28 @@ local function findtypedfieldtag(nlx)
 		name = x.name, 
 		type = x.type
 	}
---		table.print(field,1) 
 	return field, x.descriptionstart
+end
+local completeparamblock = gg.sequence({
+	builder = extractvarandref,
+	'@','param', reference, mlp.id
+})
+local paramblock = gg.sequence({
+	builder = extractvar,
+	'@','param', mlp.id
+})
+local findtypedparamtag = function(nlx)
+	local x = completeparamblock(nlx)
+	local p = {
+		name = x.name, 
+		type = x.type
+	}
+	return p, x.descriptionstart
+end
+local findparamtag = function(nlx)
+	local x = paramblock(nlx)
+	local p = {	name = x.name }
+	return p, x.descriptionstart
 end
 function M.parse(string)
 	string = trim(string)
@@ -216,7 +238,7 @@ function M.parse(string)
 		"extract_short_string", "extract_word", "extract_number",
 		"extract_symbol"
 	}
-	lx:add({"@@","file", "function", "recordtype", "return", "field"})
+	lx:add({"@@","file", "function", "recordtype", "return", "field", "param"})
 	-- The rest of the comment should be special tags starting with '@'
 	while at <= #string do
 		-- Extract section to analyse
@@ -244,8 +266,7 @@ function M.parse(string)
 					if not comment.returns then comment.returns = {} end
 					local returndesc ={
 						description = trim( stringtoparse:sub(offset + 1) ),
-						types = returns.types,
-						tag = 'TReturn'
+						types = returns.types
 					}
 					table.insert(comment.returns, returndesc)
 				end
@@ -255,6 +276,8 @@ function M.parse(string)
 					valid,x, descriptionstart = pcall(findtypedfieldtag,lx:newstream(stringtoparse, 'Field tags lexer'))
 					if valid then
 						field.type = x.type
+					else
+						x = false
 					end
 				else
 					valid, x, descriptionstart = pcall(findfieldtag, lx:newstream(stringtoparse, 'Field tags lexer'))
@@ -266,6 +289,26 @@ function M.parse(string)
 					field.tag = 'TField'
 					if not comment.fields then comment.fields = {} end
 					table.insert(comment.fields, field)
+				end
+			elseif stringtoparse:find('@param')then
+				local param, descriptionstart, x, valid = {}
+				if stringtoparse:find('#') then
+					valid,x, descriptionstart = pcall(findtypedparamtag,lx:newstream(stringtoparse, 'Parameters tags lexer'))
+					if valid then
+						param.type = x.type
+					else
+						x = false
+					end
+				else
+					valid, x, descriptionstart = pcall(findparamtag, lx:newstream(stringtoparse, 'Parameters tags lexer'))
+					if not valid then x = false end
+				end
+				if x then
+					param.name = x.name
+					param.description = trim(stringtoparse:sub(descriptionstart))
+					param.tag = 'TParam'
+					if not comment.params then comment.params = {} end
+					table.insert(comment.params, param)
 				end
 			end
 		end
