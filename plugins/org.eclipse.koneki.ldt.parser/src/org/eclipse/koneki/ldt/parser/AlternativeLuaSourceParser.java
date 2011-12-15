@@ -101,11 +101,13 @@ public class AlternativeLuaSourceParser extends AbstractSourceParser {
 	}
 
 	private static synchronized LuaState getLuaState() {
+
 		if (lua == null) {
 			final String require = "require"; //$NON-NLS-1$
 			lua = MetaluaStateFactory.newLuaState();
 			// Load module which helps avoiding reflection between Lua and Java
 			DLTKObjectFactory.register(lua);
+
 			// Load needed files
 			try {
 				/*
@@ -118,6 +120,9 @@ public class AlternativeLuaSourceParser extends AbstractSourceParser {
 
 				// Change path
 				final StringBuffer code = new StringBuffer("package.path=[["); //$NON-NLS-1$
+				code.append(folder.getPath());
+				code.append(File.separatorChar);
+				code.append("?.lua;"); //$NON-NLS-1$
 				code.append(folder.getPath());
 				code.append(File.separatorChar);
 				code.append("?.luac;]]..package.path"); //$NON-NLS-1$
@@ -135,6 +140,7 @@ public class AlternativeLuaSourceParser extends AbstractSourceParser {
 				Activator.logError(Messages.AlternativeLuaSourceParserUnableToBuild, e);
 			}
 		}
+
 		return lua;
 	}
 

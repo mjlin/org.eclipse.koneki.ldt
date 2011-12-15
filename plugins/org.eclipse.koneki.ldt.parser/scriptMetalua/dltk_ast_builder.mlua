@@ -447,6 +447,145 @@ local parenthood = {
 	Id	   = parentMatcher,
 	Dots   = parentMatcher
 }
+
+
+
+local handledcomments={}
+local function createAPI(ast)
+   local ldd = require "ldd"
+   local externalapi = require "externalapi"
+   local _file = externalapi._file()
+
+   local function handlecomment(comment)
+      print ("[comment]\n".. comment[1].."[/comment]\n")
+       io.flush()
+      local parsedcomment = ldd.parse(comment[1])
+      table.print(parsedcomment,1)
+       io.flush()
+      if parsedcomment and parsedcomment.maintags then
+         maintags = parsedcomment.maintags[1]
+         -- manage file block
+         if maintags then
+            if maintags.tag == "TFile" then
+               -- manage descriptions
+               _file.shortdescription = parsedcomment.shortdescription
+               _file.description = parsedcomment.description
+
+               -- manage returns
+               if parsedcomment.returns then
+                  for _, td_return in ipairs(parsedcomment.returns) do
+                     local _return = externalapi.createreturn(td_return)
+                     table.insert(_file.returns,_return)
+                  end
+               end
+
+               -- manage recordtypedef block
+            elseif maintags.tag == "TRecordtype" then
+               if maintags.name then
+                  -- create record type if it doesn't exist
+                  local _recordtypedef = _file.types[maintags.name]
+                  if not _recordtypedef then
+                     _recordtypedef = externalapi._recordtypedef()
+                     _file.types[maintags.name] = _recordtypedef
+                  end
+
+                  -- manage description
+                  _recordtypedef.shortdescription = parsedcomment.shortdescription
+                  _recordtypedef.description = parsedcomment.description
+
+                  -- manage fields
+                  if parsedcomment.fields then
+                     for _, td_field in ipairs(parsedcomment.fields) do
+                        local _item = externalapi.createfield(td_field)
+                        if _item then _recordtypedef.fields[_item.name] = _item end
+                     end
+                  end
+                  
+               end
+            elseif maintags.tag  == "TFunction" then
+               if maintags.name then
+                  -- create item
+                  local _item = externalapi._item()
+                  _item.description = parsedcomment.description
+                  _item.name =  maintags.name
+
+                  -- create function type
+                  local _funtiontypedef = externalapi._functiontypedef()
+                  _funtiontypedef.shortdescription = parsedcomment.shortdescription
+                  _funtiontypedef.description = parsedcomment.description
+                  
+                  -- manage params
+                  if parsedcomment.params then
+                     for _, td_param in ipairs(parsedcomment.params) do
+                        local _param = externalapi.createparam(td_param)
+                        table.insert(_funtiontypedef.params,_param)
+                     end
+                  end
+                  
+                  -- manage returns
+                  if parsedcomment.returns then
+                     for _, td_return in ipairs(parsedcomment.returns) do
+                        local _return = externalapi.createreturn(td_return)
+                        table.insert(_funtiontypedef.returns,_return)
+                     end
+                  end
+                  
+                  -- define type name
+                  _file.types["_func1"]= _funtiontypedef
+                  
+                  local _internaltyperef = externalapi._internaltyperef()
+                  _internaltyperef.typename = "func1"
+                  _item.type=_internaltyperef
+                  
+                  if maintags.global then
+                     _file.globalvars[_item.name] = _item
+                  elseif maintags.typescope then
+                     local _recordtypedef = _file.types[maintags.typescope]
+                     if not _recordtypedef then
+                        _recordtypedef = externalapi._recordtypedef()
+                        _file.types[maintags.typescope] = _recordtypedef
+                     end
+                     _recordtypedef.fields[_item.name] = _item
+                  end
+               end
+            end
+         end
+      end
+   end
+
+   local function parsecomment(node, parent, ...)
+      -- check for comments before this node
+      if node.lineinfo.first.comments then
+         local comments = node.lineinfo.first.comments
+         -- check all comments
+         for _,comment in ipairs(comments) do
+            -- if not already handled
+            if not handledcomments[comment] then
+               handlecomment(comment)
+               handledcomments[comment]=true
+            end
+         end
+      end
+      -- check for comments after this node
+      if node.lineinfo.last.comments then
+         local comments = node.lineinfo.last.comments
+         -- check all comments
+         for _,comment in ipairs(comments) do
+            -- if not already handled
+            if not handledcomments[comment] then
+               handlecomment(comment)
+               handledcomments[comment]=true
+            end
+         end
+      end
+   end
+   local cfg = { expr={down=parsecomment}, stat={down=parsecomment}}
+   walk.block(cfg, ast)
+
+   table.print(_file,1)
+   io.flush()
+end
+
 ---
 -- Build a Metalua AST from source code
 --
@@ -470,11 +609,15 @@ module.ast_builder = function(source)
 		return root
 	end
 	
+	--
+   local _file = createAPI(ast) 
+	createJAVAModel(_file)
+	
 	-- Mark intersting nodes such as declaration
 	ast = mark.parent( ast )
 	ast = mark.declaration( ast )
 	ast = mark.tablefields( ast )
-    ast = mark.module( ast )
+   ast = mark.module( ast )
 	
 	-- Walk through AST
 	walk.block(visitor, ast)

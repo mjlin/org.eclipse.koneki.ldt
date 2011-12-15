@@ -31,14 +31,7 @@ import org.eclipse.dltk.compiler.problem.DefaultProblemIdentifier;
 import org.eclipse.dltk.compiler.problem.IProblemIdentifier;
 import org.eclipse.dltk.compiler.problem.ProblemSeverity;
 import org.eclipse.dltk.utils.CorePrinter;
-import org.eclipse.koneki.ldt.parser.api.external.FunctionTypeDef;
-import org.eclipse.koneki.ldt.parser.api.external.InternalTypeRef;
-import org.eclipse.koneki.ldt.parser.api.external.Item;
 import org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI;
-import org.eclipse.koneki.ldt.parser.api.external.Parameter;
-import org.eclipse.koneki.ldt.parser.api.external.PrimitiveTypeRef;
-import org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef;
-import org.eclipse.koneki.ldt.parser.api.external.ReturnValues;
 import org.eclipse.koneki.ldt.parser.ast.declarations.DeclarationsContainer;
 
 /**
@@ -57,41 +50,41 @@ public class LuaSourceRoot extends ModuleDeclaration {
 		ASTNode localAST;
 
 		public LuaFile() {
-			fileapi = new LuaFileAPI();
-			fileapi.setDocumentation("LUA FILE API DOCUMENTATION");
-
-			Item field = new Item();
-			field.setName("field");
-			field.setDocumentation("field documentation");
-			field.setType(new PrimitiveTypeRef("string"));
-			fileapi.getGlobalvars().put(field.getName(), field);
-
-			FunctionTypeDef functionTypeDef = new FunctionTypeDef();
-			functionTypeDef.setDocumentation("FUNCTION DOCUMENTATION");
-			functionTypeDef.getParameters().add(new Parameter("param1", new PrimitiveTypeRef("string"), "desc param 1"));
-
-			RecordTypeDef recordTypeDef = new RecordTypeDef();
-			recordTypeDef.setName("record1");
-
-			fileapi.getTypes().put("f1", functionTypeDef);
-			fileapi.getTypes().put(recordTypeDef.getName(), recordTypeDef);
-
-			Item field1 = new Item();
-			field1.setName("field1");
-			field1.setDocumentation("field 1 documentation");
-			field1.setType(new PrimitiveTypeRef("string"));
-
-			recordTypeDef.getFields().put(field1.getName(), field1);
-
-			Item field2 = new Item();
-			field2.setName("field2");
-			field2.setDocumentation("field  2 documentation");
-			field2.setType(new InternalTypeRef("f1"));
-			recordTypeDef.getFields().put(field2.getName(), field2);
-
-			ReturnValues returnValues = new ReturnValues();
-			returnValues.getTypes().add(new InternalTypeRef(recordTypeDef.getName()));
-			fileapi.getReturns().add(returnValues);
+			// fileapi = new LuaFileAPI();
+			// fileapi.setDocumentation("LUA FILE API DOCUMENTATION");
+			//
+			// Item field = new Item();
+			// field.setName("field");
+			// field.setDocumentation("field documentation");
+			// field.setType(new PrimitiveTypeRef("string"));
+			// fileapi.getGlobalvars().put(field.getName(), field);
+			//
+			// FunctionTypeDef functionTypeDef = new FunctionTypeDef();
+			// functionTypeDef.setDocumentation("FUNCTION DOCUMENTATION");
+			// functionTypeDef.getParameters().add(new Parameter("param1", new PrimitiveTypeRef("string"), "desc param 1"));
+			//
+			// RecordTypeDef recordTypeDef = new RecordTypeDef();
+			// recordTypeDef.setName("record1");
+			//
+			// fileapi.getTypes().put("f1", functionTypeDef);
+			// fileapi.getTypes().put(recordTypeDef.getName(), recordTypeDef);
+			//
+			// Item field1 = new Item();
+			// field1.setName("field1");
+			// field1.setDocumentation("field 1 documentation");
+			// field1.setType(new PrimitiveTypeRef("string"));
+			//
+			// recordTypeDef.getFields().put(field1.getName(), field1);
+			//
+			// Item field2 = new Item();
+			// field2.setName("field2");
+			// field2.setDocumentation("field  2 documentation");
+			// field2.setType(new InternalTypeRef("f1"));
+			// recordTypeDef.getFields().put(field2.getName(), field2);
+			//
+			// ReturnValues returnValues = new ReturnValues();
+			// returnValues.getTypes().add(new InternalTypeRef(recordTypeDef.getName()));
+			// fileapi.getReturns().add(returnValues);
 		}
 
 		/**
@@ -100,7 +93,7 @@ public class LuaSourceRoot extends ModuleDeclaration {
 		@Override
 		public void traverse(ASTVisitor visitor) throws Exception {
 			if (visitor.visit(this)) {
-				fileapi.traverse(visitor);
+				// fileapi.traverse(visitor);
 				visitor.endvisit(this);
 			}
 
