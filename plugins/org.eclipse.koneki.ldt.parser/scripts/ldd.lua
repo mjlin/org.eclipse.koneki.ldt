@@ -40,6 +40,13 @@ local function findmaintag(nlx)
 				-- It's a record
 				res.tag = 'TRecordtype'
 				res.name = value(value(parsed))
+			else
+				-- It is a function
+				res.tag = 'TFunction'
+				-- When '#' is missing, must be a global function
+				res.global = not parsed[1]
+				res.typescope = value(parsed[2])
+				res.name = value(parsed[3])
 			end
 			return res
 		end,
@@ -53,9 +60,10 @@ local function findmaintag(nlx)
 		nlx:add({"@@","file", "function", "recordtype", "field"})
 	local result = parser(nlx)
 	return {
-		kind = result.kind,
+		global = result.global,
 		name = result.name,
-		tag  = result.tag
+		tag  = result.tag,
+		typescope = result.typescope
 	}
 end
 local reference = gg.sequence({
