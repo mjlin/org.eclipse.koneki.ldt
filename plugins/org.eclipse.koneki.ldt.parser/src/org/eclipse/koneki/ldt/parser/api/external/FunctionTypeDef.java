@@ -39,6 +39,14 @@ public class FunctionTypeDef extends TypeDef {
 		return returns;
 	}
 
+	public void addParameter(final Parameter parameter) {
+		parameters.add(parameter);
+	}
+
+	public void addReturn(final ReturnValues values) {
+		returns.add(values);
+	}
+
 	/**
 	 * @see org.eclipse.dltk.ast.ASTNode#traverse(org.eclipse.dltk.ast.ASTVisitor)
 	 */

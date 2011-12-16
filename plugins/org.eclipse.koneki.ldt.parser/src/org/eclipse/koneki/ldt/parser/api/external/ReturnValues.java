@@ -22,4 +22,8 @@ public class ReturnValues {
 	public List<TypeRef> getTypes() {
 		return types;
 	}
+
+	public void addType(final TypeRef type) {
+		types.add(type);
+	}
 }

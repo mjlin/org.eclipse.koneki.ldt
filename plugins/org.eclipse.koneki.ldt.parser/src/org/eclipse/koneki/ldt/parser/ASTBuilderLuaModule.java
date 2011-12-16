@@ -31,8 +31,8 @@ public class ASTBuilderLuaModule extends AbstractMetaLuaModule {
 	private LuaState lua = null;
 
 	public LuaSourceRoot buildAST(String string) {
-		if (lua == null)
-			lua = loadLuaModule();
+		// if (lua == null)
+		lua = loadLuaModule();
 
 		pushLuaModule(lua);
 		lua.getField(-1, "ast_builder"); //$NON-NLS-1$
@@ -41,7 +41,7 @@ public class ASTBuilderLuaModule extends AbstractMetaLuaModule {
 		LuaSourceRoot luaSourceRoot = lua.checkJavaObject(-1, LuaSourceRoot.class);
 		lua.pop(2);
 
-		//lua.close();
+		lua.close();
 
 		return luaSourceRoot;
 	}

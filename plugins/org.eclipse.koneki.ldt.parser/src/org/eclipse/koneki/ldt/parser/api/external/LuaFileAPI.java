@@ -28,6 +28,18 @@ public class LuaFileAPI extends LuaASTNode {
 	public LuaFileAPI() {
 	}
 
+	public void addType(final String typeName, final TypeDef type) {
+		types.put(typeName, type);
+	}
+
+	public void addGlobalVar(final String varName, final Item item) {
+		globalvars.put(varName, item);
+	}
+
+	public void addReturns(final ReturnValues returnValue) {
+		returns.add(returnValue);
+	}
+
 	public void setDocumentation(String documentation) {
 		this.documentation = documentation;
 	}

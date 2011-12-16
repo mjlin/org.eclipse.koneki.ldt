@@ -14,6 +14,19 @@ package org.eclipse.koneki.ldt.parser.api.external;
  * Reference a type which is defined in another module
  */
 public class ExternalTypeRef extends TypeRef {
-	private String moduleName;
-	private String typeName;
+	private final String moduleName;
+	private final String typeName;
+
+	public ExternalTypeRef(final String module, final String type) {
+		moduleName = module;
+		typeName = type;
+	}
+
+	public String getModuleName() {
+		return moduleName;
+	}
+
+	public String getTypeName() {
+		return typeName;
+	}
 }

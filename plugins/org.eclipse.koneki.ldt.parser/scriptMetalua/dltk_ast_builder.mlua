@@ -12,7 +12,7 @@
 require 'metalua.compiler'
 require 'metalua.walk'
 -{ extension 'match' }
-
+local mark = require 'declaration_marker'
 -- Just redefining classic print, as there is a flush problem calling it from Java
 local print = function (string) print(string) io.flush() end
 ---
@@ -457,11 +457,11 @@ local function createAPI(ast)
    local _file = externalapi._file()
 
    local function handlecomment(comment)
-      print ("[comment]\n".. comment[1].."[/comment]\n")
-       io.flush()
+--      print ("[comment]\n".. comment[1].."[/comment]\n")
+--       io.flush()
       local parsedcomment = ldd.parse(comment[1])
-      table.print(parsedcomment,1)
-       io.flush()
+--      table.print(parsedcomment,1)
+--       io.flush()
       if parsedcomment and parsedcomment.maintags then
          maintags = parsedcomment.maintags[1]
          -- manage file block
@@ -534,7 +534,7 @@ local function createAPI(ast)
                   _file.types["_func1"]= _funtiontypedef
                   
                   local _internaltyperef = externalapi._internaltyperef()
-                  _internaltyperef.typename = "func1"
+                  _internaltyperef.typename = "_func1"
                   _item.type=_internaltyperef
                   
                   if maintags.global then
@@ -566,26 +566,108 @@ local function createAPI(ast)
             end
          end
       end
-      -- check for comments after this node
-      if node.lineinfo.last.comments then
-         local comments = node.lineinfo.last.comments
-         -- check all comments
-         for _,comment in ipairs(comments) do
-            -- if not already handled
-            if not handledcomments[comment] then
-               handlecomment(comment)
-               handledcomments[comment]=true
-            end
-         end
-      end
-   end
-   local cfg = { expr={down=parsecomment}, stat={down=parsecomment}}
-   walk.block(cfg, ast)
-
-   table.print(_file,1)
-   io.flush()
+      	-- check for comments after this node
+      	if node.lineinfo.last.comments then
+        	local comments = node.lineinfo.last.comments
+         	-- check all comments
+			for _,comment in ipairs(comments) do
+            	-- if not already handled
+            	if not handledcomments[comment] then
+               		handlecomment(comment)
+               		handledcomments[comment]=true
+            	end
+        	end
+      	end
+   	end
+   	local cfg = { expr={down=parsecomment}, stat={down=parsecomment}}
+	walk.block(cfg, ast)
+	return _file
 end
-
+local item        = java.require("org.eclipse.koneki.ldt.parser.api.external.Item")
+local retvalues   = java.require("org.eclipse.koneki.ldt.parser.api.external.ReturnValues")
+local recorddef   = java.require("org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef")
+local functiondef = java.require("org.eclipse.koneki.ldt.parser.api.external.FunctionTypeDef")
+local parameter   = java.require("org.eclipse.koneki.ldt.parser.api.external.Parameter")
+local etyperef    = java.require("org.eclipse.koneki.ldt.parser.api.external.ExternalTypeRef")
+local ityperef    = java.require("org.eclipse.koneki.ldt.parser.api.external.InternalTypeRef")
+local ptyperef    = java.require("org.eclipse.koneki.ldt.parser.api.external.PrimitiveTypeRef")
+local fileapi     = java.require("org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI")
+local createtyperef = function (type)
+	if not type then return nil end
+	if type.tag == "externaltyperef" then
+		return etyperef:new(type.modulename, type.typename)
+	end
+	return type.tag == "internaltyperef" and ityperef:new(type.typename) or ptyperef:new(type.typename)
+end
+local function createitem(def)
+	local i = item:new()
+	i:setDocumentation(def.description)
+	i:setName(def.name)
+	-- Define optional type
+	if def.type then
+		i:setType(createtyperef(def.type))
+	end
+	return i
+end
+local function createtypedef(name, definition)
+	local def
+	-- Dealing with records
+	if definition.tag == "recordtypedef" then
+		def = recorddef:new()
+		def:setName(name)
+		-- Appending fields
+		for fieldname, item in pairs(definition.fields) do
+			def:addField(fieldname, createitem(item))
+		end
+	else
+		-- Dealing with function
+		def = functiondef:new()
+		-- Appending parameters
+		for _, param in ipairs(definition.params) do
+			def:addParameter( parameter:new(param.name, createtyperef(param.type), param.description) )
+		end
+		-- Appending returned types
+		for _, value in ipairs(definition.returns) do
+			local ret = retvalues:new()
+			for _, type in ipairs( value ) do
+				ret:addType(createtyperef(type))
+			end
+			def:addReturn(ret)
+		end
+	end
+	def:setDocumentation(definition.description)
+	return def
+end
+---
+-- Transpose Lua documentation model to Java
+--
+-- @param model Instance of Lua model
+-- @result org.eclipse.koneki.ldt.parser.api.external#LuaFileAPI Java object
+local function createJAVAModel(model)
+	--
+	-- Fill file object
+	--
+	local file = fileapi:new()
+	file:setDocumentation(model.description)
+	-- Adding gloval variables
+	for name, global in pairs(model.globalvars) do
+		-- Fill Java item
+		file:addGlobalVar(name, createitem(global))
+	end
+	-- Adding returned types
+	for _, ret in ipairs(model.returns) do
+		local values = retvalues:new()
+		for _, type in ipairs(ret.types) do
+			values:addType(createtyperef(type))
+		end
+		file:addReturns(values)
+	end
+	-- Adding types defined in files
+	for name, def in pairs(model.types) do
+		file:addType(name, createtypedef(name ,def))
+	end
+	return file
+end
 ---
 -- Build a Metalua AST from source code
 --
@@ -610,14 +692,14 @@ module.ast_builder = function(source)
 	end
 	
 	--
-   local _file = createAPI(ast) 
-	createJAVAModel(_file)
+	local _file = createAPI(ast) 
+	local file = createJAVAModel(_file)
 	
 	-- Mark intersting nodes such as declaration
 	ast = mark.parent( ast )
 	ast = mark.declaration( ast )
 	ast = mark.tablefields( ast )
-   ast = mark.module( ast )
+	ast = mark.module( ast )
 	
 	-- Walk through AST
 	walk.block(visitor, ast)
@@ -627,11 +709,13 @@ module.ast_builder = function(source)
 	walk.block(parenthood, ast)
 	-- Achieve DLTK Java Objects AST
 	DLTK.addStatementToModuleDeclaration(root, object[ast])
+	-- Append information from documentation
+	root:setDocumentationInformation(file)
 	-- clear cache
-   module = {}
-   hash = {}
-   object= {}
-   declaration = {}
-   return root
+	module = {}
+	hash = {}
+	object= {}
+	declaration = {}
+	return root
 end
 return module

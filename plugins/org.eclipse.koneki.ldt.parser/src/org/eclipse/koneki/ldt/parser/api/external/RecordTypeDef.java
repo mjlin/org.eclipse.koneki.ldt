@@ -53,6 +53,10 @@ public class RecordTypeDef extends TypeDef {
 		return fields;
 	}
 
+	public void addField(final String fieldName, final Item item) {
+		fields.put(fieldName, item);
+	}
+
 	public void setName(String name) {
 		this.name = name;
 	}

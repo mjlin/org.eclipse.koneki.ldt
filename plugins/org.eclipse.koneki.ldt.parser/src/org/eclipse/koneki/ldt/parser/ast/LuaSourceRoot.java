@@ -46,8 +46,8 @@ public class LuaSourceRoot extends ModuleDeclaration {
 	private static class LuaFile extends ASTNode {
 
 		// this is the API of the current Lua file.
-		LuaFileAPI fileapi;
-		ASTNode localAST;
+		private LuaFileAPI fileapi;
+		private ASTNode localAST;
 
 		public LuaFile() {
 			// fileapi = new LuaFileAPI();
@@ -87,13 +87,23 @@ public class LuaSourceRoot extends ModuleDeclaration {
 			// fileapi.getReturns().add(returnValues);
 		}
 
+		public void setApi(final LuaFileAPI file) {
+			fileapi = file;
+		}
+
+		public LuaFileAPI getApi() {
+			return fileapi;
+		}
+
 		/**
 		 * @see org.eclipse.dltk.ast.ASTNode#traverse(org.eclipse.dltk.ast.ASTVisitor)
 		 */
 		@Override
 		public void traverse(ASTVisitor visitor) throws Exception {
 			if (visitor.visit(this)) {
-				// fileapi.traverse(visitor);
+				if (getApi() != null) {
+					fileapi.traverse(visitor);
+				}
 				visitor.endvisit(this);
 			}
 
@@ -165,7 +175,7 @@ public class LuaSourceRoot extends ModuleDeclaration {
 	public void printNode(final CorePrinter output) {
 		final MethodDeclaration[] functions = this.getFunctions();
 		if (functions.length > 0) {
-			output.print("functions: ");
+			output.print("functions: "); //$NON-NLS-1$
 			for (MethodDeclaration function : functions) {
 				output.print(function.getName());
 				output.print(' ');
@@ -174,7 +184,7 @@ public class LuaSourceRoot extends ModuleDeclaration {
 		}
 		final FieldDeclaration[] fields = this.getVariables();
 		if (fields.length > 0) {
-			output.print("fields: ");
+			output.print("fields: ");//$NON-NLS-1$
 			for (FieldDeclaration field : fields) {
 				output.print(field.getName());
 				output.print(' ');
@@ -183,7 +193,7 @@ public class LuaSourceRoot extends ModuleDeclaration {
 		}
 		final TypeDeclaration[] types = this.getTypes();
 		if (fields.length > 0) {
-			output.print("types: ");
+			output.print("types: ");//$NON-NLS-1$
 			for (TypeDeclaration type : types) {
 				output.print(type.getName());
 				output.print(' ');
@@ -227,5 +237,9 @@ public class LuaSourceRoot extends ModuleDeclaration {
 	 */
 	public void setError(final boolean status) {
 		error = status;
+	}
+
+	public void setDocumentationInformation(final LuaFileAPI file) {
+		luaFile.setApi(file);
 	}
 }
