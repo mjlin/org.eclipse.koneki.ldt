@@ -10,13 +10,11 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.parser.format;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.koneki.ldt.metalua.MetaluaStateFactory;
+import org.eclipse.koneki.ldt.parser.AbstractLuaModule;
 import org.eclipse.koneki.ldt.parser.Activator;
 
 import com.naef.jnlua.LuaRuntimeException;
@@ -29,12 +27,12 @@ import com.naef.jnlua.LuaState;
  * 
  * @author Kevin KIN-FOO <kkinfoo@sierrawireless.com>
  */
-public final class LuaSourceFormat {
+public final class FormatLuaModule extends AbstractLuaModule {
 	public static final String FORMATTER_PATH = "/scripts/"; //$NON-NLS-1$
 	public static final String FORMATTER_LIB_NAME = "format"; //$NON-NLS-1$
 	public static final String INDENTATION_FUNTION = "indentCode"; //$NON-NLS-1$
 
-	private LuaSourceFormat() {
+	public FormatLuaModule() {
 	}
 
 	/**
@@ -46,9 +44,10 @@ public final class LuaSourceFormat {
 	 *            Source code position which depth is required
 	 * @return Offset semantic depth
 	 */
-	public static int depth(final String source, final int offset) {
+	public int depth(final String source, final int offset) {
 		// Load function
-		final LuaState lua = loadState();
+		final LuaState lua = loadLuaModule();
+		pushLuaModule(lua);
 		lua.getField(-1, "indentLevel"); //$NON-NLS-1$
 
 		// Pass arguments
@@ -80,9 +79,10 @@ public final class LuaSourceFormat {
 	 *            Indicates original semantic depth, useful for selections
 	 * @return Indented Lua source code
 	 */
-	public static String indent(final String source, final String delimiter, final String tabulation, final int originalIndentationLevel) {
+	public String indent(final String source, final String delimiter, final String tabulation, final int originalIndentationLevel) {
 		// Load function
-		final LuaState lua = loadState();
+		final LuaState lua = loadLuaModule();
+		pushLuaModule(lua);
 		lua.getField(-1, INDENTATION_FUNTION);
 		lua.pushString(source);
 		lua.pushString(delimiter);
@@ -115,9 +115,9 @@ public final class LuaSourceFormat {
 	 * @return indented Lua source code
 	 * @see #indent(String, String, String, int)
 	 */
-	public static String indent(final String source, final String delimiter, final int tabSize, final int indentationSize,
-			final int originalInentationLevel) {
-		final LuaState lua = loadState();
+	public String indent(final String source, final String delimiter, final int tabSize, final int indentationSize, final int originalInentationLevel) {
+		final LuaState lua = loadLuaModule();
+		pushLuaModule(lua);
 		lua.getField(-1, INDENTATION_FUNTION);
 		lua.pushString(source);
 		lua.pushString(delimiter);
@@ -135,27 +135,45 @@ public final class LuaSourceFormat {
 		return formattedCode;
 	}
 
-	private static LuaState loadState() {
-		// Loading LuaState with Metalua capabilities
-		LuaState lua = MetaluaStateFactory.newLuaState();
-		String path = null;
-		// Compute path to library
-		try {
-			final URL folderUrl = FileLocator.toFileURL(Platform.getBundle(Activator.PLUGIN_ID).getEntry(FORMATTER_PATH));
-			final File folder = new File(folderUrl.getFile());
-			path = folder.getPath() + File.separatorChar;
-		} catch (IOException e) {
-			Activator.logError(Messages.LuaSourceFormatUnableToLoad + FORMATTER_PATH, e);
-		}
-		// Updating path to enable formatter library loading
-		String code = "package.path = [[" + path + "?.lua;]] .. package.path"; //$NON-NLS-1$ //$NON-NLS-2$
-		lua.load(code, "UpdatingFormatterPath"); //$NON-NLS-1$
-		lua.call(0, 0);
+	/**
+	 * @see org.eclipse.koneki.ldt.parser.AbstractLuaModule#getLuaSourcePaths()
+	 */
+	@Override
+	protected List<String> getLuaSourcePaths() {
+		ArrayList<String> sourcepaths = new ArrayList<String>();
+		sourcepaths.add(FORMATTER_PATH);
+		return sourcepaths;
+	}
 
-		// Loading formatter library
-		lua.getGlobal("require"); //$NON-NLS-1$
-		lua.pushString(FORMATTER_LIB_NAME);
-		lua.call(1, 1);
-		return lua;
+	/**
+	 * @see org.eclipse.koneki.ldt.parser.AbstractLuaModule#getLuacSourcePaths()
+	 */
+	@Override
+	protected List<String> getLuacSourcePaths() {
+		return null;
+	}
+
+	/**
+	 * @see org.eclipse.koneki.ldt.parser.AbstractLuaModule#createLuaState()
+	 */
+	@Override
+	protected LuaState createLuaState() {
+		return MetaluaStateFactory.newLuaState();
+	}
+
+	/**
+	 * @see org.eclipse.koneki.ldt.parser.AbstractLuaModule#getPluginID()
+	 */
+	@Override
+	protected String getPluginID() {
+		return Activator.PLUGIN_ID;
+	}
+
+	/**
+	 * @see org.eclipse.koneki.ldt.parser.AbstractLuaModule#getModuleName()
+	 */
+	@Override
+	protected String getModuleName() {
+		return FORMATTER_LIB_NAME;
 	}
 }
