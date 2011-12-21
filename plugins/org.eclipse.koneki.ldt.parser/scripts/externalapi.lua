@@ -156,5 +156,46 @@ function M.createparam(td_param)
 end
 
 
+function M.generatefunctiontypename(_functiontypedef)
+   local name = {"__"}
+   if _functiontypedef.returns and _functiontypedef.returns[1] then
+      local ret =  _functiontypedef.returns[1]
+      for _, type in ipairs(ret.types) do
+         if type.typename then
+            if type.modulename then
+               table.insert(name,type.modulename)
+            end
+            table.insert(name,"#")
+            table.insert(name,type.typename)
+         end
+      end
+      
+   end
+   table.insert(name,"=")
+   if _functiontypedef.params then
+      for _, param in ipairs(_functiontypedef.params) do
+         local type =  param.type
+         if type then
+            if type.typename then
+               if type.modulename then
+                  table.insert(name,type.modulename)
+               end
+               table.insert(name,"#")
+               table.insert(name,type.typename)
+            else
+               table.insert(name,"#unknown")
+            end
+         end
+         table.insert(name,"[")
+         table.insert(name,param.name)
+         table.insert(name,"]")
+      end
+   end
+    table.insert(name,"__")
+    table.print(name,1)
+    io.flush()
+   return table.concat(name)
+end
+
 
 return M

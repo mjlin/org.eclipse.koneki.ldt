@@ -510,15 +510,15 @@ local function createAPI(ast)
                   _item.name =  maintags.name
 
                   -- create function type
-                  local _funtiontypedef = externalapi._functiontypedef()
-                  _funtiontypedef.shortdescription = parsedcomment.shortdescription
-                  _funtiontypedef.description = parsedcomment.description
+                  local _functiontypedef = externalapi._functiontypedef()
+                  _functiontypedef.shortdescription = parsedcomment.shortdescription
+                  _functiontypedef.description = parsedcomment.description
                   
                   -- manage params
                   if parsedcomment.params then
                      for _, td_param in ipairs(parsedcomment.params) do
                         local _param = externalapi.createparam(td_param)
-                        table.insert(_funtiontypedef.params,_param)
+                        table.insert(_functiontypedef.params,_param)
                      end
                   end
                   
@@ -526,15 +526,18 @@ local function createAPI(ast)
                   if parsedcomment.returns then
                      for _, td_return in ipairs(parsedcomment.returns) do
                         local _return = externalapi.createreturn(td_return)
-                        table.insert(_funtiontypedef.returns,_return)
+                        table.insert(_functiontypedef.returns,_return)
                      end
                   end
                   
                   -- define type name
-                  _file.types["_func1"]= _funtiontypedef
+                  local functioname = externalapi.generatefunctiontypename(_functiontypedef)
+                  print(functioname)
+                  io.flush()                
+                  _file.types[functioname]= _functiontypedef
                   
                   local _internaltyperef = externalapi._internaltyperef()
-                  _internaltyperef.typename = "_func1"
+                  _internaltyperef.typename = functioname
                   _item.type=_internaltyperef
                   
                   if maintags.global then
