@@ -213,8 +213,6 @@ visitor.block.up =function(node, parent, ...)
 		| `Do { ... } ->
 			object[ node ] = DLTK.Do(first, last, statListToChunk(node))
 		| _ ->
---			print('In block missing type `'..(node.tag))
---			table.print(node, 'nohash',1)
 	end
 end
 ---
@@ -272,8 +270,6 @@ visitor.stat.up = function (node, ...)
 		| `Call{...} | `Invoke{...} ->
 			apply(node, ...)
 		| _ ->
---			print('In stat.up missing type `'..(node.tag))
---			table.print(node, 'nohash',1)
 	end
 end
 ---
@@ -328,8 +324,6 @@ visitor.expr.up = function (node, ...)
 		| `Dots ->
 			visitor.binder(node, ...)
 		| _ ->
---			print('In expr.up missing type `'..(node.tag))
---			table.print(node, 'nohash',1)
 	end
 end
 ---
@@ -356,13 +350,12 @@ local function backpatch(root,ast)
                   local iStart, iEnd = mark.offsets(field.init.parent)                 
                   local functionDeclaration  = DLTK.FunctionDeclaration(fieldname,field.first, field.last, iStart, iEnd, "indexed")
                   DLTK.addFunction( moduleDeclaration, functionDeclaration)
-                  --table.print(field.init,"nohash")        
                   local params, body = field.init[1], field.init[2]
 	       	      -- Fetch from declaration created above or in regular table
 	       	      -- Define function's parameters
-			         DLTK.acceptArguments(functionDeclaration, statListToChunk(params))
-			         -- Define function's body
-			         DLTK.acceptBody(functionDeclaration, object[ body ])
+					DLTK.acceptArguments(functionDeclaration, statListToChunk(params))
+					-- Define function's body
+					DLTK.acceptBody(functionDeclaration, object[ body ])
                end
             end
          end
@@ -417,11 +410,10 @@ local function backpatch(root,ast)
 		--
 		local occ = mark.declaration_occurrences( node )
 		for i, occurrence in ipairs( occ ) do
-		if not declaration then print 'pas de declaration' end
-         -- Link occurrence to declaration
-		   DLTK.setDeclaration(object[occurrence], declaration)
-		   -- Add occurrence to declaration
-		   DLTK.addOccurrence(declaration, object[occurrence])
+        	-- Link occurrence to declaration
+			DLTK.setDeclaration(object[occurrence], declaration)
+			-- Add occurrence to declaration
+			DLTK.addOccurrence(declaration, object[occurrence])
 		end
 	end
 end
@@ -457,11 +449,7 @@ local function createAPI(ast)
    local _file = externalapi._file()
 
    local function handlecomment(comment)
---      print ("[comment]\n".. comment[1].."[/comment]\n")
---       io.flush()
       local parsedcomment = ldd.parse(comment[1])
---      table.print(parsedcomment,1)
---       io.flush()
       if parsedcomment and parsedcomment.maintags then
          maintags = parsedcomment.maintags[1]
          -- manage file block
@@ -532,8 +520,6 @@ local function createAPI(ast)
                   
                   -- define type name
                   local functioname = externalapi.generatefunctiontypename(_functiontypedef)
-                  print(functioname)
-                  io.flush()                
                   _file.types[functioname]= _functiontypedef
                   
                   local _internaltyperef = externalapi._internaltyperef()
@@ -687,7 +673,26 @@ module.ast_builder = function(source)
 	require 'errnode'
 	local ast = getast( source )
 	local root = DLTK.LuaSourceRoot(#source, true)
-	if ast and ast.tag == 'Error' then
+	--
+	-- Check if an error occurred
+	--
+	local aststatus, error = pcall(mlc.check_ast, ast)
+	-- Seeking for regular `Error node
+	if not aststatus then
+		-- Selecting `Error in AST
+		local Q = require 'metalua.treequery'
+		local errornode = Q(ast):filter('Error'):first()
+		-- Giving `Error information to Java AST
+		if errornode then
+			local line, column = errornode.lineinfo.first.line, errornode.lineinfo.first.column
+			local offset = errornode.lineinfo.first.offset
+			DLTK.setProblem(root, line, column, offset, error)
+		else
+			DLTK.setProblem(root, 1, 1, 0, error)
+		end
+		return root
+	elseif ast.tag == 'Error' then
+		-- Dealing with error generated from errnode#getast
 		local line, column, offset = ast.lineinfo.first[1], ast.lineinfo.first[2], ast.lineinfo.first[3]
 		local errorMessage = ast[1] or 'Unable to determine error'
 		DLTK.setProblem(root, line, column, offset, errorMessage )

@@ -211,7 +211,7 @@ function M.parse(string)
 	--
 	-- Parse documentation from first tag
 	--	
-	local newline = string:find('[\n|\r|\r\n]+')
+	local newline = string:find('[\n|\r|\r\n]') or #string
 	local at =  string:find('@', newline, true) or #string
 	-- Split description before first '@'
 	local shortDescription = newline < at and string:sub(1, newline) or ""
@@ -242,7 +242,7 @@ function M.parse(string)
 	-- The rest of the comment should be special tags starting with '@'
 	while at <= #string do
 		-- Extract section to analyse
-		local newline = string:find('[\n|\r|\r\n]+', at) or #string
+		local newline = string:find('[\n|\r|\r\n]', at) or #string
 		local stringtoparse = string:sub(at, newline)
 		if stringtoparse:len() > 0 then
 			-- Moving forward to next section

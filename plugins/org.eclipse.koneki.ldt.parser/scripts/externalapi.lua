@@ -192,8 +192,8 @@ function M.generatefunctiontypename(_functiontypedef)
       end
    end
     table.insert(name,"__")
-    table.print(name,1)
-    io.flush()
+--    table.print(name,1)
+--    io.flush()
    return table.concat(name)
 end
 
