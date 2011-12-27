@@ -40,17 +40,19 @@ function M.indentLevel(source, offset, flush)
 			local offsets = node.lineinfo
 			-- Consider previous comments as part of current chunk
 			-- WARNING: This is NOT the default in Metalua
-			if offsets.first.comments
-			then first = offsets.first.comments[1][2]
-			else first = offsets.first[3]
+			if offsets.first.comments then
+				first = offsets.first.comments.lineinfo.first.offset
+			else
+				first = offsets.first.offset
 			end
 			-- Same for block end comments
-			if offsets.last.comments
-			then last =  offsets.last.comments[1][3]
-			else last = offsets.last[3]
+			if offsets.last.comments then
+				last = offsets.last.comments.lineinfo.last.offset
+			else
+				last = offsets.last.offset
 			end
 		elseif #node > 0 then
-			-- Reglar block
+			-- Regular block
 			local nop
 			first, nop = isIncluded(node[1], offset)
 			nop, last =  isIncluded(node[#node], offset)
