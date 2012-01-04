@@ -13,12 +13,11 @@ package org.eclipse.koneki.ldt.editor.internal.completion;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
-import org.eclipse.dltk.ast.ASTNode;
 import org.eclipse.dltk.ast.declarations.Argument;
 import org.eclipse.dltk.ast.declarations.Declaration;
-import org.eclipse.dltk.ast.declarations.ModuleDeclaration;
 import org.eclipse.dltk.codeassist.ScriptCompletionEngine;
 import org.eclipse.dltk.compiler.env.IModuleSource;
 import org.eclipse.dltk.compiler.util.Util;
@@ -34,13 +33,15 @@ import org.eclipse.dltk.core.IScriptProject;
 import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.dltk.core.IType;
 import org.eclipse.dltk.core.ModelException;
-import org.eclipse.dltk.core.SourceParserUtil;
-import org.eclipse.koneki.ldt.core.LuaUtils;
 import org.eclipse.koneki.ldt.editor.Activator;
-import org.eclipse.koneki.ldt.editor.internal.navigation.LuaLocalDeclarationVisitor;
+import org.eclipse.koneki.ldt.parser.LuaASTModelUtils;
 import org.eclipse.koneki.ldt.parser.LuaASTUtils;
+import org.eclipse.koneki.ldt.parser.LuaASTUtils.TypeResolution;
+import org.eclipse.koneki.ldt.parser.api.external.Item;
+import org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef;
+import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
 import org.eclipse.koneki.ldt.parser.ast.declarations.FunctionDeclaration;
-import org.eclipse.koneki.ldt.parser.ast.declarations.ModuleReference;
+import org.eclipse.koneki.ldt.parser.model.FakeField;
 
 /**
  * 
@@ -71,10 +72,10 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 			if (start.contains(".")) {
 				// Select between module fields if completion is asked after a module reference
 				final List<String> ids = getExpressionIdentifiers(start);
-				addModuleFields(sourceModule, ids);
+				addFields(sourceModule, ids, position);
 			} else {
 				// Search local declaration in AST
-				// addLocalDeclarations(sourceModule, start);
+				addLocalDeclarations(sourceModule, start, position);
 
 				// Search global declaration in DLTK model
 				addGlobalDeclarations(sourceModule, start);
@@ -146,45 +147,61 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 		}
 	}
 
-	private void addLocalDeclarations(ISourceModule sourceModule, String start) {
-		// Retrieve AST from cache
-		final ModuleDeclaration moduleDeclaration = SourceParserUtil.getModuleDeclaration(sourceModule);
-		if (moduleDeclaration != null) {
-			try {
-				// Locate a node at cursor position
-				final ASTNode nodeInScope = LuaASTUtils.getClosestScope(moduleDeclaration, offset);
-				// Locate nodes above this one, to gather local variable of those scopes
-				LuaLocalDeclarationVisitor visitor = new LuaLocalDeclarationVisitor(nodeInScope);
-				moduleDeclaration.traverse(visitor);
-				for (Declaration declaration : visitor.getDeclarations()) {
-					createProposal(declaration);
-				}
-				// CHECKSTYLE:OFF
-			} catch (Exception e) {
-				// CHECKSTYLE:ON
-				Activator.logWarning(Messages.LuaCompletionEngineDuringLocalProposalProcessing, e);
+	private void addLocalDeclarations(ISourceModule sourceModule, String start, int position) {
+		LuaSourceRoot luaSourceRoot = LuaASTModelUtils.getLuaSourceRoot(sourceModule);
+		if (luaSourceRoot != null) {
+			Collection<Item> localVars = LuaASTUtils.getLocalVars(luaSourceRoot, position, start);
+			for (Item var : localVars) {
+				createProposal(var.getName(), new FakeField(sourceModule, var.getName(), offset, var.getName().length(), Declaration.D_DECLARATOR
+						& Declaration.AccPrivate));
 			}
 		}
 	}
 
-	private void addModuleFields(final ISourceModule sourceModule, final List<String> ids) {
-		if (ids.size() != 2)
+	private void addFields(final ISourceModule initialSourceModule, final List<String> ids, int position) {
+		if (ids.size() < 2)
 			return;
 
-		// get identifier
-		final String identifierName = ids.get(0);
-		final ModuleDeclaration ast = SourceParserUtil.getModuleDeclaration(sourceModule);
-		final ModuleReference moduleref = LuaASTUtils.getModuleReferenceFromName(ast, identifierName);
-		if (moduleref == null)
+		// get the closest definition with the name of the first element of ids
+		// we support only Identifier root for now.
+		final String rootIdentifierName = ids.get(0);
+		final LuaSourceRoot luaSourceRoot = LuaASTModelUtils.getLuaSourceRoot(initialSourceModule);
+		final Item rootItem = LuaASTUtils.getClosestItem(luaSourceRoot, rootIdentifierName, position);
+		if (rootItem == null)
 			return;
 
-		String moduleNameReference = moduleref.getModuleNameReference();
-		ISourceModule referencedModule = LuaUtils.getSourceModule(moduleNameReference, sourceModule.getScriptProject());
-		if (referencedModule == null)
+		// resolve Item Type
+		TypeResolution typeResolution = LuaASTUtils.resolveType(initialSourceModule, rootItem.getType());
+		if (typeResolution == null || !(typeResolution.getTypeDef() instanceof RecordTypeDef))
 			return;
 
+		// found type of the last bigger complete index
+		// (e.g. for identifier.field1.field2.f, get the type of identifier.field1.field2)
+		RecordTypeDef currentRecordTypeDef = (RecordTypeDef) typeResolution.getTypeDef();
+		ISourceModule currentSourceModule = typeResolution.getModule();
+		for (int i = 1; i < ids.size() - 1; i++) {
+			// check if the current type
+			String fieldname = ids.get(i);
+			Item item = currentRecordTypeDef.getFields().get(fieldname);
+
+			// we could resolve the type of this field we stop the research
+			if (item == null)
+				return;
+
+			// resolve the type
+			typeResolution = LuaASTUtils.resolveType(initialSourceModule, rootItem.getType());
+			// we are interested only by record type
+			if (typeResolution == null || !(typeResolution.getTypeDef() instanceof RecordTypeDef))
+				return;
+
+			currentRecordTypeDef = (RecordTypeDef) typeResolution.getTypeDef();
+			currentSourceModule = typeResolution.getModule();
+		}
+
+		// get all the field of the complete index
 		try {
-			IModelElement[] moduleFields = LuaASTUtils.getModuleFields((ISourceModule) referencedModule);
+			IType iType = LuaASTModelUtils.getIType(currentSourceModule, currentRecordTypeDef);
+			IModelElement[] moduleFields = iType.getFields();
 			// get field name
 			final String fieldName = ids.get(1);
 			// Update replacement position as well just insert field name without module reference name

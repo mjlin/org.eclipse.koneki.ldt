@@ -10,8 +10,11 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.parser.api.external;
 
+import java.util.List;
+
 import org.eclipse.dltk.ast.ASTVisitor;
 import org.eclipse.koneki.ldt.internal.parser.IDocumentationHolder;
+import org.eclipse.koneki.ldt.parser.ast.Identifier;
 
 /**
  * An item is an element which references a type.<br/>
@@ -21,6 +24,7 @@ public class Item extends LuaASTNode implements IDocumentationHolder {
 	private String name;
 	private String documentation;
 	private TypeRef type;
+	private List<Identifier> occurences;
 
 	public String getName() {
 		return name;

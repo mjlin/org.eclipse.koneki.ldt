@@ -31,7 +31,9 @@ import org.eclipse.dltk.compiler.problem.DefaultProblemIdentifier;
 import org.eclipse.dltk.compiler.problem.IProblemIdentifier;
 import org.eclipse.dltk.compiler.problem.ProblemSeverity;
 import org.eclipse.dltk.utils.CorePrinter;
+import org.eclipse.koneki.ldt.parser.api.external.Item;
 import org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI;
+import org.eclipse.koneki.ldt.parser.api.external.PrimitiveTypeRef;
 import org.eclipse.koneki.ldt.parser.ast.declarations.DeclarationsContainer;
 
 /**
@@ -46,8 +48,8 @@ public class LuaSourceRoot extends ModuleDeclaration {
 	private static class LuaFile extends ASTNode {
 
 		// this is the API of the current Lua file.
-		private LuaFileAPI fileapi;
-		private ASTNode localAST;
+		private LuaFileAPI fileAPI;
+		private LuaInternalContent internalContent;
 
 		public LuaFile() {
 			// fileapi = new LuaFileAPI();
@@ -85,14 +87,50 @@ public class LuaSourceRoot extends ModuleDeclaration {
 			// ReturnValues returnValues = new ReturnValues();
 			// returnValues.getTypes().add(new InternalTypeRef(recordTypeDef.getName()));
 			// fileapi.getReturns().add(returnValues);
+
+			internalContent = new LuaInternalContent();
+
+			// root
+			Block block = new Block();
+			block.setStart(0);
+			block.setEnd(100);
+			internalContent.setContent(block);
+
+			Item var = new Item();
+			var.setName("var");
+			var.setType(new PrimitiveTypeRef("string"));
+			LocalVar localVar = new LocalVar(var, 2, 10);
+			block.getLocalVars().add(localVar);
+
+			Identifier identifier = new Identifier(var);
+			identifier.setStart(6);
+			identifier.setEnd(9);
+			block.getContent().add(identifier);
+
+			Block innerBlock = new Block();
+			innerBlock.setStart(24);
+			innerBlock.setEnd(55);
+			block.getContent().add(innerBlock);
+
+			Item var2 = new Item();
+			var2.setName("var2");
+			var2.setType(new PrimitiveTypeRef("string"));
+			LocalVar localVar2 = new LocalVar(var2, 2, 10);
+			innerBlock.getLocalVars().add(localVar2);
+
+			Identifier identifier2 = new Identifier(var2);
+			identifier2.setStart(29);
+			identifier2.setEnd(32);
+			innerBlock.getContent().add(identifier2);
+
 		}
 
 		public void setApi(final LuaFileAPI file) {
-			fileapi = file;
+			fileAPI = file;
 		}
 
 		public LuaFileAPI getApi() {
-			return fileapi;
+			return fileAPI;
 		}
 
 		/**
@@ -102,7 +140,7 @@ public class LuaSourceRoot extends ModuleDeclaration {
 		public void traverse(ASTVisitor visitor) throws Exception {
 			if (visitor.visit(this)) {
 				if (getApi() != null) {
-					fileapi.traverse(visitor);
+					fileAPI.traverse(visitor);
 				}
 				visitor.endvisit(this);
 			}
@@ -120,11 +158,11 @@ public class LuaSourceRoot extends ModuleDeclaration {
 	}
 
 	public LuaFileAPI getFileapi() {
-		return luaFile.fileapi;
+		return luaFile.fileAPI;
 	}
 
-	public ASTNode getLocalAST() {
-		return luaFile.localAST;
+	public LuaInternalContent getInternalContent() {
+		return luaFile.internalContent;
 	}
 
 	/**

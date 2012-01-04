@@ -104,4 +104,14 @@ public final class LuaASTModelUtils {
 		}
 		return null;
 	}
+
+	/**
+	 * Get IType from RecordTypeDef <br/>
+	 * 
+	 * AST => DLTK Model
+	 */
+	public static IType getIType(ISourceModule module, RecordTypeDef recordtypeDef) {
+		IType type = module.getType(recordtypeDef.getName());
+		return type;
+	}
 }
