@@ -10,14 +10,14 @@
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
 local M = {}
-function M.newinternalcontent(block, vars)
+function M._internalcontent(block, vars)
 	return {
 		content = block,
 		unknownglobalvars = vars,
 		tag = "MInternalContent"
 	}
 end
-function M.newblock(block, vars, range)
+function M._block(block, vars, range)
 	return {
 		content = block,
 		localvars = vars,
@@ -25,14 +25,14 @@ function M.newblock(block, vars, range)
 		tag = "MBlock"
 	}
 end
-function M.newidentifier(item, range)
+function M._identifier(item, range)
 	return {
 		definition= item,
 		sourcerange = range,
 		tag = "MIdentifier"
 	}
 end
-function M.newindex(key, value, range)
+function M._index(key, value, range)
 	return {
 		left= key,
 		right= value,
@@ -40,21 +40,21 @@ function M.newindex(key, value, range)
 		tag = "MIndex"
 	}
 end
-function M.newsourcerange(min, max)
+function M._sourcerange(min, max)
 	return {
 		min=min,
 		max=max,
 		tag="MSourceRange"
 	}
 end
-function M.newcall(funct, range)
+function M._call(funct, range)
 	return {
 		func = funct,
 		sourcerange = range,
 		tag = "MCall"
 	}
 end
-function M.newinvoke(name, expr, range)
+function M._invoke(name, expr, range)
 	return {
 		functionname = name,
 		record = expr,
