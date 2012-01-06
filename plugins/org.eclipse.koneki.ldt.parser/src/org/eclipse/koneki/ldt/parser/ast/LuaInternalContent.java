@@ -25,7 +25,7 @@ public class LuaInternalContent extends LuaASTNode {
 		return content;
 	}
 
-	public void setContent(Block content) {
+	public void setContent(final Block content) {
 		this.content = content;
 	}
 
@@ -33,8 +33,12 @@ public class LuaInternalContent extends LuaASTNode {
 		return unknownglovalvars;
 	}
 
+	public void addUnknownglobalvar(final Item item) {
+		unknownglovalvars.add(item);
+	}
+
 	@Override
-	public void traverse(ASTVisitor visitor) throws Exception {
+	public void traverse(final ASTVisitor visitor) throws Exception {
 		if (visitor.visit(this)) {
 			// traverse block
 			content.traverse(visitor);

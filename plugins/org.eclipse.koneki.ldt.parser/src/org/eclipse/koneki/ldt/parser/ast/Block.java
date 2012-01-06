@@ -29,6 +29,14 @@ public class Block extends LuaASTNode {
 		return content;
 	}
 
+	public void addLocalVar(final LocalVar var) {
+		localVars.add(var);
+	}
+
+	public void addContent(final LuaASTNode node) {
+		content.add(node);
+	}
+
 	@Override
 	public void traverse(ASTVisitor visitor) throws Exception {
 		if (visitor.visit(this)) {

@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
---  Copyright (c) 2011-2012 Sierra Wireless.
+--  Copyright (c) 2012 Sierra Wireless.
 --  All rights reserved. This program and the accompanying materials
 --  are made available under the terms of the Eclipse Public License v1.0
 --  which accompanies this distribution, and is available at
@@ -17,9 +17,9 @@ function M._internalcontent(block, vars)
 		tag = "MInternalContent"
 	}
 end
-function M._block(block, vars, range)
+function M._block(chunk, vars, range)
 	return {
-		content = block,
+		content = chunk,
 		localvars = vars,
 		sourcerange = range,
 		tag = "MBlock"

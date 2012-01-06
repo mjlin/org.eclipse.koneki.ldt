@@ -14,7 +14,23 @@ import org.eclipse.dltk.ast.ASTVisitor;
 
 public class Index extends LuaExpression {
 	private LuaExpression left;
-	private String fieldname;
+	private String right;
+
+	public String getRight() {
+		return right;
+	}
+
+	public void setRight(final String right) {
+		this.right = right;
+	}
+
+	public LuaExpression getLeft() {
+		return left;
+	}
+
+	public void setLeft(final LuaExpression left) {
+		this.left = left;
+	}
 
 	@Override
 	public void traverse(ASTVisitor visitor) throws Exception {

@@ -16,6 +16,22 @@ public class Invoke extends LuaExpression {
 	private LuaExpression record;
 	private String functionName;
 
+	public LuaExpression getRecord() {
+		return record;
+	}
+
+	public void setRecord(final LuaExpression record) {
+		this.record = record;
+	}
+
+	public String getFunctionName() {
+		return functionName;
+	}
+
+	public void setFunctionName(final String functionName) {
+		this.functionName = functionName;
+	}
+
 	@Override
 	public void traverse(ASTVisitor visitor) throws Exception {
 		// TODO Auto-generated method stub

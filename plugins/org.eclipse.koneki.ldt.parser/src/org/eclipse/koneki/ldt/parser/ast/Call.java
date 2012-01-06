@@ -15,6 +15,14 @@ import org.eclipse.dltk.ast.ASTVisitor;
 public class Call extends LuaExpression {
 	private LuaExpression function;
 
+	public LuaExpression getFunction() {
+		return function;
+	}
+
+	public void setFunction(final LuaExpression function) {
+		this.function = function;
+	}
+
 	@Override
 	public void traverse(ASTVisitor visitor) throws Exception {
 		// TODO Auto-generated method stub
