@@ -249,7 +249,7 @@ function M.has_tag(...)
     else
         local tags = { }
         for _, tag in ipairs(args) do tags[tag]=true end
-        return function(self, node)
+        return function(node)
             local node_tag = node.tag
             return node_tag and tags[node_tag]
         end

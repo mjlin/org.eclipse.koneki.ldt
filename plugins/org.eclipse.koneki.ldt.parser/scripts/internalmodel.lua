@@ -10,25 +10,25 @@
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
 local M = {}
-function M._internalcontent(block, vars)
+function M._internalcontent()
 	return {
-		content = block,
-		unknownglobalvars = vars,
+		content = nil,
+		unknownglobalvars = {},
 		tag = "MInternalContent"
 	}
 end
-function M._block(chunk, vars, range)
+function M._block()
 	return {
-		content = chunk,
-		localvars = vars,
-		sourcerange = range,
+		content = {},
+		localvars = {},
+		sourcerange = {min=0,max=0},
 		tag = "MBlock"
 	}
 end
 function M._identifier(item, range)
 	return {
 		definition= item,
-		sourcerange = range,
+		sourcerange = {min=0,max=0},
 		tag = "MIdentifier"
 	}
 end
@@ -36,21 +36,21 @@ function M._index(key, value, range)
 	return {
 		left= key,
 		right= value,
-		sourcerange = range,
+		sourcerange = {min=0,max=0},
 		tag = "MIndex"
 	}
 end
-function M._sourcerange(min, max)
-	return {
-		min=min,
-		max=max,
-		tag="MSourceRange"
-	}
-end
+--function M._sourcerange(min, max)
+--	return {
+--		min=min,
+--		max=max,
+--		tag="MSourceRange"
+--	}
+--end
 function M._call(funct, range)
 	return {
 		func = funct,
-		sourcerange = range,
+		sourcerange = {min=0,max=0},
 		tag = "MCall"
 	}
 end
@@ -58,7 +58,7 @@ function M._invoke(name, expr, range)
 	return {
 		functionname = name,
 		record = expr,
-		sourcerange = range,
+		sourcerange = {min=0,max=0},
 		tag = "MInvoke"
 	}
 end

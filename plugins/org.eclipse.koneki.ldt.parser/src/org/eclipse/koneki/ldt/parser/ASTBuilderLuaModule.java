@@ -31,8 +31,8 @@ public class ASTBuilderLuaModule extends AbstractMetaLuaModule {
 	private LuaState lua = null;
 
 	public synchronized LuaSourceRoot buildAST(final String string) {
-		if (lua == null)
-			lua = loadLuaModule();
+		// if (lua == null)
+		lua = loadLuaModule();
 
 		pushLuaModule(lua);
 		lua.getField(-1, "ast_builder"); //$NON-NLS-1$
@@ -41,7 +41,7 @@ public class ASTBuilderLuaModule extends AbstractMetaLuaModule {
 		LuaSourceRoot luaSourceRoot = lua.checkJavaObject(-1, LuaSourceRoot.class);
 		lua.pop(2);
 
-		// lua.close();
+		lua.close();
 
 		return luaSourceRoot;
 	}
@@ -72,6 +72,9 @@ public class ASTBuilderLuaModule extends AbstractMetaLuaModule {
 		ArrayList<String> sourcepaths = new ArrayList<String>();
 		sourcepaths.add(BUILDER_SCRIPT);
 		sourcepaths.add(MARKER_SCRIPT);
+		sourcepaths.add("internalmodel_builder.mlua");
+		sourcepaths.add("metalua/treequery.mlua");
+		sourcepaths.add("metalua/treequery/walk.mlua");
 		return sourcepaths;
 	}
 

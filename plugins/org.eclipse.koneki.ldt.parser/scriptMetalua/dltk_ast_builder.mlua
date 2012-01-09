@@ -573,6 +573,73 @@ local function createAPI(ast)
 	return _file
 end
 ---
+-- Transpose Lua documentation model to Java
+--
+-- @param model Instance of Lua model
+-- @result org.eclipse.koneki.ldt.parser.api.external#LuaFileAPI Java object
+local function createJAVAModel(model)
+	--
+	-- Fill file object
+	--
+	local file = fileapi:new()
+	file:setDocumentation(model.description)
+	-- Adding gloval variables
+	for name, global in pairs(model.globalvars) do
+		-- Fill Java item
+		file:addGlobalVar(name, createitem(global))
+	end
+	-- Adding returned types
+	for _, ret in ipairs(model.returns) do
+		local values = retvalues:new()
+		for _, type in ipairs(ret.types) do
+			values:addType(createtyperef(type))
+		end
+		file:addReturns(values)
+	end
+	-- Adding types defined in files
+	for name, def in pairs(model.types) do
+		file:addType(name, createtypedef(name ,def))
+	end
+	return file
+end
+
+
+
+
+
+
+
+local function createInternalModell(model)
+   --
+   -- Fill file object
+   --
+   local file = fileapi:new()
+   file:setDocumentation(model.description)
+   -- Adding gloval variables
+   for name, global in pairs(model.globalvars) do
+      -- Fill Java item
+      file:addGlobalVar(name, createitem(global))
+   end
+   -- Adding returned types
+   for _, ret in ipairs(model.returns) do
+      local values = retvalues:new()
+      for _, type in ipairs(ret.types) do
+         values:addType(createtyperef(type))
+      end
+      file:addReturns(values)
+   end
+   -- Adding types defined in files
+   for name, def in pairs(model.types) do
+      file:addType(name, createtypedef(name ,def))
+   end
+   return file
+end
+
+
+
+
+
+---
 -- Build a Metalua AST from source code
 --
 -- @param	source Code to parse
@@ -614,6 +681,17 @@ module.ast_builder = function(source)
 		return root
 	end
 	
+	-- create internal model
+	local internalmodelbuilder = require "internalmodel_builder"
+	local _internalcontent = internalmodelbuilder.createInternalContent(ast) 
+	table.print(_internalcontent,1)
+	io.flush()
+	
+	-- Converting to java
+   local internaljavamodel = require 'internaljavamodel'
+   local javao = internaljavamodel._internalcontent(_internalcontent)
+	
+	--
 	local externaljava = require 'externaljavaapi'
 	local _file = createAPI(ast) 
 	local file = externaljava.createJAVAModel(_file)
@@ -637,26 +715,28 @@ module.ast_builder = function(source)
 --	local block = internalmodel._block(chunk, vars, range)
 --	local vars  = { externalapi._item( "testitem" ) }
 --	local content = internalmodel._internalcontent(block, vars)
---	-- Converting to java
---	local internaljavamodel = require 'internaljavamodel'
---	local javao = internaljavamodel._internalcontent(content)
 
-	-- Mark intersting nodes such as declaration
-	ast = mark.parent( ast )
-	ast = mark.declaration( ast )
-	ast = mark.tablefields( ast )
-	ast = mark.module( ast )
+   
 	
-	-- Walk through AST
-	walk.block(visitor, ast)
-	-- Backpatch partial nodes
-	backpatch(root,ast)
-	-- Link nodes to their parents
-	walk.block(parenthood, ast)
-	-- Achieve DLTK Java Objects AST
-	DLTK.addStatementToModuleDeclaration(root, object[ast])
+	-- Mark intersting nodes such as declaration
+--	ast = mark.parent( ast )
+--	ast = mark.declaration( ast )
+--	ast = mark.tablefields( ast )
+--	ast = mark.module( ast )
+--	
+--	-- Walk through AST
+--	walk.block(visitor, ast)
+--	-- Backpatch partial nodes
+--	backpatch(root,ast)
+--	-- Link nodes to their parents
+--	walk.block(parenthood, ast)
+--	-- Achieve DLTK Java Objects AST
+--	DLTK.addStatementToModuleDeclaration(root, object[ast])
+
+
 	-- Append information from documentation
 	root:setDocumentationInformation(file)
+	root:setInternalContent(javao)
 	-- clear cache
 	module = {}
 	hash = {}

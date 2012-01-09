@@ -26,7 +26,7 @@ function J._block(content)
 	chunk:setEnd(content.sourcerange.max)
 	for _, vardef in pairs(content.localvars) do
 		-- Create Java item
-		local item = externalapi.createitem(vardef.item)
+		local item = externalapi.createitem(vardef.item)		
 		-- Append Java local variable definition
 		local var  = localvar:new(item, vardef.scope.min, vardef.scope.max)
 		chunk:addLocalVar(var)
@@ -55,7 +55,10 @@ function J._expression(expr)
 		return J._call(expr)
 	elseif tag == "MInvoke" then
 		return J._invoke(expr)
+   elseif tag == "MBlock" then
+      return J._block(expr)
 	end
+	return nil
 end
 function J._identifier(item)
 	local javaitem = externalapi.createitem(item)
@@ -68,9 +71,9 @@ function J._index(x)
 	local idx = index:new()
 	idx:setStart(x.sourcerange.min)
 	idx:setEnd  (x.sourcerange.max)
-	idx.setLeft (J._expression(x.left))
+	idx:setLeft (J._expression(x.left))
 	idx:setRight(x.right)
-	return id
+	return idx
 end
 function J._internalcontent(icontent)
 	local content = internalcontent:new()
