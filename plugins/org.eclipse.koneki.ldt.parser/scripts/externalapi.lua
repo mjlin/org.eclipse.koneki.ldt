@@ -60,7 +60,8 @@ function M._item(name)
    tag = "item",
    name = name,
    description =  description or "",
-   type = nil
+   type = nil,
+   occurences={}
    }
 end
 
@@ -78,10 +79,26 @@ function M._internaltyperef(typename)
    }
 end
 
-function M._primitivetypref(typename)
+function M._primitivetyperef(typename)
    return {
    tag = "primitivetyperef",
    typename =  typename
+   }
+end
+
+function M._moduletyperef(modulename,returnposition)
+   return {
+   tag = "moduletyperef",
+   modulename =  modulename,
+   returnposition = returnposition 
+   }
+end
+
+function M._exprtyperef(expression,returnposition)
+   return {
+   tag = "exprtyperef",
+   expression =  expression,
+   returnposition = returnposition 
    }
 end
 
@@ -111,7 +128,7 @@ function M.createtyperef(td_typeref)
    else
       if primitivetypes[td_typeref.type] then
          -- manage primitive type
-         _typeref = M._primitivetypref()
+         _typeref = M._primitivetyperef()
          _typeref.typename = td_typeref.type
       else
          -- manage internal type
@@ -128,14 +145,17 @@ function M.createreturn(td_return)
    _return.description = td_return.description
 
    -- manage typeref
+   table.print(td_return.types,1)
    if td_return.types then
       for _, td_typeref in ipairs(td_return.types) do
-         local _typref = M.createtyperef(td_typeref)
+         table.print(td_typeref,1)
+         local _typeref = M.createtyperef(td_typeref)
          if _typeref then
             table.insert(_return.types,_typeref)
          end
       end
    end
+   table.print(_return)
    return _return
 end
 

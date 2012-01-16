@@ -8,12 +8,17 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-package org.eclipse.koneki.ldt.parser.ast;
-
-import org.eclipse.koneki.ldt.parser.api.external.TypeRef;
+package org.eclipse.koneki.ldt.parser.api.external;
 
 public class ModuleTypeRef extends TypeRef {
 	private String moduleName;
+
+	public ModuleTypeRef(String moduleName, int returnPosition) {
+		super();
+		this.moduleName = moduleName;
+		this.returnPosition = returnPosition;
+	}
+
 	private int returnPosition;
 
 	public String getModuleName() {

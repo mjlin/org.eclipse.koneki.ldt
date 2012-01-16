@@ -8,11 +8,31 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-package org.eclipse.koneki.ldt.parser.ast;
+package org.eclipse.koneki.ldt.parser.api.external;
 
-import org.eclipse.koneki.ldt.parser.api.external.TypeRef;
+import org.eclipse.koneki.ldt.parser.ast.LuaExpression;
 
 public class ExprTypeRef extends TypeRef {
+
 	private LuaExpression expression;
 	private int returnPosition;
+
+	public ExprTypeRef(int returnPosition) {
+		super();
+		this.expression = null;
+		this.returnPosition = returnPosition;
+	}
+
+	public LuaExpression getExpression() {
+		return expression;
+	}
+
+	public int getReturnPosition() {
+		return returnPosition;
+	}
+
+	public void setExpression(LuaExpression expression) {
+		this.expression = expression;
+	}
+
 }

@@ -29,19 +29,26 @@ import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.dltk.core.IType;
 import org.eclipse.dltk.core.ModelException;
 import org.eclipse.koneki.ldt.core.LuaUtils;
+import org.eclipse.koneki.ldt.parser.api.external.ExprTypeRef;
 import org.eclipse.koneki.ldt.parser.api.external.ExternalTypeRef;
+import org.eclipse.koneki.ldt.parser.api.external.FunctionTypeDef;
 import org.eclipse.koneki.ldt.parser.api.external.InternalTypeRef;
 import org.eclipse.koneki.ldt.parser.api.external.Item;
 import org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI;
+import org.eclipse.koneki.ldt.parser.api.external.ModuleTypeRef;
 import org.eclipse.koneki.ldt.parser.api.external.PrimitiveTypeRef;
+import org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef;
 import org.eclipse.koneki.ldt.parser.api.external.ReturnValues;
 import org.eclipse.koneki.ldt.parser.api.external.TypeDef;
 import org.eclipse.koneki.ldt.parser.api.external.TypeRef;
 import org.eclipse.koneki.ldt.parser.ast.Block;
-import org.eclipse.koneki.ldt.parser.ast.ExprTypeRef;
+import org.eclipse.koneki.ldt.parser.ast.Call;
+import org.eclipse.koneki.ldt.parser.ast.Identifier;
+import org.eclipse.koneki.ldt.parser.ast.Index;
+import org.eclipse.koneki.ldt.parser.ast.Invoke;
 import org.eclipse.koneki.ldt.parser.ast.LocalVar;
+import org.eclipse.koneki.ldt.parser.ast.LuaExpression;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
-import org.eclipse.koneki.ldt.parser.ast.ModuleTypeRef;
 import org.eclipse.koneki.ldt.parser.ast.declarations.ModuleReference;
 import org.eclipse.koneki.ldt.parser.ast.visitor.ModuleReferenceVisitor;
 import org.eclipse.koneki.ldt.parser.ast.visitor.ScopeVisitor;
@@ -126,7 +133,7 @@ public final class LuaASTUtils {
 		}
 
 		if (typeRef instanceof ExprTypeRef) {
-			return resolveType(sourceModule, (ModuleTypeRef) typeRef);
+			return resolveType(sourceModule, (ExprTypeRef) typeRef);
 		}
 
 		return null;
@@ -161,6 +168,76 @@ public final class LuaASTUtils {
 				if (returnValues.getTypes().size() > moduleTypeRef.getReturnPosition() - 1) {
 					TypeRef typeRef = returnValues.getTypes().get(moduleTypeRef.getReturnPosition() - 1);
 					return resolveType(referencedSourceModule, typeRef);
+				}
+			}
+		}
+		return null;
+	}
+
+	public static TypeResolution resolveType(ISourceModule sourceModule, ExprTypeRef exprTypeRef) {
+		LuaExpression expression = exprTypeRef.getExpression();
+		if (expression == null)
+			return null;
+
+		return resolveType(sourceModule, expression, exprTypeRef.getReturnPosition());
+	}
+
+	public static TypeResolution resolveType(ISourceModule sourceModule, LuaExpression expr) {
+		return resolveType(sourceModule, expr, 1);
+	}
+
+	public static TypeResolution resolveType(ISourceModule sourceModule, LuaExpression expr, int returnposition) {
+		if (expr instanceof Identifier) {
+			Item definition = ((Identifier) expr).getDefinition();
+			// resolve the type of the definition
+			if (definition == null || definition.getType() == null)
+				return null;
+			return resolveType(sourceModule, definition.getType());
+		} else if (expr instanceof Index) {
+			Index index = ((Index) expr);
+			// resolve left part of the index
+			LuaExpression left = index.getLeft();
+			TypeResolution resolvedLeftType = resolveType(sourceModule, left);
+			if (resolvedLeftType != null && resolvedLeftType.getTypeDef() instanceof RecordTypeDef) {
+				RecordTypeDef recordtype = (RecordTypeDef) resolvedLeftType.getTypeDef();
+				Item item = recordtype.getFields().get(index.getRight());
+				if (item != null && item.getType() != null) {
+					return resolveType(resolvedLeftType.getModule(), item.getType());
+				}
+			}
+			return null;
+		} else if (expr instanceof Call) {
+			Call call = ((Call) expr);
+			// resolve the function which is called
+			TypeResolution resolvedFunctionType = resolveType(sourceModule, call.getFunction());
+			if (resolvedFunctionType != null && resolvedFunctionType.getTypeDef() instanceof FunctionTypeDef) {
+				FunctionTypeDef functiontype = (FunctionTypeDef) resolvedFunctionType.getTypeDef();
+				if (functiontype.getReturns().size() > 0) {
+					List<TypeRef> types = functiontype.getReturns().get(0).getTypes();
+					if (types.size() >= returnposition) {
+						return resolveType(resolvedFunctionType.getModule(), types.get(returnposition - 1));
+					}
+				}
+			}
+			return null;
+		} else if (expr instanceof Invoke) {
+			Invoke invoke = ((Invoke) expr);
+			// resolve the function which is called
+			TypeResolution resolvedRecordType = resolveType(sourceModule, invoke.getRecord());
+			if (resolvedRecordType != null && resolvedRecordType.getTypeDef() instanceof RecordTypeDef) {
+				RecordTypeDef recordtype = (RecordTypeDef) resolvedRecordType.getTypeDef();
+				Item item = recordtype.getFields().get(invoke.getFunctionName());
+				if (item != null && item.getType() != null) {
+					TypeResolution resolvedFunctionType = resolveType(resolvedRecordType.getModule(), item.getType());
+					if (resolvedFunctionType != null && resolvedFunctionType.getTypeDef() instanceof FunctionTypeDef) {
+						FunctionTypeDef functiontype = (FunctionTypeDef) resolvedFunctionType.getTypeDef();
+						if (functiontype.getReturns().size() > 0) {
+							List<TypeRef> types = functiontype.getReturns().get(0).getTypes();
+							if (types.size() >= returnposition) {
+								return resolveType(resolvedFunctionType.getModule(), types.get(returnposition - 1));
+							}
+						}
+					}
 				}
 			}
 		}

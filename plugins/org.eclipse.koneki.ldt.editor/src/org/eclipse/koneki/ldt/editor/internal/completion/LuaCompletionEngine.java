@@ -69,13 +69,14 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 			this.offset = actualCompletionPosition - start.length();
 			this.requestor.beginReporting();
 
-			if (start.contains(".")) {
+			if (start.contains(".") || start.contains(":")) { //$NON-NLS-1$//$NON-NLS-2$
 				// Select between module fields if completion is asked after a module reference
-				final List<String> ids = getExpressionIdentifiers(start);
-				addFields(sourceModule, ids, position);
+				final List<String> ids = new ArrayList<String>();
+				Character lastOperator = getExpressionIdentifiers(start, ids);
+				addFields(sourceModule, ids, this.offset, lastOperator);
 			} else {
 				// Search local declaration in AST
-				addLocalDeclarations(sourceModule, start, position);
+				addLocalDeclarations(sourceModule, start, this.offset);
 
 				// Search global declaration in DLTK model
 				addGlobalDeclarations(sourceModule, start);
@@ -158,7 +159,7 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 		}
 	}
 
-	private void addFields(final ISourceModule initialSourceModule, final List<String> ids, int position) {
+	private void addFields(final ISourceModule initialSourceModule, final List<String> ids, int position, Character lastOperator) {
 		if (ids.size() < 2)
 			return;
 
@@ -189,7 +190,7 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 				return;
 
 			// resolve the type
-			typeResolution = LuaASTUtils.resolveType(initialSourceModule, rootItem.getType());
+			typeResolution = LuaASTUtils.resolveType(currentSourceModule, item.getType());
 			// we are interested only by record type
 			if (typeResolution == null || !(typeResolution.getTypeDef() instanceof RecordTypeDef))
 				return;
@@ -201,9 +202,9 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 		// get all the field of the complete index
 		try {
 			IType iType = LuaASTModelUtils.getIType(currentSourceModule, currentRecordTypeDef);
-			IModelElement[] moduleFields = iType.getFields();
+			IModelElement[] moduleFields = iType.getChildren();
 			// get field name
-			final String fieldName = ids.get(1);
+			final String fieldName = ids.get(ids.size() - 1);
 			// Update replacement position as well just insert field name without module reference name
 			this.offset = actualCompletionPosition - fieldName.length();
 			// search field
@@ -212,7 +213,7 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 					final boolean goodStart = field.getElementName().toLowerCase().startsWith(fieldName.toLowerCase());
 					final boolean nostart = fieldName.isEmpty();
 					if (goodStart || nostart) {
-						createProposal(field.getElementName(), field);
+						createProposal(field.getElementName(), field, lastOperator);
 					}
 				}
 			}
@@ -256,7 +257,7 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 		this.requestor.accept(proposal);
 	}
 
-	private void createProposal(String name, IModelElement element) {
+	private void createProposal(String name, IModelElement element, Character lastOperator) {
 		CompletionProposal proposal = null;
 		int relevance = 2;
 		try {
@@ -267,11 +268,24 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 			} else {
 				// Only collect global proposals
 				IMember member = (IMember) element;
+				if (lastOperator == ':' && member.getElementType() != IModelElement.METHOD)
+					return;
+
 				switch (member.getElementType()) {
 				case IModelElement.METHOD:
 					proposal = this.createProposal(CompletionProposal.METHOD_REF, this.actualCompletionPosition);
 					IMethod method = (IMethod) member;
-					proposal.setParameterNames(method.getParameterNames());
+					if (lastOperator == ':') {
+						if (method.getParameterNames().length == 0)
+							return;
+
+						String[] parameterNames = method.getParameterNames();
+						String[] parameterNamesWithoutFirstOne = Arrays.copyOfRange(parameterNames, 1, parameterNames.length);
+						proposal.setParameterNames(parameterNamesWithoutFirstOne);
+					} else {
+						proposal.setParameterNames(method.getParameterNames());
+					}
+
 					break;
 				case IModelElement.FIELD:
 					proposal = this.createProposal(CompletionProposal.FIELD_REF, this.actualCompletionPosition);
@@ -297,6 +311,10 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 		}
 	}
 
+	private void createProposal(String name, IModelElement element) {
+		createProposal(name, element, '\0');
+	}
+
 	// I'm unable to handle spaces in composed identifiers like 'someTable . someField'
 	private String getWordStarting(final String content, final int position) {
 		// manage inconsistent parameters
@@ -310,14 +328,16 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 		do {
 			currentPosition--;
 			final char currentChar = content.charAt(currentPosition);
-			final boolean isOperator = currentChar == '.'; // || currentChar == ':';
+			final boolean isInvokeChar = currentChar == ':';
+			final boolean isIndexChar = currentChar == '.';
 			final boolean isIdentifierPart = Character.isLetterOrDigit(currentChar) || currentChar == '_';
 
-			// we stop if we found a character which is neiter a identifier part or an index operator
-			if (isOperator || isIdentifierPart)
+			// we stop if we found a character which is neiter a identifier part or an operator
+			if (isIdentifierPart || isIndexChar || isInvokeChar)
 				lastValidPosition = currentPosition;
 			else
 				finish = true;
+
 		} while (!finish);
 
 		if (lastValidPosition >= position)
@@ -325,10 +345,39 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 		return content.substring(lastValidPosition, position);
 	}
 
-	private List<String> getExpressionIdentifiers(final String composedId) {
-		List<String> result = new ArrayList<String>(Arrays.asList(composedId.split("\\."))); //$NON-NLS-1$
-		if (composedId.endsWith(".")) //$NON-NLS-1$
-			result.add(""); //$NON-NLS-1$
-		return result;
+	private Character getExpressionIdentifiers(final String composedId, List<String> result) {
+		StringBuffer stringToParse = new StringBuffer(composedId);
+		StringBuffer nextId = new StringBuffer();
+		Character lastOperator = '\0'; // we support only if invoke is the last operator
+
+		for (int i = 0; i < stringToParse.length(); i++) {
+			Character character = stringToParse.charAt(i);
+
+			if (!(character == '.') && !(character == ':')) {
+				// if it's not an operator then append the next char
+				nextId.append(character);
+			} else {
+				// we have an operator
+
+				// don't allow 2 sucesssive operator
+				if (nextId.length() == 0)
+					return null;
+
+				// we support only if invoke is the last operator
+				if (lastOperator == ':' && character == ':')
+					return null;
+
+				// store value to next validation
+				lastOperator = character;
+
+				// store previous value
+				result.add(nextId.toString());
+				nextId = new StringBuffer();
+			}
+		}
+
+		result.add(nextId.toString());
+
+		return lastOperator;
 	}
 }

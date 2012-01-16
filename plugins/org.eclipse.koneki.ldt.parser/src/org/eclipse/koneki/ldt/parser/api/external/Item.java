@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.parser.api.external;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.dltk.ast.ASTVisitor;
@@ -24,7 +25,7 @@ public class Item extends LuaASTNode implements IDocumentationHolder {
 	private String name;
 	private String documentation;
 	private TypeRef type;
-	private List<Identifier> occurences;
+	private List<Identifier> occurences = new ArrayList<Identifier>();
 
 	public String getName() {
 		return name;
@@ -51,6 +52,11 @@ public class Item extends LuaASTNode implements IDocumentationHolder {
 		this.type = type;
 	}
 
+	public void addOccurence(Identifier identifier) {
+		occurences.add(identifier);
+		identifier.setDefinition(this);
+	}
+
 	/**
 	 * @see org.eclipse.dltk.ast.ASTNode#traverse(org.eclipse.dltk.ast.ASTVisitor)
 	 */
@@ -60,4 +66,5 @@ public class Item extends LuaASTNode implements IDocumentationHolder {
 			visitor.endvisit(this);
 		}
 	}
+
 }

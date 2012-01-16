@@ -17,13 +17,16 @@ public class Identifier extends LuaExpression {
 
 	private Item definition;
 
-	public Identifier(Item definition) {
+	public Identifier() {
 		super();
-		this.definition = definition;
 	}
 
 	public Item getDefinition() {
 		return definition;
+	}
+
+	public void setDefinition(Item definition) {
+		this.definition = definition;
 	}
 
 	@Override

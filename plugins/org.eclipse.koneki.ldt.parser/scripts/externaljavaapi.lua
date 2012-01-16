@@ -19,12 +19,22 @@ local etyperef    = java.require("org.eclipse.koneki.ldt.parser.api.external.Ext
 local ityperef    = java.require("org.eclipse.koneki.ldt.parser.api.external.InternalTypeRef")
 local ptyperef    = java.require("org.eclipse.koneki.ldt.parser.api.external.PrimitiveTypeRef")
 local fileapi     = java.require("org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI")
+local mtyperef    = java.require ("org.eclipse.koneki.ldt.parser.api.external.ModuleTypeRef")
+local etyperef    = java.require ("org.eclipse.koneki.ldt.parser.api.external.ExprTypeRef")
+
 function M.createtyperef (type)
 	if not type then return nil end
 	if type.tag == "externaltyperef" then
 		return etyperef:new(type.modulename, type.typename)
+	elseif type.tag == "internaltyperef" then
+      return ityperef:new(type.typename)
+   elseif type.tag == "moduletyperef" then
+      return mtyperef:new(type.modulename,type.returnposition)
+   elseif type.tag == "exprtyperef" then
+      return etyperef:new(type.returnposition)
+   else
+      return ptyperef:new(type.typename) 
 	end
-	return type.tag == "internaltyperef" and ityperef:new(type.typename) or ptyperef:new(type.typename)
 end
 function M.createitem(def)
 	local i = item:new()
@@ -54,9 +64,11 @@ function M.createtypedef(name, definition)
 			def:addParameter( parameter:new(param.name, M.createtyperef(param.type), param.description) )
 		end
 		-- Appending returned types
+		table.print(definition.returns)
 		for _, value in ipairs(definition.returns) do
 			local ret = retvalues:new()
-			for _, type in ipairs( value ) do
+			for _, type in ipairs( value.types ) do
+			   table.print(type)
 				ret:addType(M.createtyperef(type))
 			end
 			def:addReturn(ret)
