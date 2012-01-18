@@ -338,7 +338,8 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 			else
 				finish = true;
 
-		} while (!finish);
+			// if we are at the end of the file it's finish too
+		} while (!finish && currentPosition > 0);
 
 		if (lastValidPosition >= position)
 			return Util.EMPTY_STRING;

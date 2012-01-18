@@ -199,8 +199,6 @@ function M.build(source)
    -- create internal model
    local internalmodelbuilder = require "internalmodelbuilder"
    local _internalcontent = internalmodelbuilder.createInternalContent(ast)
-   table.print(_internalcontent)
-   io.flush()
    
    -- Converting internal model to java
    local javainternalmodelbuilder = require 'javainternalmodelbuilder'
