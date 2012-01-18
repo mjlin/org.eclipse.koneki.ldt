@@ -12,7 +12,7 @@
 local M = {}
 
 ----
--- EXTERNAL API MODEL
+-- API MODEL
 --
 function M._file()
    return {

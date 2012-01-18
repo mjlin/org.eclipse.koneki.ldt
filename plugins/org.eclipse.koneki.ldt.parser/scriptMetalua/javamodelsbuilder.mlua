@@ -1,0 +1,217 @@
+--------------------------------------------------------------------------------
+--  Copyright (c) 2011 Sierra Wireless.
+--  All rights reserved. This program and the accompanying materials
+--  are made available under the terms of the Eclipse Public License v1.0
+--  which accompanies this distribution, and is available at
+--  http://www.eclipse.org/legal/epl-v10.html
+--
+--  Contributors:
+--       Kevin KIN-FOO <kkinfoo@sierrawireless.com>
+--           - initial API and implementation and initial documentation
+--------------------------------------------------------------------------------
+require 'metalua.compiler'
+require 'metalua.walk'
+-{ extension 'match' }
+
+-- Just redefining classic print, as there is a flush problem calling it from Java
+local print = function (string) print(string) io.flush() end
+
+local M = {}
+
+
+local handledcomments={}
+local function createAPI(ast)
+   local ldd = require "ldd"
+   local externalapi = require "externalapi"
+   local _file = externalapi._file()
+
+   local function handlecomment(comment)
+      local parsedcomment = ldd.parse(comment[1])
+      if parsedcomment and parsedcomment.maintags then
+         maintags = parsedcomment.maintags[1]
+         -- manage file block
+         if maintags then
+            if maintags.tag == "TFile" then
+               -- manage descriptions
+               _file.shortdescription = parsedcomment.shortdescription
+               _file.description = parsedcomment.description
+
+               -- manage returns
+               if parsedcomment.returns then
+                  for _, td_return in ipairs(parsedcomment.returns) do
+                     local _return = externalapi.createreturn(td_return)
+                     table.insert(_file.returns,_return)
+                  end
+               end
+
+               -- manage recordtypedef block
+            elseif maintags.tag == "TRecordtype" then
+               if maintags.name then
+                  -- create record type if it doesn't exist
+                  local _recordtypedef = _file.types[maintags.name]
+                  if not _recordtypedef then
+                     _recordtypedef = externalapi._recordtypedef()
+                     _file.types[maintags.name] = _recordtypedef
+                  end
+
+                  -- manage description
+                  _recordtypedef.shortdescription = parsedcomment.shortdescription
+                  _recordtypedef.description = parsedcomment.description
+
+                  -- manage fields
+                  if parsedcomment.fields then
+                     for _, td_field in ipairs(parsedcomment.fields) do
+                        local _item = externalapi.createfield(td_field)
+                        if _item then _recordtypedef.fields[_item.name] = _item end
+                     end
+                  end
+
+               end
+            elseif maintags.tag  == "TFunction" then
+               if maintags.name then
+                  -- create item
+                  local _item = externalapi._item()
+                  _item.description = parsedcomment.description
+                  _item.name =  maintags.name
+
+                  -- create function type
+                  local _functiontypedef = externalapi._functiontypedef()
+                  _functiontypedef.shortdescription = parsedcomment.shortdescription
+                  _functiontypedef.description = parsedcomment.description
+
+                  -- manage params
+                  if parsedcomment.params then
+                     for _, td_param in ipairs(parsedcomment.params) do
+                        local _param = externalapi.createparam(td_param)
+                        table.insert(_functiontypedef.params,_param)
+                     end
+                  end
+
+                  -- manage returns
+                  if parsedcomment.returns then
+                     for _, td_return in ipairs(parsedcomment.returns) do
+                        local _return = externalapi.createreturn(td_return)
+                        table.insert(_functiontypedef.returns,_return)
+                     end
+                  end
+
+                  -- define type name
+                  local functioname = externalapi.generatefunctiontypename(_functiontypedef)
+                  _file.types[functioname]= _functiontypedef
+
+                  local _internaltyperef = externalapi._internaltyperef()
+                  _internaltyperef.typename = functioname
+                  _item.type=_internaltyperef
+
+                  if maintags.global then
+                     _file.globalvars[_item.name] = _item
+                  elseif maintags.typescope then
+                     local _recordtypedef = _file.types[maintags.typescope]
+                     if not _recordtypedef then
+                        _recordtypedef = externalapi._recordtypedef()
+                        _file.types[maintags.typescope] = _recordtypedef
+                     end
+                     _recordtypedef.fields[_item.name] = _item
+                  end
+               end
+            end
+         end
+      end
+   end
+
+   local function parsecomment(node, parent, ...)
+      -- check for comments before this node
+      if node.lineinfo.first.comments then
+         local comments = node.lineinfo.first.comments
+         -- check all comments
+         for _,comment in ipairs(comments) do
+            -- if not already handled
+            if not handledcomments[comment] then
+               handlecomment(comment)
+               handledcomments[comment]=true
+            end
+         end
+      end
+      -- check for comments after this node
+      if node.lineinfo.last.comments then
+         local comments = node.lineinfo.last.comments
+         -- check all comments
+         for _,comment in ipairs(comments) do
+            -- if not already handled
+            if not handledcomments[comment] then
+               handlecomment(comment)
+               handledcomments[comment]=true
+            end
+         end
+      end
+   end
+   local cfg = { expr={down=parsecomment}, stat={down=parsecomment}}
+   walk.block(cfg, ast)
+   return _file
+end
+
+---
+-- Build Java Model from source code
+--
+-- @param	source Code to parse
+-- @return	LuaSourceRoot, DLTK node, root of DLTK AST
+function M.build(source)
+
+   --  initialize
+   handledcomments={}
+
+   -- Build AST
+   require 'errnode'
+   local ast = getast( source )
+   local root = DLTK.LuaSourceRoot(#source, true)
+
+   -- Check if an error occurred
+   local aststatus, error = pcall(mlc.check_ast, ast)
+   -- Seeking for regular `Error node
+   if not aststatus then
+      -- Selecting `Error in AST
+      local Q = require 'metalua.treequery'
+      local errornode = Q(ast):filter('Error'):first()
+      -- Giving `Error information to Java AST
+      if errornode and errornode.lineinfo then
+         local line, column = errornode.lineinfo.first.line or 1, errornode.lineinfo.first.column or 1
+         local offset = errornode.lineinfo.first.offset or 1
+         DLTK.setProblem(root, line, column, offset, error)
+      else
+         DLTK.setProblem(root, 1, 1, 0, error)
+      end
+      return root
+   elseif ast.tag == 'Error' then
+      -- Dealing with error generated from errnode#getast
+      local line, column, offset = ast.lineinfo.first[1] or 1, ast.lineinfo.first[2] or 1, ast.lineinfo.first[3] or 1
+      local errorMessage = ast[1] or 'Unable to determine error'
+      DLTK.setProblem(root, line, column, offset, errorMessage )
+      return root
+   end
+
+   -- create api model
+   local _file = createAPI(ast)
+
+   -- Converting api model to java
+   local externaljavaapi = require 'externaljavaapi'
+   local jfile = externaljavaapi.createJAVAModel(_file)
+
+   -- create internal model
+   local internalmodelbuilder = require "internalmodelbuilder"
+   local _internalcontent = internalmodelbuilder.createInternalContent(ast)
+   table.print(_internalcontent)
+   io.flush()
+   
+   -- Converting internal model to java
+   local javainternalmodelbuilder = require 'javainternalmodelbuilder'
+   local jinternalcontent = javainternalmodelbuilder._internalcontent(_internalcontent)
+
+   
+   -- Append information from documentation
+   root:setDocumentationInformation(jfile)
+   root:setInternalContent(jinternalcontent)
+
+   local handledcomments={}
+   return root
+end
+return M

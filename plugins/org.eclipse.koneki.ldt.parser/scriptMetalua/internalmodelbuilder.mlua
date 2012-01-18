@@ -1,0 +1,275 @@
+--------------------------------------------------------------------------------
+--  Copyright (c) 2011-2012 Sierra Wireless.
+--  All rights reserved. This program and the accompanying materials
+--  are made available under the terms of the Eclipse Public License v1.0
+--  which accompanies this distribution, and is available at
+--  http://www.eclipse.org/legal/epl-v10.html
+-- 
+--  Contributors:
+--       Simon BERNARD <sbernard@sierrawireless.com>
+--           - initial API and implementation and initial documentation
+--------------------------------------------------------------------------------
+-{ extension 'match' }
+local Q = require 'metalua.treequery'
+require 'metalua.walk'
+require 'metalua.walk.bindings'
+
+local internalmodel = require 'internalmodel'
+local externalapi = require 'externalapi'
+
+local M = {}
+
+----------------------------------------
+-- debug function : To delete
+local function pdown (node,parent)
+     print (tostring(parent and parent.tag or nil )..' ' .. tostring(node.tag) .. " down")
+end
+  
+local function pup (node, parent)
+   print (tostring(parent and parent.tag or nil) .. ' ' .. tostring(node.tag).. " up")     
+end
+----------------------------------------
+
+
+------------------------------------------------------------
+-- return true if this node is a block for the internal representation
+local function supportedblock(node,parent)
+  return node.tag == "Function" or
+         node.tag == "Do" or
+         node.tag == "While" or
+         node.tag == "Fornum" or
+         node.tag == "Forin" or
+         node.tag == "Repeat" or
+         (parent and parent.tag == "If" and node.tag == nil)
+end
+
+------------------------------------------------------------
+-- create a block from the  metalua node
+local function createblock(block,parent)
+     local _block =   internalmodel._block()
+     match block with
+      | `Function{param, body} ->
+         _block.sourcerange.min = body.lineinfo.first.facing.offset
+         _block.sourcerange.max = body.lineinfo.last.facing.offset
+      | `Do{...} ->
+         _block.sourcerange.min = block.lineinfo.first.offset
+         _block.sourcerange.max = block.lineinfo.last.offset
+      | `While {expr, body} ->
+         _block.sourcerange.min = body.lineinfo.first.facing.offset
+         _block.sourcerange.max = body.lineinfo.last.facing.offset
+      | `Fornum {identifier, min, max, body} ->
+         _block.sourcerange.min = body.lineinfo.first.facing.offset
+         _block.sourcerange.max = body.lineinfo.last.facing.offset
+      | `Forin {identifiers, exprs, body} ->
+         _block.sourcerange.min = body.lineinfo.first.facing.offset
+         _block.sourcerange.max = body.lineinfo.last.facing.offset
+      | `Repeat {body, expr}  ->
+         _block.sourcerange.min = block.lineinfo.first.offset
+         _block.sourcerange.max = block.lineinfo.last.offset
+      | _ ->
+         if parent and parent.tag == "If" and block.tag == nil then
+            _block.sourcerange.min = block.lineinfo.first.facing.offset
+            _block.sourcerange.max = block.lineinfo.last.facing.offset
+         end
+     end
+     return _block
+end
+
+------------------------------------------------------------
+-- return true if this node is a expression in the internal representation
+local function supportedexpr(node)
+  return node.tag =="Index" or node.tag =="Id" or node.tag=="Call" or node.tag == "Invoke"
+end
+
+
+local idto_block = {} -- cache from metalua id to internal model block 
+local idto_identifier = {} -- cache from  metalua id to internal model indentifier
+
+------------------------------------------------------------
+-- create an expression from a metalua node
+local function createexpr(expr,_block)
+   match expr with
+    | `Id { name } ->
+         -- create identifier
+         local _identifier = internalmodel._identifier()
+         -- we store the block which hold this node 
+         -- to be able to define   
+         idto_block[expr]= _block
+         idto_identifier[expr]= _identifier
+         return _identifier                                   
+    | `Index { innerexpr, `String{fieldname} } ->
+         -- create index
+         local _expression = createexpr(innerexpr,_block)
+         if _expression then return internalmodel._index(_expression,fieldname) end
+    | `Call{innerexpr, ...} ->
+         -- create call 
+         local _expression = createexpr(innerexpr,_block)
+         if _expression then return internalmodel._call(_expression) end
+    | `Invoke{innerexpr,`String{functionname},...} ->
+         -- create invoke
+         local _expression = createexpr(innerexpr,_block)
+         if _expression then return internalmodel._invoke(functionname,_expression) end
+    | _ ->
+   end
+   
+   return nil
+end
+
+
+local expreto_expression = {} -- cache from  metalua expression to internal model expression
+
+------------------------------------------------------------
+-- create block and expression node
+local function createTreeStructure(ast)
+  -- create internal content 
+  local _internalcontent = internalmodel._internalcontent()
+
+  -- create root block
+  local _block = internalmodel._block()
+  local _blocks = { _block }
+  _block.sourcerange.min = ast.lineinfo.first.facing.offset
+  _block.sourcerange.max = ast.lineinfo.last.facing.offset
+  _internalcontent.content = _block
+  
+  -- visitor function (down)
+  local function down (node,parent)
+    if supportedblock(node,parent) then
+       -- create the block
+       local _block = createblock(node,parent)
+       -- add it to parent block
+       table.insert(_blocks[#_blocks].content, _block) 
+       -- enqueue the last block to know the "current" block
+       table.insert(_blocks,_block)
+    elseif supportedexpr(node) then
+       -- create expr
+       local _expression = createexpr(node,_blocks[#_blocks])
+       -- add it to parent block
+       if _expression then
+          table.insert(_blocks[#_blocks].content, _expression)
+          -- store this node as supported expr
+          expreto_expression[node] = _expression
+       end  
+    end
+  end
+  
+  -- visitor function (up)
+  local function up (node, parent)
+    if supportedblock(node,parent) then
+       -- dequeue the last block to know the "current" block
+       table.remove(_blocks,#_blocks)
+    end     
+  end
+ 
+  -- visit ast and build internal model  
+  Q(ast):not_under(supportedexpr):foreach(down,up)
+      
+  return _internalcontent
+end
+
+
+
+local function createType(node,position)
+    match node with
+    | `Call{ `Id "require", `String {modulename}} ->
+        return externalapi._moduletyperef(modulename,position)
+    | _ ->
+    end
+    -- if node is an expression supported
+    local supportedexpr = expreto_expression[node]
+    if supportedexpr then
+      return externalapi._exprtyperef(supportedexpr,position)
+    end
+    
+end
+ 
+local function getType(node, itemname)
+   match node with
+   | `Local {ids, inits} ->
+      local init = nil
+      local returnposition = 1
+      for i,id in ipairs(ids) do
+         local idname = id[1]
+         
+         if init and (init.tag == "Call" or init.tag == "Invoke") then
+            returnposition= returnposition+1
+         else
+            init = inits[i]                  
+         end
+     
+         if itemname == idname then
+            -- create type
+            local type = createType(init,returnposition)
+            
+            -- return data
+            return id, type 
+         end
+      end
+   | _ ->
+   end
+end
+
+------------------------------------------------------------
+-- create local vars, global vars and linked it with theirs occurences
+local function createVarDefinitions(internalcontent,ast)
+  -- use bindings to get locals and globals definition
+  local locals, globals = bindings( ast )
+
+  -- create locals var
+  for node, namesAndOccurrences in pairs(locals) do
+      for name, occurences in pairs(namesAndOccurrences) do
+            -- create item
+            local _item = externalapi._item(name)
+            -- get type and id 
+            local id, type = getType(node, name)
+            if id then
+               if type then _item.type = type end
+               -- add declaration as occurences
+               table.insert(_item.occurences, idto_identifier[id])
+               -- add occurences
+               for _,occurence in ipairs(occurences) do
+                  local _identifier = idto_identifier[occurence]
+                  if _identifier then
+                    table.insert(_item.occurences, _identifier)
+                    _identifier.definition = _item 
+                  end 
+               end
+               -- add item to block
+               local _block = idto_block[id]
+               table.insert(_block.localvars,{item=_item,scope = {min=0,max=0}})
+            end  
+      end
+   end
+   
+  -- create globals var
+  -- TODO IMPLEMENTS GLOVA VAR
+  --  for name, occurrences in pairs( globals ) do
+  -- local item = externalapi._item()
+  -- foreach occurence blabla
+  -- table.insert(internalcontent.unknownglobalvars,item)    
+  -- end
+end
+
+
+------------------------------------------------------------
+-- create the internalcontent from an ast metalua 
+function M.createInternalContent (ast)
+   -- init cache
+   idto_block = {}  
+   idto_identifier = {} 
+   expreto_expression = {}
+
+   -- create block and expression node
+   local internalcontent = createTreeStructure(ast)
+   
+   -- create Local vars, global vars and linked occurences (Items)
+   createVarDefinitions(internalcontent,ast)
+   
+   -- clean cache
+   idto_block = {}  
+   idto_identifier = {} 
+   expreto_expression = {}
+   
+   return internalcontent
+end
+
+return M 

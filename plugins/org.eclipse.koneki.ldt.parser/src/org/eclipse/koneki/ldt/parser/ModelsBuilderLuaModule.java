@@ -18,15 +18,16 @@ import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
 
 import com.naef.jnlua.LuaState;
 
-public class ASTBuilderLuaModule extends AbstractMetaLuaModule {
+public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 
 	public static final String META_LIB_PATH = "/scriptMetalua/";//$NON-NLS-1$
 	public static final String LIB_PATH = "/scripts/";//$NON-NLS-1$
 
-	public static final String BUILDER = "dltk_ast_builder";//$NON-NLS-1$
-	public static final String BUILDER_SCRIPT = BUILDER + ".mlua";//$NON-NLS-1$
-	public static final String MARKER = "declaration_marker";//$NON-NLS-1$
-	public static final String MARKER_SCRIPT = MARKER + ".mlua";//$NON-NLS-1$
+	public static final String MODELS_BUILDER = "javamodelsbuilder";//$NON-NLS-1$
+	public static final String MODELS_BUILDER_SCRIPT = MODELS_BUILDER + ".mlua";//$NON-NLS-1$
+
+	public static final String INTERNAL_MODEL_BUILDER = "internalmodelbuilder";//$NON-NLS-1$
+	public static final String INTERNAL_MODEL_BUILDER_SCRIPT = INTERNAL_MODEL_BUILDER + ".mlua";//$NON-NLS-1$
 
 	private LuaState lua = null;
 
@@ -35,7 +36,7 @@ public class ASTBuilderLuaModule extends AbstractMetaLuaModule {
 		lua = loadLuaModule();
 
 		pushLuaModule(lua);
-		lua.getField(-1, "ast_builder"); //$NON-NLS-1$
+		lua.getField(-1, "build"); //$NON-NLS-1$
 		lua.pushString(string);
 		lua.call(1, 1);
 		LuaSourceRoot luaSourceRoot = lua.checkJavaObject(-1, LuaSourceRoot.class);
@@ -70,11 +71,10 @@ public class ASTBuilderLuaModule extends AbstractMetaLuaModule {
 	@Override
 	protected List<String> getMetaLuaFileToCompile() {
 		ArrayList<String> sourcepaths = new ArrayList<String>();
-		sourcepaths.add(BUILDER_SCRIPT);
-		sourcepaths.add(MARKER_SCRIPT);
-		sourcepaths.add("internalmodel_builder.mlua");
-		sourcepaths.add("metalua/treequery.mlua");
-		sourcepaths.add("metalua/treequery/walk.mlua");
+		sourcepaths.add(MODELS_BUILDER_SCRIPT);
+		sourcepaths.add(INTERNAL_MODEL_BUILDER_SCRIPT);
+		// sourcepaths.add("metalua/treequery.mlua");
+		// sourcepaths.add("metalua/treequery/walk.mlua");
 		return sourcepaths;
 	}
 
@@ -91,7 +91,7 @@ public class ASTBuilderLuaModule extends AbstractMetaLuaModule {
 	 */
 	@Override
 	protected String getModuleName() {
-		return BUILDER;
+		return MODELS_BUILDER;
 	}
 
 	/**

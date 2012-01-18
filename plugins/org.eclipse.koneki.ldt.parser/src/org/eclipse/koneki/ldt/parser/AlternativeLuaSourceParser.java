@@ -36,7 +36,7 @@ import com.naef.jnlua.LuaException;
  */
 public class AlternativeLuaSourceParser extends AbstractSourceParser {
 
-	private static ASTBuilderLuaModule astBuilder = new ASTBuilderLuaModule();
+	private static ModelsBuilderLuaModule astBuilder = new ModelsBuilderLuaModule();
 
 	// BEGIN CACHE MANAGEMENT
 	// TODO DLTK has already a cache system but it can be used to keep the last valid AST.
