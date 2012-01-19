@@ -10,12 +10,14 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.parser.api.external;
 
+import org.eclipse.koneki.ldt.internal.parser.IDocumentationHolder;
+
 /**
  * a TypeDef is the definition of a kind of type.<br/>
  * User could use it define a kind of recordtype or a kind of functiontype.
  */
 // CHECKSTYLE:OFF
-public abstract class TypeDef extends LuaASTNode {
+public abstract class TypeDef extends LuaASTNode implements IDocumentationHolder {
 	// CHECKSTYLE:ON
 
 }

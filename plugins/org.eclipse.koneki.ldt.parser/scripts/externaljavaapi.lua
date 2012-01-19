@@ -20,7 +20,10 @@ local ityperef    = java.require("org.eclipse.koneki.ldt.parser.api.external.Int
 local ptyperef    = java.require("org.eclipse.koneki.ldt.parser.api.external.PrimitiveTypeRef")
 local fileapi     = java.require("org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI")
 local mtyperef    = java.require ("org.eclipse.koneki.ldt.parser.api.external.ModuleTypeRef")
-local etyperef    = java.require ("org.eclipse.koneki.ldt.parser.api.external.ExprTypeRef")
+local exprtyperef    = java.require ("org.eclipse.koneki.ldt.parser.api.external.ExprTypeRef")
+
+local generator = require 'docgenerator'
+local print = function (string) print(string) io.flush() end
 
 function M.createtyperef (type)
 	if not type then return nil end
@@ -31,14 +34,15 @@ function M.createtyperef (type)
    elseif type.tag == "moduletyperef" then
       return mtyperef:new(type.modulename,type.returnposition)
    elseif type.tag == "exprtyperef" then
-      return etyperef:new(type.returnposition)
+      return exprtyperef:new(type.returnposition)
    else
       return ptyperef:new(type.typename) 
 	end
 end
 function M.createitem(def)
 	local i = item:new()
-	i:setDocumentation(def.description)
+	local desc = generator.item(def)
+	i:setDocumentation(desc)
 	i:setName(def.name)
 	-- Define optional type
 	if def.type then
@@ -46,7 +50,7 @@ function M.createitem(def)
 	end
 	return i
 end
-function M.createtypedef(name, definition)
+function M.createtypedef(name, definition, filemodel)
 	local def
 	-- Dealing with records
 	if definition.tag == "recordtypedef" then
@@ -54,7 +58,19 @@ function M.createtypedef(name, definition)
 		def:setName(name)
 		-- Appending fields
 		for fieldname, item in pairs(definition.fields) do
-			def:addField(fieldname, M.createitem(item))
+			-- Create java oject
+			local javaitem =  M.createitem(item)
+			-- WARNING
+			-- If the current item points an internal function,
+			-- the documentation of referred type will be provided to java object.
+			-- As it is more useful than item documentation. 
+			if item.type and item.type.tag == 'internaltyperef' then
+				local type = filemodel.types [ item.type.typename ]
+				if type.tag == 'functiontypedef' then
+					javaitem:setDocumentation( generator.typedef(item.name, type) )
+				end
+			end
+			def:addField(fieldname, javaitem)
 		end
 	else
 		-- Dealing with function
@@ -74,7 +90,8 @@ function M.createtypedef(name, definition)
 			def:addReturn(ret)
 		end
 	end
-	def:setDocumentation(definition.description)
+	local desc = generator.typedef(name, definition, filemodel.types)
+	def:setDocumentation(desc)
 	return def
 end
 ---
@@ -87,7 +104,8 @@ function M.createJAVAModel(model)
 	-- Fill file object
 	--
 	local file = fileapi:new()
-	file:setDocumentation(model.description)
+	local desc = generator.file(model)
+	file:setDocumentation(desc)
 	-- Adding gloval variables
 	for name, global in pairs(model.globalvars) do
 		-- Fill Java item
@@ -103,7 +121,7 @@ function M.createJAVAModel(model)
 	end
 	-- Adding types defined in files
 	for name, def in pairs(model.types) do
-		file:addType(name, M.createtypedef(name ,def))
+		file:addType(name, M.createtypedef(name ,def, model))
 	end
 	return file
 end

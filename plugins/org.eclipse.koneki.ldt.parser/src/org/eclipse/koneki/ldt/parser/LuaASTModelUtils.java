@@ -45,7 +45,7 @@ public final class LuaASTModelUtils {
 	 * 
 	 * DLTK Model => AST
 	 */
-	public static ASTNode getASTNode(IModelElement modelElement) {
+	public static ASTNode getASTNode(final IModelElement modelElement) {
 		if (modelElement instanceof ISourceModule)
 			return getLuaSourceRoot((ISourceModule) modelElement);
 		if (modelElement instanceof IType)
@@ -58,28 +58,25 @@ public final class LuaASTModelUtils {
 	}
 
 	/**
-	 * Get Record type def from ISourceModule <br/>
+	 * Get Record type def from {@link ISourceModule} <br/>
 	 * 
 	 * DLTK Model => AST
 	 */
-	public static RecordTypeDef getTypeDef(IType type) {
+	public static TypeDef getTypeDef(IType type) {
 		LuaSourceRoot luaSourceRoot = getLuaSourceRoot(type.getSourceModule());
 		LuaFileAPI fileapi = luaSourceRoot.getFileapi();
-		TypeDef typeDef = fileapi.getTypes().get(type.getElementName());
-		if (typeDef instanceof RecordTypeDef)
-			return (RecordTypeDef) typeDef;
-		return null;
+		return fileapi.getTypes().get(type.getElementName());
 	}
 
 	/**
-	 * Get Item from Ifield <br/>
+	 * Get Item from {@link IField} <br/>
 	 * 
 	 * DLTK Model => AST
 	 */
 	public static Item getItem(IField field) {
 		IModelElement parent = field.getParent();
 		if (parent instanceof IType) {
-			RecordTypeDef typeDef = getTypeDef((IType) parent);
+			RecordTypeDef typeDef = (RecordTypeDef) getTypeDef((IType) parent);
 			return typeDef.getFields().get(field.getElementName());
 		} else if (parent instanceof ISourceModule) {
 			LuaSourceRoot luaSourceRoot = getLuaSourceRoot((ISourceModule) parent);
@@ -96,7 +93,7 @@ public final class LuaASTModelUtils {
 	public static Item getItem(IMethod method) {
 		IModelElement parent = method.getParent();
 		if (parent instanceof IType) {
-			RecordTypeDef typeDef = getTypeDef((IType) parent);
+			RecordTypeDef typeDef = (RecordTypeDef) getTypeDef((IType) parent);
 			return typeDef.getFields().get(method.getElementName());
 		} else if (parent instanceof ISourceModule) {
 			LuaSourceRoot luaSourceRoot = getLuaSourceRoot((ISourceModule) parent);

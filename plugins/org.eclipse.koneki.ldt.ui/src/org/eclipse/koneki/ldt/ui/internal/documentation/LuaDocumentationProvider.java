@@ -82,7 +82,7 @@ public class LuaDocumentationProvider implements IScriptDocumentationProvider, I
 				if (memberDocumentation != null)
 					return new TextDocumentationResponse(element, memberDocumentation);
 			} else if (element instanceof ISourceModule) {
-				String moduleDocumentation = getModuleDocumentation((ISourceModule) element);
+				final String moduleDocumentation = getModuleDocumentation((ISourceModule) element);
 				if (moduleDocumentation != null)
 					return new TextDocumentationResponse(element, moduleDocumentation);
 			}
@@ -94,9 +94,9 @@ public class LuaDocumentationProvider implements IScriptDocumentationProvider, I
 
 	private String getMemberDocumentation(IMember member) throws ModelException {
 		ASTNode astNode = LuaASTModelUtils.getASTNode(member);
-		if (astNode instanceof IDocumentationHolder)
+		if (astNode instanceof IDocumentationHolder) {
 			return ((IDocumentationHolder) astNode).getDocumentation();
-		else
+		} else
 			return getOldMemberDocumentation(member);
 	}
 
@@ -118,12 +118,12 @@ public class LuaDocumentationProvider implements IScriptDocumentationProvider, I
 		return null;
 	}
 
-	private String getModuleDocumentation(ISourceModule module) {
-		ModuleDeclaration moduleDeclaration = SourceParserUtil.getModuleDeclaration(module);
+	private String getModuleDocumentation(final ISourceModule module) {
+		final ModuleDeclaration moduleDeclaration = SourceParserUtil.getModuleDeclaration(module);
 		if (moduleDeclaration instanceof LuaSourceRoot) {
-			return ((LuaSourceRoot) moduleDeclaration).getGlobalDocumentation();
+			final LuaSourceRoot root = (LuaSourceRoot) moduleDeclaration;
+			return root.getFileapi().getDocumentation();
 		}
 		return null;
 	}
-
 }
