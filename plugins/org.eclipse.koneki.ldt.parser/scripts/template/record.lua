@@ -13,10 +13,10 @@ return [[
 <h3>Field(s)</h3>
 # for name, item in pairs( record.fields )do
 #	local def = item.type and types and types[item.type.typename]
+	<a id="$(parentname).$(name)"></a>
 #	if def and def.tag == 'functiontypedef' then
 		$(funcstring(def))
-#	else 
-pas de def
+#	else
 		$( itemstring(item, name) )
 #	end
 # end

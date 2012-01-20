@@ -52,7 +52,7 @@ return[[
 #			end				
 #		end
 		<tr>
-		<td class="name" nowrap="nowrap"><a href="#$(item.name)">$(item.name)$(parameters)</a></td>
+		<td class="name" nowrap="nowrap"><a href="#$(moduletyperef.typename).$(item.name)">$(item.name)$(parameters)</a></td>
 		<td class="summary">$(item.description)</td>
 		</tr>
 #	end
@@ -63,14 +63,14 @@ return[[
 # --
 # local listtypes = tolist(types)
 # if listtypes and #listtypes > 0 then 
-# 	for name, def in pairs(types) do
+# 	for defname, def in pairs(types) do
 #		if def ~= moduletype then
 #			if def.tag ~= 'functiontypedef' then
-				<h2>Type $(name)</h2>
+				<h2>Type $(defname)</h2>
 				<table class="function_list">
 #				for name, item in pairs(def.fields) do
 					<tr>
-					<td class="name" nowrap="nowrap"><a href="#$(name)">$(name)</a></td>
+					<td class="name" nowrap="nowrap"><a href="#$(defname).$(name)">$(name)</a></td>
 					<td class="summary">$(item.shortdescription or item.description)</td>
 					</tr>
 #				end
@@ -86,12 +86,12 @@ return[[
 #		local definition = item.type and types[item.type.typename]
 #		if definition then
 #			if definition.tag == 'functiontypedef' then
-				$( typedefstring(name, definition) )
+				$( typedefstring(name, definition, types, moduletyperef.typename) )
 #			else
-				<h3>$(item.name)<a id="$(item.name)"></a></h3>
+				<h3>$(item.name)<a id="$(moduletyperef.typename).$(item.name)"></a></h3>
 				<p>
 #				if item.type.tag == 'internaltyperef' and item.type.typename then
-					<a href="#$(item.type.typename)">#$(item.type.typename)</a>
+					<a href="#$(moduletyperef.typename).$(item.type.typename)">#$(item.type.typename)</a>
 #				else
 					#$(item.name)
 #				end
@@ -106,7 +106,7 @@ return[[
 # if types then
 # 	for name, def in pairs(types) do
 #		if def ~= moduletype and def.tag ~= 'functiontypedef' then
-			$( typedefstring(name, def) )
+			$( typedefstring(name, def, types, name) )
 #		end
 # 	end
 # end

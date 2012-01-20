@@ -12,7 +12,8 @@
 ---
 -- Template used to generate typedef documentation HTML.
 return
-[[<a id ="$(name)"></a>
+[[
+<a id ="$(parentname).$(name)"></a>
 <h3>$(name)</h3>
 <p>$(shortdescription)</p>
 <p>$(description)</p>

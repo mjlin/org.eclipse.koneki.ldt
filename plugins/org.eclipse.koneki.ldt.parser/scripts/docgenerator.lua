@@ -51,7 +51,7 @@ local returnstring = function ( ret )
 	}
 	local str, err = pltemplate.substitute(returntemplate, returntable)
 	if err then
-		print ( 'le return' )
+		print ( 'Generating return template:' )
 		table.print(ret,1)
 		print ( err )
 		io.flush()
@@ -66,10 +66,10 @@ end
 -- results of M.func or M.record depending of given node type.
 -- @param #string name associated to definition
 -- @param typed Node to describe
--- @param types .types field of file extenalapi object.
+-- @param parentname name of type's parent module, used for link generation
 --		Used to match human redeable definition names.
 -- @return #string HTML description of given node
-function M.typedef( name, typed, types)
+function M.typedef( name, typed, types, parentname)
 	local templatetable = {
 		concat = table.concat,
 		description = typed.description,
@@ -79,13 +79,15 @@ function M.typedef( name, typed, types)
 		name = name,
 		pairs = pairs,
 		params = typed.params,
+		parentname = parentname,
 		returns = typed.returns,
 		returnstring = returnstring,
 		shortdescription = typed.shortdescription,
+		types = types,
 	}
 	local html, err = pltemplate.substitute(typedeftemplate, templatetable)
 	if err then
-		print ( 'on typedef' )
+		print ( 'Generating typedef template:' )
 		table.print(typed,1)
 		print ( err )
 		io.flush()
@@ -97,10 +99,10 @@ function M.typedef( name, typed, types)
 		specific, err = M.record(templatetable, types)
 	end
 	if not specific then
-		print('noting computed for '.. typed .tag)
+		print('Nothing computed for '.. typed .tag)
 	end
 	if err then
-		print ( 'on '.. typed.tag)
+		print ( 'Generating '.. typed.tag .. ' template:')
 		table.print(typed,1)
 		print ( err )
 		io.flush()
@@ -131,16 +133,18 @@ function M.file(file)
 	}
 	local html, error = pltemplate.substitute(filetemplate, filetable)
 	if error then
-		print ('On file')
+		print ('Generating file template:')
 		table.print(file, 1)
 		print (error)
 		io.flush()
 	end
-	if html then
-		local file = io.open('/tmp/docdebug.html', 'w')
-		file:write(html)
-		file:close()
-	end
+--	Flush generated HTML in a temporary file, allow to preview file in a browser
+--	For testing purpose
+--	if html then
+--		local file = io.open('/tmp/docdebug.html', 'w')
+--		file:write(html)
+--		file:close()
+--	end
 	return html
 end
 ---
@@ -151,12 +155,14 @@ function M.func(fun)
 	local f = {
 		func	= fun,
 		ipairs	= ipairs,
+		parentname = fun.parentname,
 		returnstring = returnstring,
 	}
 	local html, err = pltemplate.substitute(functiontemplate, f)
 	if err then
+		print ('Generating '.. fun.tag ..' template :')
 		table.print(f, 1)
-		print ('Parsing function: '..err)
+		print(err)
 		io.flush()
 	end
 	return html
@@ -190,6 +196,7 @@ end
 ---
 -- Generate HTML documentation for a `recordtypedef node.
 -- @param `recordtypedef from external api to describe
+-- @types types defined in current module, use to resolve type names
 -- @return #string HTML code describing given object
 function M.record(record, types)
 	local rectable = {
@@ -197,6 +204,7 @@ function M.record(record, types)
 		itemstring	= M.item,
 		funcstring	= M.func,
 		pairs		= pairs,
+		parentname	= record.parentname,
 		record		= record,
 		types		= types
 	}
