@@ -29,6 +29,9 @@ public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 	public static final String INTERNAL_MODEL_BUILDER = "internalmodelbuilder";//$NON-NLS-1$
 	public static final String INTERNAL_MODEL_BUILDER_SCRIPT = INTERNAL_MODEL_BUILDER + ".mlua";//$NON-NLS-1$
 
+	public static final String API_MODEL_BUILDER = "apimodelbuilder";//$NON-NLS-1$
+	public static final String API_MODEL_BUILDER_SCRIPT = API_MODEL_BUILDER + ".mlua";//$NON-NLS-1$
+
 	private LuaState lua = null;
 
 	public synchronized LuaSourceRoot buildAST(final String string) {
@@ -73,7 +76,7 @@ public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 		ArrayList<String> sourcepaths = new ArrayList<String>();
 		sourcepaths.add(MODELS_BUILDER_SCRIPT);
 		sourcepaths.add(INTERNAL_MODEL_BUILDER_SCRIPT);
-		// sourcepaths.add("metalua/treequery.mlua");
+		sourcepaths.add(API_MODEL_BUILDER_SCRIPT);
 		// sourcepaths.add("metalua/treequery/walk.mlua");
 		return sourcepaths;
 	}

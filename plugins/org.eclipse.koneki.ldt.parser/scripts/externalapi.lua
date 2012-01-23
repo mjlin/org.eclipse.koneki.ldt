@@ -145,17 +145,14 @@ function M.createreturn(td_return)
    _return.description = td_return.description
 
    -- manage typeref
-   table.print(td_return.types,1)
    if td_return.types then
       for _, td_typeref in ipairs(td_return.types) do
-         table.print(td_typeref,1)
          local _typeref = M.createtyperef(td_typeref)
          if _typeref then
             table.insert(_return.types,_typeref)
          end
       end
    end
-   table.print(_return)
    return _return
 end
 

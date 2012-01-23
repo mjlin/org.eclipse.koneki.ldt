@@ -9,310 +9,394 @@
 --     Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 require ('metalua.compiler')
-local M = {}
----
--- Trim white spaces before and after given string
---
--- @usage local str = '          foo' str:trim()
--- @param string to trim
--- @return String trimmed
-local function trim(string)
-	local pattern = "^(%s*)(.*)"
-	local _, strip =  string:match(pattern)
-	if not strip then return string end
-	local restrip
-	_, restrip = strip:reverse():match(pattern)
-	return restrip and restrip:reverse() or strip
-end
-local value = function(node)
-	return node[1]
-end
-local function findmaintag(nlx)
-	local parser = gg.sequence{
-		name = 'Main Tag Parser',
-		builder = function (x)
-			local res = {}
-			local parsed = value(x)
-			if #parsed == 0 then
-				-- It is a file
-				res.tag = 'TFile'
-			elseif #parsed == 1 then
-				-- It's a record
-				res.tag = 'TRecordtype'
-				res.name = value(value(parsed))
-			else
-				-- It is a function
-				res.tag = 'TFunction'
-				-- When '#' is missing, must be a global function
-				res.global = not parsed[1]
-				res.typescope = value(parsed[2])
-				res.name = value(parsed[3])
-			end
-			return res
-		end,
-		'@@',
-		gg.multisequence{
-			gg.sequence{ 'file' },
-			gg.sequence{'recordtype', '#', mlp.id },
-			gg.sequence{'function', '[', gg.optkeyword('#'), mlp.id, ']', mlp.id}
-		}
-	}
-		nlx:add({"@@","file", "function", "recordtype", "field"})
-	local result = parser(nlx)
-	return {
-		global = result.global,
-		name = result.name,
-		tag  = result.tag,
-		typescope = result.typescope
-	}
-end
-local reference = gg.sequence({
-	builder = function(tks)
-		-- No identifiers at all
-		local ids = {}
-		if #tks == 0 then return ids end
-		-- List of prefix identifiers
-		local scopeIds = tks[1]
-		-- Last identifer
-		local lastId = tks[2]
-		-- Search for scope identifiers
-		for _, id in ipairs(scopeIds) do
-			table.insert(ids, id)
-		end
-		-- Append last identifier
-		table.insert(ids, lastId)
-		return #ids > 0 and ids
-	end,
-	gg.list({
-		separators = '.',
-		terminators = '#',
-		mlp.id
-	}),
-	"#",
-	mlp.id
-})
-local referencesList = gg.list({
-	name = 'Reference List',
-	primary  = reference,
-	separators = ','
 
+local M = {} -- module
+local lx -- lexer used to parse tag
+local registeredparsers -- table {tagname => {list de parsers}}
+
+-- raise an error if  result contains a node error
+local function raiserror(result)
+   for i, node in ipairs(result) do
+      -- if node.tag == "Error" then table.print(node) end
+   	assert(not node or node.tag ~= "Error")
+   end
+end
+
+
+-- copy key and value from one table to an other
+local function copykey(tablefrom, tableto)
+   for key, value in pairs(tablefrom) do
+      if key ~= "lineinfos" then
+         tableto[key] = value
+      end
+   end
+end
+
+------------------------------------------------------
+-- parse an id
+-- return a table {name, lineinfo)
+local idparser = gg.sequence({
+         builder = function (result)
+                     raiserror(result)
+                     return { name = result[1][1] }
+                   end,
+         mlp.id
 })
-local returnBlock = gg.sequence({
-	builder = function (ret)
-		return ret[1] or false
-	end,
-	name = 'Return Documentation Statement Parser',
-	'@', 'return', referencesList
+------------------------------------------------------
+-- parse an modulename parser  (id.)?id
+-- return a table {name, lineinfo)
+local modulenameparser =  gg.list({
+         builder = function (result)
+                     raiserror(result)
+                     local ids = {}
+                     for i, id in ipairs(result) do
+                        table.insert(ids,id.name)
+                     end
+                     return {name = table.concat(ids,".")}
+                   end,
+         primary  = idparser,
+         separators = '.'
 })
-local composetyperef = function(vars)
-	local sequenceend
-	local ref = { tag = 'TTyperef'}
-	-- Deal with type less type reference
-	if #vars == 0 then
-		return ref, -1
-	elseif #vars > 0 then
-		-- Store type name
-		local last = vars[#vars]
-		ref.type = value( last )
-		sequenceend = last.lineinfo.last.offset
-	end
-	-- Compose module name
-	local tmp = {}
-	local id = 1
-	-- Storing names in an array with gaps
-	for index = 1, (#vars-1) * 2 , 2 do
-		tmp[index] = value(vars[id])
-		id = id + 1
-	end
-	-- Inserting dots in gaps
-	for index = 2, (#vars-2) * 2, 2 do
-		tmp[index] = '.'
-	end
-	-- Retrieve full module name
-	if #tmp > 0 then
-		ref.module = table.concat(tmp)
-	end
-	return ref , sequenceend + 1
-end
-local function findreturntag(nlx)
-	local result = returnBlock(nlx)
-	local comment = {}
-	local name, sequenceend
-	if #result > 0 then
-		comment.types = {tag = 'Types'}
-	end
-	for k = 1, #result do
-		name, sequenceend = composetyperef(result[k])
-		table.insert(comment.types, name)
-	end
-	return comment, sequenceend
-end
-local extractvarandref = function (x)
-	local fieldtype = composetyperef(value(x))
-	local nameend  = x[2].lineinfo.last.offset
-	return {
-		descriptionstart = nameend +1,
-		name = value(x[2]),
-		type = fieldtype
-	}
-end
-local extractvar =function (x)
-	local token = value(x)
-	local name = value(token)
-	return {
-		descriptionstart = token.lineinfo.last.offset +1,
-		name =name,
-	}
-end
-local completefieldblock = gg.sequence({
-	builder = extractvarandref,
-	'@','field', reference, mlp.id
+------------------------------------------------------
+-- parse an modulename parser  (id.)?id
+-- return a table {name, lineinfo)
+local typenameparser= modulenameparser
+
+------------------------------------------------------
+-- parse an id
+-- return a table {name, lineinfo)
+local internaltyperefparser = gg.sequence({
+         builder = function(result)
+                     raiserror(result)
+                     return {tag = "typeref",type=result[1].name}
+                   end,
+         "#", typenameparser
 })
-local fieldblock = gg.sequence({
-	builder = extractvar,
-	'@','field', mlp.id
+
+------------------------------------------------------
+-- parse an id
+-- return a table {name, lineinfo)
+local externaltyperefparser = gg.sequence({
+         builder = function(result)
+                     raiserror(result)
+                     return {tag = "typeref",module=result[1].name,type=result[2].name}
+                   end,
+         modulenameparser,"#", typenameparser
 })
-local function findfieldtag(nlx)
-	local x = fieldblock(nlx)
-	local field = {	name = x.name }
-	return field, x.descriptionstart
-end
-local function findtypedfieldtag(nlx)
-	local x = completefieldblock(nlx)
-	local field = {
-		name = x.name, 
-		type = x.type
-	}
-	return field, x.descriptionstart
-end
-local completeparamblock = gg.sequence({
-	builder = extractvarandref,
-	'@','param', reference, mlp.id
+
+
+------------------------------------------------------
+-- parse an id
+-- return a table {name, lineinfo)
+local typerefparser = gg.multisequence{
+                           internaltyperefparser,
+                           externaltyperefparser}
+
+------------------------------------------------------     
+-- parse an id
+-- return a table {name, lineinfo)
+local typereflistparser = gg.list({
+         primary  = typerefparser,
+         separators = ','
 })
-local paramblock = gg.sequence({
-	builder = extractvar,
-	'@','param', mlp.id
+
+------------------------------------------------------
+-- 
+-- TODO use a more generic way to parse (modifier if not always a typeref)
+-- TODO support more than one modifier 
+local modifiersparser = gg.sequence({
+         builder = function(result)
+                     raiserror(result)
+                     return {[result[1].name]=result[2]}
+                   end,
+         "[", idparser ,  "=" , internaltyperefparser , "]"
 })
-local findtypedparamtag = function(nlx)
-	local x = completeparamblock(nlx)
-	local p = {
-		name = x.name, 
-		type = x.type
-	}
-	return p, x.descriptionstart
+
+
+------------------------------------------------------
+-- parse an module tag
+local returnparsers = {
+      -- full parser
+      gg.sequence({
+         builder = function (result)
+                     raiserror(result)
+                     return { types= result[1]}
+                   end,
+         '@','return', typereflistparser
+      }),
+      -- parser without typerefs
+      gg.sequence({
+         builder = function (result)
+                     raiserror(result)
+                     return { types = {}}
+                   end,
+         '@','return'
+      })    
+}  
+
+------------------------------------------------------
+-- parse an module tag
+local paramparsers = {
+      -- full parser
+      gg.sequence({
+         builder = function (result)
+                     raiserror(result)
+                     return { name = result[2].name, typeref = result[1]}
+                   end,
+         '@','param', typerefparser, idparser
+      }),
+      
+      -- full parser
+      gg.sequence({
+         builder = function (result)
+                     raiserror(result)
+                     return { name = result[1].name}
+                   end,
+         '@','param', idparser
+      })          
+}  
+
+------------------------------------------------------
+-- parse an module tag
+local fieldparsers = {
+      -- full parser
+      gg.sequence({
+         builder = function (result)
+                     raiserror(result)
+                     local tag = {}
+                     copykey(result[1],tag)
+                     tag.typeref = result[2]
+                     tag.name = result[3].name
+                     return tag
+                   end,
+         '@','field', modifiersparser, typerefparser, idparser
+      }),
+      
+      
+      -- full parser
+      gg.sequence({
+         builder = function (result)
+                     raiserror(result)
+                     return { name = result[2].name, typeref = result[1]}
+                   end,
+         '@','field', typerefparser, idparser
+      }),
+      
+      -- full parser
+      gg.sequence({
+         builder = function (result)
+                     raiserror(result)
+                     local tag = {}
+                     copykey(result[1],tag)
+                     tag.name = result[2].name
+                     return tag
+                   end,
+         '@','field', modifiersparser, idparser
+      }),
+      
+      -- full parser
+      gg.sequence({
+         builder = function (result)
+                     raiserror(result)
+                     return { name = result[1].name}
+                   end,
+         '@','field', idparser
+      })          
+}  
+
+------------------------------------------------------
+-- parse an module tag
+-- TODO use a more generic way to parse modifier !
+local functionparsers = {
+      -- full parser
+      gg.sequence({
+         builder = function (result)
+                     raiserror(result)
+                     local tag = {}
+                     copykey(result[1],tag)
+                     tag.name = result[2].name
+                     return tag
+                   end,
+         '@','function', modifiersparser, idparser
+      })          
+} 
+
+------------------------------------------------------
+-- parse an module tag
+local typeparsers = {
+      -- full parser
+      gg.sequence({
+         builder = function (result)
+                     raiserror(result)
+                     return { name = result[1].name}
+                   end,
+         '@','type', '#',modulenameparser
+      })          
+}  
+
+------------------------------------------------------
+-- parse an module tag
+local moduleparsers = {
+      -- full parser
+      gg.sequence({
+         builder = function (result)
+                     raiserror(result)
+                     return { name = result[1].name }
+                   end,
+         '@','module', modulenameparser
+      }),
+      -- parser without name
+      gg.sequence({
+         builder = function (result)
+                     raiserror(result)
+                     return {}
+                   end,
+         '@','module'
+      })    
+}   
+
+------------------------------------------------------------
+-- init parser 
+
+local function initparser()
+   -- register parsers
+   -- each tag name has several parsers
+   registeredparsers  = {
+     ["module"]   = moduleparsers,
+     ["return"]   = returnparsers,
+     ["type"]     = typeparsers,
+     ["field"]    = fieldparsers,
+     ["function"] = functionparsers,
+     ["param"]    = paramparsers
+   }
+   
+   -- create lexer used for parsing
+   lx = lexer.lexer:clone()
+   lx.extractors = {
+      -- "extract_long_comment",
+      -- "extract_short_comment",
+      -- "extract_long_string",
+      "extract_short_string",
+      "extract_word",
+      "extract_number",
+      "extract_symbol"
+   }
+   
+   -- add tag name as key word
+   local tagnames = {}
+   for tagname, _ in pairs(registeredparsers) do
+      table.insert(tagnames,tagname)
+   end
+   lx:add(tagnames)   
+   
+   return lx, parsers
 end
-local findparamtag = function(nlx)
-	local x = paramblock(nlx)
-	local p = {	name = x.name }
-	return p, x.descriptionstart
+
+initparser()
+
+
+------------------------------------------------------------
+-- parse comment tag partition and return table structure  
+local function parsetag(part)
+   -- check if the part start by a supported tag
+   for tagname,parsers in pairs(registeredparsers) do
+      if (part.comment:find("^@"..tagname)) then
+         -- try the registered parsers for this tag
+         local result
+         for i, parser in ipairs(parsers) do
+            local valid, tag = pcall(parser, lx:newstream(part.comment, tagname .. 'tag lexer'))
+            if valid then
+                -- add tagname
+                tag.tagname = tagname
+                
+                -- add description
+                local endoffset = tag.lineinfo.last.offset
+                tag.description = part.comment:sub(endoffset+1,-1)
+                return tag
+            end
+         end
+      end
+   end
+   return nil;
 end
-function M.parse(string)
-	string = trim(string)
-	--
-	-- Parse documentation from first tag
-	--	
-	local newline = string:find('[\n|\r|\r\n]') or #string
-	local at =  string:find('@', newline, true) or #string
-	-- Split description before first '@'
-	local shortDescription = newline < at and string:sub(1, newline) or ""
-	-- There is a long description
-	local longDescription
-	if at - newline > 2 then
-		longDescription = string:sub(newline+1, at-1)
-	else
-		longDescription = shortDescription
+
+------------------------------------------------------------
+-- split string comment in several part
+-- return list of {comment = string, offset = number}
+-- the first part is the part before the first tag
+-- the others are the part from a tag to the next one
+local function split(stringcomment,commentstart)
+   local partstart = commentstart
+   local result = {}
+   
+   -- manage case where the comment start by @
+   local at_startoffset, at_endoffset = stringcomment:find("^%s+@",partstart)
+   if at_endoffset then
+      partstart = at_endoffset
+   end
+    
+   -- split comment
+   repeat
+      at_startoffset, at_endoffset = stringcomment:find("[\n\r]%s?@",partstart)
+      local partend = (at_endoffset or #stringcomment) -1
+      table.insert(result,
+                    { comment = stringcomment:sub (partstart,partend) ,
+                      offset = partstart})
+      partstart = partend+1
+   until not at_endoffset
+   
+   return result
+end
+
+
+
+------------------------------------------------------------
+-- parse a comment block and return a table 
+function M.parse(stringcomment)
+	
+	local _comment = {description="", shortdescription=""}
+	
+	-- check if it's a ld comment
+	-- get the begin of the comment
+	-------------------------------
+	local commentstart = 1
+	
+	-- split comment part
+	-------------------------------
+	local commentparts = split(stringcomment, commentstart)
+--	table.print(commentparts,1)
+--	io.flush()
+	
+	-- Extract descriptions
+	-------------------------------
+	local firstpart = commentparts[1].comment
+	if firstpart:find("^[^@]") then
+	   -- if the comment part don't start by @
+	   -- it's the part which contains descriptions
+	   local startoffset,endoffset = firstpart:find("[.?][%s\n\r]*")
+	   if startoffset then
+	     _comment.shortdescription = firstpart:sub(1,startoffset)
+	     _comment.description = firstpart:sub(endoffset+1,-1)   
+	   else
+	     _comment.shortdescription = firstpart
+	     _comment.description = firstpart
+	   end
 	end
-	-- Nothing more to parse
-	local comment = {
-		description = trim(longDescription),
-		shortdescription = trim(shortDescription)
-	}
-	if not at then
-		return comment
-	end
-	-- Cretate lexer used for parsing
-	local lx = lexer.lexer:clone()
-	lx.extractors = {
-		--	"extract_long_comment", "extract_short_comment",
-		--	"extract_long_string",
-		"extract_short_string", "extract_word", "extract_number",
-		"extract_symbol"
-	}
-	lx:add({"@@","file", "function", "recordtype", "return", "field", "param"})
-	-- The rest of the comment should be special tags starting with '@'
-	while at <= #string do
-		-- Extract section to analyse
-		local newline = string:find('[\n|\r|\r\n]', at) or #string
-		local stringtoparse = string:sub(at, newline)
-		if stringtoparse:len() > 0 then
-			-- Moving forward to next section
-			at = newline + 1
-			-- Detect main tags (file, function, recordtype)
-			if stringtoparse:find('@@') then
-				-- Parse tag
-				local maintag = findmaintag(lx:newstream(stringtoparse, 'Main tags lexer'))
-				if maintag then
-					-- Append tag information to collection
-					if not comment.maintags then comment.maintags = {} end
-					table.insert(comment.maintags, maintag)
-				end
-			elseif stringtoparse:find('@return')then
-				-- Search for a field
-				local returntag, returns, offset = pcall(findreturntag, lx:newstream(stringtoparse, 'Return tags lexer'))
-				if not returntag then
-					returntag, returns, offset = pcall(findreturntag, lx:newstream(stringtoparse, 'Return tags lexer'))
-				end
-				if returntag then
-					if not comment.returns then comment.returns = {} end
-					local returndesc ={
-						description = trim( stringtoparse:sub(offset + 1) ),
-						types = returns.types
-					}
-					table.insert(comment.returns, returndesc)
-				end
-			elseif stringtoparse:find('@field')then
-				local field, descriptionstart, x, valid = {}
-				if stringtoparse:find('#') then
-					valid,x, descriptionstart = pcall(findtypedfieldtag,lx:newstream(stringtoparse, 'Field tags lexer'))
-					if valid then
-						field.type = x.type
-					else
-						x = false
-					end
-				else
-					valid, x, descriptionstart = pcall(findfieldtag, lx:newstream(stringtoparse, 'Field tags lexer'))
-					if not valid then x = false end
-				end
-				if x then
-					field.name = x.name
-					field.description = trim(stringtoparse:sub(descriptionstart))
-					field.tag = 'TField'
-					if not comment.fields then comment.fields = {} end
-					table.insert(comment.fields, field)
-				end
-			elseif stringtoparse:find('@param')then
-				local param, descriptionstart, x, valid = {}
-				if stringtoparse:find('#') then
-					valid,x, descriptionstart = pcall(findtypedparamtag,lx:newstream(stringtoparse, 'Parameters tags lexer'))
-					if valid then
-						param.type = x.type
-					else
-						x = false
-					end
-				else
-					valid, x, descriptionstart = pcall(findparamtag, lx:newstream(stringtoparse, 'Parameters tags lexer'))
-					if not valid then x = false end
-				end
-				if x then
-					param.name = x.name
-					param.description = trim(stringtoparse:sub(descriptionstart))
-					param.tag = 'TParam'
-					if not comment.params then comment.params = {} end
-					table.insert(comment.params, param)
-				end
-			end
+   
+   -- Extract tags
+   -------------------------------
+   -- parse tag
+  for i, part in ipairs(commentparts) do
+	   tag = parsetag(part)
+		--if it's a supported tag (so tag is not nil, it's a table)
+		if tag then 
+   	  if not _comment[tag.tagname] then
+   		 _comment[tag.tagname] = {}
+   	  end
+   	  table.insert(_comment[tag.tagname],tag)
 		end
 	end
-	return comment
+		
+	return _comment
 end
 return M

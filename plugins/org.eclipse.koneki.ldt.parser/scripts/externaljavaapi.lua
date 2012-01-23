@@ -80,11 +80,9 @@ function M.createtypedef(name, definition, filemodel)
 			def:addParameter( parameter:new(param.name, M.createtyperef(param.type), param.description) )
 		end
 		-- Appending returned types
-		table.print(definition.returns)
 		for _, value in ipairs(definition.returns) do
 			local ret = retvalues:new()
 			for _, type in ipairs( value.types ) do
-			   table.print(type)
 				ret:addType(M.createtyperef(type))
 			end
 			def:addReturn(ret)

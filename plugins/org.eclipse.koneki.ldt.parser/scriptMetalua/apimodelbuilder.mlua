@@ -1,0 +1,283 @@
+--------------------------------------------------------------------------------
+--  Copyright (c) 2011-2012 Sierra Wireless.
+--  All rights reserved. This program and the accompanying materials
+--  are made available under the terms of the Eclipse Public License v1.0
+--  which accompanies this distribution, and is available at
+--  http://www.eclipse.org/legal/epl-v10.html
+-- 
+--  Contributors:
+--       Simon BERNARD <sbernard@sierrawireless.com>
+--           - initial API and implementation and initial documentation
+--------------------------------------------------------------------------------
+-{ extension 'match' }
+require 'metalua.walk'
+require 'metalua.walk.bindings'
+local ldd = require "ldd"
+local externalapi = require "externalapi"
+
+local M = {}
+
+local handledcomments={} -- cache to know the comment already handled
+
+----
+-- UTILITY METHODS
+local primitivetypes = {string=true, boolean=true, ["nil"]=true, table=true, number=true}
+
+local function createtyperef(td_typeref)
+   local _typref
+   if td_typeref.tag == "typeref" then
+      if td_typeref.module then
+         -- manage external type
+         _typeref = externalapi._externaltypref()
+         _typeref.modulename = td_typeref.module
+         _typeref.typename = td_typeref.type
+      else
+         if primitivetypes[td_typeref.type] then
+            -- manage primitive type
+            _typeref = externalapi._primitivetyperef()
+            _typeref.typename = td_typeref.type
+         else
+            -- manage internal type
+            _typeref = externalapi._internaltyperef()
+            _typeref.typename = td_typeref.type
+         end
+      end
+   end
+   return _typeref
+end
+
+local function createreturn(td_return)
+   local _return = externalapi._return()
+
+   _return.description = td_return.description
+
+   -- manage typeref
+   if td_return.types then
+      for _, td_typeref in ipairs(td_return.types) do
+         local _typeref = createtyperef(td_typeref)
+         if _typeref then
+            table.insert(_return.types,_typeref)
+         end
+      end
+   end
+   return _return
+end
+
+
+local function createfield(td_field)
+   local _item = externalapi._item()
+   _item.description = td_field.description
+   _item.name = td_field.name
+
+   -- manage typeref
+   local td_typeref = td_field.type
+   if td_typeref then
+      _item.type =  createtyperef(td_typeref)
+   end
+   return _item
+end
+
+local function createparam(td_param)
+   local _parameter = externalapi._parameter()
+   _parameter.description = td_param.description
+   _parameter.name = td_param.name
+
+   -- manage typeref
+   local td_typeref = td_param.type
+   if td_typeref then
+      _parameter.type =  createtyperef(td_typeref)
+   end
+   return _parameter
+end
+
+
+local function generatefunctiontypename(_functiontypedef)
+   local name = {"__"}
+   if _functiontypedef.returns and _functiontypedef.returns[1] then
+      local ret =  _functiontypedef.returns[1]
+      for _, type in ipairs(ret.types) do
+         if type.typename then
+            if type.modulename then
+               table.insert(name,type.modulename)
+            end
+            table.insert(name,"#")
+            table.insert(name,type.typename)
+         end
+      end
+      
+   end
+   table.insert(name,"=")
+   if _functiontypedef.params then
+      for _, param in ipairs(_functiontypedef.params) do
+         local type =  param.type
+         if type then
+            if type.typename then
+               if type.modulename then
+                  table.insert(name,type.modulename)
+               end
+               table.insert(name,"#")
+               table.insert(name,type.typename)
+            else
+               table.insert(name,"#unknown")
+            end
+         end
+         table.insert(name,"[")
+         table.insert(name,param.name)
+         table.insert(name,"]")
+      end
+   end
+    table.insert(name,"__")
+   return table.concat(name)
+end
+
+
+
+------------------------------------------------------
+-- create the module api 
+function M.createmoduleapi(ast)
+   local _file = externalapi._file()
+
+   local function handlecomment(comment)
+      local parsedcomment = ldd.parse(comment[1])
+      -- if comment is an ldd comment
+      if parsedcomment then
+         -- manage "module" comment
+         if parsedcomment["module"] then
+            -- get name
+            _file.name = parsedcomment["module"][1].name
+            
+            -- manage descriptions
+            _file.shortdescription = parsedcomment.shortdescription
+            _file.description = parsedcomment.description
+
+            -- manage returns
+            if parsedcomment ["return"] then
+               for _, td_return in ipairs(parsedcomment ["return"]) do
+                  local _return = createreturn(td_return)
+                 table.insert(_file.returns,_return)
+               end
+            end
+
+            -- manage "type" comment
+         elseif parsedcomment["type"] then
+         
+            -- create record type if it doesn't exist
+            local typename = parsedcomment["type"][1].name
+            local _recordtypedef = _file.types[typename]
+            if not _recordtypedef then
+               _recordtypedef = externalapi._recordtypedef()
+               _file.types[typename] = _recordtypedef
+            end
+
+            -- manage description
+            _recordtypedef.shortdescription = parsedcomment.shortdescription
+            _recordtypedef.description = parsedcomment.description
+
+            -- manage fields
+            if parsedcomment["field"] then
+               for _, td_field in ipairs(parsedcomment["field"]) do
+                  local _item = createfield(td_field)
+                  if _item then _recordtypedef.fields[_item.name] = _item end
+               end
+            end
+          elseif parsedcomment["field"] then
+            local td_field = parsedcomment["field"][1]
+            local _item = createfield(td_field)
+            
+            local scope = parsedcomment["field"][1].parent
+            if scope then
+               if scope.type == "global" then
+                  _file.globalvars[_item.name] = _item
+               else
+                  local _recordtypedef = _file.types[scope.type]
+                  if not _recordtypedef then
+                     _recordtypedef = externalapi._recordtypedef()
+                     _file.types[scope.type] = _recordtypedef
+                  end
+                  _recordtypedef.fields[_item.name] = _item
+               end
+            end
+          elseif parsedcomment["function"] then
+            -- create item
+            local _item = externalapi._item()
+            _item.description = parsedcomment.description
+            _item.name =  parsedcomment["function"][1].name
+
+            -- create function type
+            local _functiontypedef = externalapi._functiontypedef()
+            _functiontypedef.shortdescription = parsedcomment.shortdescription
+            _functiontypedef.description = parsedcomment.description
+
+            -- manage params
+            if parsedcomment["param"] then
+               for _, td_param in ipairs(parsedcomment["param"]) do
+                  local _param = createparam(td_param)
+                  table.insert(_functiontypedef.params,_param)
+               end
+            end
+
+            -- manage returns
+            if parsedcomment.returns then
+               for _, td_return in ipairs(parsedcomment["return"]) do
+                  local _return = createreturn(td_return)
+                  table.insert(_functiontypedef.returns,_return)
+               end
+            end
+
+            -- define type name
+            local functioname = generatefunctiontypename(_functiontypedef)
+            _file.types[functioname]= _functiontypedef
+
+            local _internaltyperef = externalapi._internaltyperef()
+            _internaltyperef.typename = functioname
+            _item.type=_internaltyperef
+
+            local scope = parsedcomment["function"][1].parent
+            if scope then
+               if scope.type == "global" then
+                  _file.globalvars[_item.name] = _item
+               else
+                  local _recordtypedef = _file.types[scope.type]
+                  if not _recordtypedef then
+                     _recordtypedef = externalapi._recordtypedef()
+                     _file.types[scope.type] = _recordtypedef
+                  end
+                  _recordtypedef.fields[_item.name] = _item
+               end
+            end
+         end
+      end
+   end
+
+   local function parsecomment(node, parent, ...)
+      -- check for comments before this node
+      if node.lineinfo.first.comments then
+         local comments = node.lineinfo.first.comments
+         -- check all comments
+         for _,comment in ipairs(comments) do
+            -- if not already handled
+            if not handledcomments[comment] then
+               handlecomment(comment)
+               handledcomments[comment]=true
+            end
+         end
+      end
+      -- check for comments after this node
+      if node.lineinfo.last.comments then
+         local comments = node.lineinfo.last.comments
+         -- check all comments
+         for _,comment in ipairs(comments) do
+            -- if not already handled
+            if not handledcomments[comment] then
+               handlecomment(comment)
+               handledcomments[comment]=true
+            end
+         end
+      end
+   end
+   local cfg = { expr={down=parsecomment}, stat={down=parsecomment}}
+   walk.block(cfg, ast)
+   return _file
+end
+
+return M 
