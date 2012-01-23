@@ -12,9 +12,9 @@
 return 
 [[<dl class="function">
 <dt>
-# if type and type.tag == 'internaltyperef' then
-	<em>$(type and '#'..type.typename)</em>
+# if item.type and item.type.tag == 'internaltyperef' then
+	<em>$(item.type and '#'..item.type.typename)</em>
 # end
-$(name)</dt>
-<dd>$(description)</dd>
+$(item.name)</dt>
+<dd>$( markdown(item.description) )</dd>
 </dl>]]

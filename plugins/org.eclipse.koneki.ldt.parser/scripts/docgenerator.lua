@@ -24,6 +24,9 @@ local returntemplate =		require 'template.return'
 
 -- Load template engine
 local pltemplate = require 'pl.template'
+
+-- Markdown handling
+local markdown = require 'markdown.markdown'
 ---
 -- Transfor a hash map in list
 -- <code>tolist({foo = 'bar'}) is equivalent to <code>{'bar'}</code>
@@ -46,13 +49,14 @@ end
 -- @return #string HTML description of given node
 local returnstring = function ( ret )
 	local returntable = {
-		ipairs = ipairs,
-		oreturns = ret,
+		ipairs		= ipairs,
+		markdown	= markdown,
+		oreturns	= ret,
 	}
 	local str, err = pltemplate.substitute(returntemplate, returntable)
 	if err then
 		print ( 'Generating return template:' )
-		table.print(ret,1)
+		table.print(ret, 1)
 		print ( err )
 		io.flush()
 	end
@@ -76,6 +80,7 @@ function M.typedef( name, typed, types, parentname)
 		fields = typed.fields,
 		ipairs = ipairs,
 		itemstring = M.item,
+		markdown = markdown,
 		name = name,
 		pairs = pairs,
 		params = typed.params,
@@ -123,6 +128,7 @@ function M.file(file)
 		globalvars		= file.globalvars,
 		ipairs			= ipairs,
 		itemstring		= M.item,
+		markdown		= markdown,
 		pairs			= pairs,
 		returns 		= file.returns,
 		returnstring	= returnstring,
@@ -138,8 +144,8 @@ function M.file(file)
 		print (error)
 		io.flush()
 	end
---	Flush generated HTML in a temporary file, allow to preview file in a browser
---	For testing purpose
+	-- Flush generated HTML in a temporary file, allow to preview file in a browser
+	-- For testing purpose
 --	if html then
 --		local file = io.open('/tmp/docdebug.html', 'w')
 --		file:write(html)
@@ -153,14 +159,15 @@ end
 -- @return #string HTML code describing given object
 function M.func(fun)
 	local f = {
-		func	= fun,
-		ipairs	= ipairs,
-		parentname = fun.parentname,
-		returnstring = returnstring,
+		func			= fun,
+		ipairs			= ipairs,
+		markdown		= markdown,
+		parentname		= fun.parentname,
+		returnstring	= returnstring,
 	}
 	local html, err = pltemplate.substitute(functiontemplate, f)
 	if err then
-		print ('Generating '.. fun.tag ..' template :')
+		print ('Generating function template :')
 		table.print(f, 1)
 		print(err)
 		io.flush()
@@ -180,17 +187,19 @@ end
 -- @param `item from external api to describe
 -- @return #string HTML code describing given object
 function M.item(it, name)
-	local previousname = it.name
+	local itemtable = {
+		item		= it,
+		markdown	= markdown,
+	}
 	if name then
-		it.name = name
+		itemtable.item.name = name
 	end
-	local html, err = pltemplate.substitute(itemtemplate, it)
+	local html, err = pltemplate.substitute(itemtemplate, itemtable)
 	if err then
 		table.print(it, 1)
 		print ('Parsing item: '..err)
 		io.flush()
 	end
-	it.name = previousname
 	return html
 end
 ---

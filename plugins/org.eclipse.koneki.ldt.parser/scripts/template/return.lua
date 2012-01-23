@@ -21,6 +21,6 @@ return [[
 # 	end
 # end
 # if oreturns.description then
-	<p>$(oreturns.description)</p>
+	$( markdown(oreturns.description))
 # end
 ]]

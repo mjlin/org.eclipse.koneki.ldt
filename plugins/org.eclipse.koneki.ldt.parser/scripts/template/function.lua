@@ -27,7 +27,7 @@ return [[
 #		if param.hidden then
 			$(param.hidden)
 #		end
-		</em></code>: $(param.description)</li>
+		</em></code>: $( markdown(param.description) )</li>
 #	end
 	</ul>
 # end

@@ -15,6 +15,6 @@ return
 [[
 <a id ="$(parentname).$(name)"></a>
 <h3>$(name)</h3>
-<p>$(shortdescription)</p>
-<p>$(description)</p>
+<p>$( markdown( shortdescription) )</p>
+<p>$( markdown( description) )</p>
 ]]
