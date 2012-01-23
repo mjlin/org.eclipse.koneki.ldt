@@ -296,6 +296,17 @@ initparser()
 
 
 ------------------------------------------------------------
+-- clean the description 
+local function cleandescription (string)
+ print("{"..string .."}")
+   local a =  string:gsub("([%s\n\r]*)$","")
+  print("["..a .."]")
+   io.flush()
+   return a    
+end
+
+
+------------------------------------------------------------
 -- parse comment tag partition and return table structure  
 local function parsetag(part)
    -- check if the part start by a supported tag
@@ -311,7 +322,7 @@ local function parsetag(part)
                 
                 -- add description
                 local endoffset = tag.lineinfo.last.offset
-                tag.description = part.comment:sub(endoffset+1,-1)
+                tag.description = cleandescription(part.comment:sub(endoffset+2,-1))
                 return tag
             end
          end
@@ -338,7 +349,7 @@ local function split(stringcomment,commentstart)
    -- split comment
    repeat
       at_startoffset, at_endoffset = stringcomment:find("[\n\r]%s?@",partstart)
-      local partend = (at_endoffset or #stringcomment) -1
+      local partend = (at_endoffset or #stringcomment+1) -1
       table.insert(result,
                     { comment = stringcomment:sub (partstart,partend) ,
                       offset = partstart})
@@ -359,7 +370,19 @@ function M.parse(stringcomment)
 	-- check if it's a ld comment
 	-- get the begin of the comment
 	-------------------------------
-	local commentstart = 1
+	if not stringcomment:find("^-") then
+	  -- if this comment don't start by -, we will not handle it
+	  return nil
+	end
+	
+	-- retrieve the real start
+	local commentstart = 2
+	-- if the first line is an empty comment line with at least 3 hypens we ignore it
+	local  _ , endoffset = stringcomment:find("^-+%s*[\n\r]")
+	if endoffset then
+	   commentstart = endoffset
+	end
+	
 	
 	-- split comment part
 	-------------------------------
@@ -376,7 +399,7 @@ function M.parse(stringcomment)
 	   local startoffset,endoffset = firstpart:find("[.?][%s\n\r]*")
 	   if startoffset then
 	     _comment.shortdescription = firstpart:sub(1,startoffset)
-	     _comment.description = firstpart:sub(endoffset+1,-1)   
+	     _comment.description = cleandescription(firstpart:sub(endoffset+1,-1))   
 	   else
 	     _comment.shortdescription = firstpart
 	     _comment.description = firstpart
