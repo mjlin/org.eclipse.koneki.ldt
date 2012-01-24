@@ -160,14 +160,20 @@ function M.createmoduleapi(ast)
 
             -- manage "type" comment
          elseif parsedcomment["type"] then
-         
+            local td_type = parsedcomment["type"][1];
             -- create record type if it doesn't exist
-            local typename = parsedcomment["type"][1].name
+            local typename = td_type.name
             local _recordtypedef = _file.types[typename]
             if not _recordtypedef then
                _recordtypedef = externalapi._recordtypedef()
                _file.types[typename] = _recordtypedef
+               table.print(td_type,1)
+               io.flush()             
             end
+            
+            -- define sourcerange
+            _recordtypedef.sourcerange.min = comment.lineinfo.first.offset-1
+            _recordtypedef.sourcerange.max = comment.lineinfo.last.offset-1
 
             -- manage description
             _recordtypedef.shortdescription = parsedcomment.shortdescription
@@ -177,12 +183,18 @@ function M.createmoduleapi(ast)
             if parsedcomment["field"] then
                for _, td_field in ipairs(parsedcomment["field"]) do
                   local _item = createfield(td_field)
+                  -- define sourcerange only if we create it
+                  _item.sourcerange.min = comment.lineinfo.first.offset-1
+                  _item.sourcerange.max = comment.lineinfo.last.offset-1
                   if _item then _recordtypedef.fields[_item.name] = _item end
                end
             end
           elseif parsedcomment["field"] then
             local td_field = parsedcomment["field"][1]
             local _item = createfield(td_field)
+            -- define sourcerange
+            _item.sourcerange.min = comment.lineinfo.first.offset-1
+            _item.sourcerange.max = comment.lineinfo.last.offset-1
             
             local scope = parsedcomment["field"][1].parent
             if scope then
@@ -193,6 +205,9 @@ function M.createmoduleapi(ast)
                   if not _recordtypedef then
                      _recordtypedef = externalapi._recordtypedef()
                      _file.types[scope.type] = _recordtypedef
+                      -- define sourcerange only if we create it
+                     _recordtypedef.sourcerange.min = comment.lineinfo.first.offset-1
+                     _recordtypedef.sourcerange.max = comment.lineinfo.last.offset-1
                   end
                   _recordtypedef.fields[_item.name] = _item
                end
@@ -202,11 +217,17 @@ function M.createmoduleapi(ast)
             local _item = externalapi._item()
             _item.description = parsedcomment.description
             _item.name =  parsedcomment["function"][1].name
+            
+            -- define sourcerange
+            _item.sourcerange.min = comment.lineinfo.first.offset-1
+            _item.sourcerange.max = comment.lineinfo.last.offset-1
+            
 
             -- create function type
             local _functiontypedef = externalapi._functiontypedef()
             _functiontypedef.shortdescription = parsedcomment.shortdescription
             _functiontypedef.description = parsedcomment.description
+
 
             -- manage params
             if parsedcomment["param"] then
@@ -241,6 +262,9 @@ function M.createmoduleapi(ast)
                   if not _recordtypedef then
                      _recordtypedef = externalapi._recordtypedef()
                      _file.types[scope.type] = _recordtypedef
+                     -- define sourcerange only if we create it
+                     _recordtypedef.sourcerange.min = comment.lineinfo.first.offset-1
+                     _recordtypedef.sourcerange.max = comment.lineinfo.last.offset-1
                   end
                   _recordtypedef.fields[_item.name] = _item
                end

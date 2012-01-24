@@ -30,7 +30,8 @@ function M._recordtypedef(shortdescription,description)
    tag = "recordtypedef",
    shortdescription = shortdescription or "",
    description =  description or "",
-   fields = {}
+   fields = {},
+   sourcerange = {min=0,max=0}
    }
 end
 
@@ -61,7 +62,8 @@ function M._item(name)
    name = name,
    description =  description or "",
    type = nil,
-   occurences={}
+   occurences={},
+   sourcerange = {min=0,max=0}
    }
 end
 

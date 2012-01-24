@@ -44,6 +44,8 @@ function M.createitem(def)
 	local desc = generator.item(def)
 	i:setDocumentation(desc)
 	i:setName(def.name)
+	i:setStart(def.sourcerange.min)
+    i:setEnd(def.sourcerange.max)
 	-- Define optional type
 	if def.type then
 		i:setType(M.createtyperef(def.type))
@@ -56,6 +58,8 @@ function M.createtypedef(name, definition, filemodel)
 	if definition.tag == "recordtypedef" then
 		def = recorddef:new()
 		def:setName(name)
+		def:setStart(definition.sourcerange.min)
+		def:setEnd(definition.sourcerange.max)
 		-- Appending fields
 		for fieldname, item in pairs(definition.fields) do
 			-- Create java oject

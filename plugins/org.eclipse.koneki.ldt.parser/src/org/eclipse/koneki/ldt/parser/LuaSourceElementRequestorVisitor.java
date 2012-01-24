@@ -98,13 +98,13 @@ public class LuaSourceElementRequestorVisitor extends SourceElementRequestVisito
 					methodInfo.name = item.getName();
 					methodInfo.parameterNames = parametersName;
 					methodInfo.modifiers = Declaration.D_METHOD_DECL & Declaration.AccPublic;
-					// methodInfo.nameSourceStart = 1;
-					// methodInfo.nameSourceEnd = 2;
-					// methodInfo.declarationStart = 1;
+					methodInfo.nameSourceStart = item.sourceStart();
+					methodInfo.nameSourceEnd = item.sourceEnd();
+					methodInfo.declarationStart = item.sourceStart();
 					// methodInfo.parameterInitializers = initializers;
 
 					this.fRequestor.enterMethod(methodInfo);
-					int declarationEnd = -1;
+					int declarationEnd = item.sourceEnd();
 					this.fRequestor.exitMethod(declarationEnd);
 					return true;
 				}
@@ -113,9 +113,9 @@ public class LuaSourceElementRequestorVisitor extends SourceElementRequestVisito
 
 		FieldInfo fieldinfo = new IElementRequestor.FieldInfo();
 		fieldinfo.name = item.getName();
-		// fieldinfo.nameSourceStart = 2;
-		// fieldinfo.nameSourceEnd = 3;
-		// fieldinfo.declarationStart = 2;
+		fieldinfo.nameSourceStart = item.sourceStart();
+		fieldinfo.nameSourceEnd = item.sourceEnd();
+		fieldinfo.declarationStart = item.sourceStart();
 		fieldinfo.modifiers = Declaration.AccPublic & Declaration.AccPublic;
 
 		if (currentRecord == null) {
@@ -125,7 +125,7 @@ public class LuaSourceElementRequestorVisitor extends SourceElementRequestVisito
 		}
 
 		this.fRequestor.enterField(fieldinfo);
-		int declarationEnd = -1;
+		int declarationEnd = item.sourceEnd();
 		this.fRequestor.exitField(declarationEnd);
 		return true;
 	}
@@ -135,9 +135,9 @@ public class LuaSourceElementRequestorVisitor extends SourceElementRequestVisito
 		RecordTypeDef recordtype = (RecordTypeDef) type;
 		TypeInfo typeinfo = new IElementRequestor.TypeInfo();
 		typeinfo.name = recordtype.getName();
-		// typeinfo.declarationStart = 1;
-		// typeinfo.nameSourceStart = 1;
-		// typeinfo.nameSourceEnd = 2;
+		typeinfo.declarationStart = type.sourceStart();
+		typeinfo.nameSourceStart = type.sourceStart();
+		typeinfo.nameSourceEnd = type.sourceEnd();
 		typeinfo.modifiers = Declaration.D_TYPE_DECL;
 
 		this.fRequestor.enterType(typeinfo);
@@ -146,7 +146,8 @@ public class LuaSourceElementRequestorVisitor extends SourceElementRequestVisito
 	}
 
 	public boolean endvisit(RecordTypeDef type) throws Exception {
-		int declarationEnd = -1;
+		int declarationEnd = type.sourceEnd();
+		System.out.println(declarationEnd);
 		this.fRequestor.exitType(declarationEnd);
 		this.currentRecord = null;
 		return true;
