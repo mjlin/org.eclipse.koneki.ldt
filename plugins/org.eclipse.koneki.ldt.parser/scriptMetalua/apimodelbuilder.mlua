@@ -217,7 +217,7 @@ function M.createmoduleapi(ast)
             end
 
             -- manage returns
-            if parsedcomment.returns then
+            if parsedcomment["return"] then
                for _, td_return in ipairs(parsedcomment["return"]) do
                   local _return = createreturn(td_return)
                   table.insert(_functiontypedef.returns,_return)

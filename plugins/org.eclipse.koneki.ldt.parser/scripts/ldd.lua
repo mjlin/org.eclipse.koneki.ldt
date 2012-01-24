@@ -230,7 +230,7 @@ local typeparsers = {
                      raiserror(result)
                      return { name = result[1].name}
                    end,
-         '@','type', '#',modulenameparser
+         '@','type', '#',typenameparser
       })          
 }  
 
@@ -298,11 +298,7 @@ initparser()
 ------------------------------------------------------------
 -- clean the description 
 local function cleandescription (string)
- print("{"..string .."}")
-   local a =  string:gsub("([%s\n\r]*)$","")
-  print("["..a .."]")
-   io.flush()
-   return a    
+   return  string:gsub("([%s\n\r]*)$","")    
 end
 
 
@@ -376,8 +372,8 @@ function M.parse(stringcomment)
 	end
 	
 	-- retrieve the real start
-	local commentstart = 2
-	-- if the first line is an empty comment line with at least 3 hypens we ignore it
+	local commentstart = 2 --after the first hyphen
+	-- if the first line is an empty comment line with at least 3 hyphens we ignore it
 	local  _ , endoffset = stringcomment:find("^-+%s*[\n\r]")
 	if endoffset then
 	   commentstart = endoffset

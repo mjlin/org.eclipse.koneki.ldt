@@ -28,7 +28,6 @@ import org.eclipse.dltk.ui.documentation.TextDocumentationResponse;
 import org.eclipse.koneki.ldt.Activator;
 import org.eclipse.koneki.ldt.internal.parser.IDocumentationHolder;
 import org.eclipse.koneki.ldt.parser.LuaASTModelUtils;
-import org.eclipse.koneki.ldt.parser.LuaASTUtils;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
 
 /**
@@ -96,24 +95,6 @@ public class LuaDocumentationProvider implements IScriptDocumentationProvider, I
 		ASTNode astNode = LuaASTModelUtils.getASTNode(member);
 		if (astNode instanceof IDocumentationHolder) {
 			return ((IDocumentationHolder) astNode).getDocumentation();
-		} else
-			return getOldMemberDocumentation(member);
-	}
-
-	private String getOldMemberDocumentation(IMember member) throws ModelException {
-		ISourceModule sourceModule = member.getSourceModule();
-		if (sourceModule != null) {
-			if (LuaASTUtils.isModule(member)) {
-				return getModuleDocumentation(sourceModule);
-			} else {
-				// get identifier
-				String elementName = member.getElementName();
-				// get documentation for this identifier
-				ModuleDeclaration moduleDeclaration = SourceParserUtil.getModuleDeclaration(sourceModule);
-				if (moduleDeclaration instanceof LuaSourceRoot) {
-					return ((LuaSourceRoot) moduleDeclaration).getMemberDocumentation(elementName);
-				}
-			}
 		}
 		return null;
 	}
