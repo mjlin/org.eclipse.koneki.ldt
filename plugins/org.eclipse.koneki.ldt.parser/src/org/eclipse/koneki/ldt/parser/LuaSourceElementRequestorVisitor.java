@@ -33,7 +33,8 @@ import org.eclipse.koneki.ldt.parser.api.external.TypeDef;
  */
 public class LuaSourceElementRequestorVisitor extends SourceElementRequestVisitor {
 	private LuaFileAPI luafileapi = null;
-	private RecordTypeDef currentRecord = null;
+
+	// private RecordTypeDef currentRecord = null;
 
 	public LuaSourceElementRequestorVisitor(ISourceElementRequestor requesor) {
 		super(requesor);
@@ -118,11 +119,11 @@ public class LuaSourceElementRequestorVisitor extends SourceElementRequestVisito
 		fieldinfo.declarationStart = item.sourceStart();
 		fieldinfo.modifiers = Declaration.AccPublic & Declaration.AccPublic;
 
-		if (currentRecord == null) {
-			// global var
-		} else {
-			// field of type
-		}
+		// if (currentRecord == null) {
+		// // global var
+		// } else {
+		// // field of type
+		// }
 
 		this.fRequestor.enterField(fieldinfo);
 		int declarationEnd = item.sourceEnd();
@@ -141,15 +142,14 @@ public class LuaSourceElementRequestorVisitor extends SourceElementRequestVisito
 		typeinfo.modifiers = Declaration.D_TYPE_DECL;
 
 		this.fRequestor.enterType(typeinfo);
-		this.currentRecord = recordtype;
+		// this.currentRecord = recordtype;
 		return true;
 	}
 
 	public boolean endvisit(RecordTypeDef type) throws Exception {
 		int declarationEnd = type.sourceEnd();
-		System.out.println(declarationEnd);
 		this.fRequestor.exitType(declarationEnd);
-		this.currentRecord = null;
+		// this.currentRecord = null;
 		return true;
 	}
 }

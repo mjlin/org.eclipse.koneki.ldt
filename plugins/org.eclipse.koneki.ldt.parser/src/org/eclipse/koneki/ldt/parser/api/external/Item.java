@@ -57,6 +57,10 @@ public class Item extends LuaASTNode implements IDocumentationHolder {
 		identifier.setDefinition(this);
 	}
 
+	public List<Identifier> getOccurences() {
+		return occurences;
+	}
+
 	/**
 	 * @see org.eclipse.dltk.ast.ASTNode#traverse(org.eclipse.dltk.ast.ASTVisitor)
 	 */

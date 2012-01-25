@@ -167,8 +167,6 @@ function M.createmoduleapi(ast)
             if not _recordtypedef then
                _recordtypedef = externalapi._recordtypedef()
                _file.types[typename] = _recordtypedef
-               table.print(td_type,1)
-               io.flush()             
             end
             
             -- define sourcerange

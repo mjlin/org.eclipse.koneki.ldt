@@ -25,7 +25,9 @@ public class Call extends LuaExpression {
 
 	@Override
 	public void traverse(ASTVisitor visitor) throws Exception {
-		// TODO Auto-generated method stub
-
+		if (visitor.visit(this)) {
+			function.traverse(visitor);
+			visitor.endvisit(this);
+		}
 	}
 }

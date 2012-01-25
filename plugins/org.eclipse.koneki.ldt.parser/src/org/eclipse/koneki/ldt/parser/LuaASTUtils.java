@@ -50,6 +50,7 @@ import org.eclipse.koneki.ldt.parser.ast.LocalVar;
 import org.eclipse.koneki.ldt.parser.ast.LuaExpression;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
 import org.eclipse.koneki.ldt.parser.ast.declarations.ModuleReference;
+import org.eclipse.koneki.ldt.parser.ast.visitor.MatchNodeVisitor;
 import org.eclipse.koneki.ldt.parser.ast.visitor.ModuleReferenceVisitor;
 import org.eclipse.koneki.ldt.parser.ast.visitor.ScopeVisitor;
 
@@ -309,6 +310,21 @@ public final class LuaASTUtils {
 		}
 
 		return collectedLocalVars.values();
+	}
+
+	public static LuaExpression getLuaExpressionAt(LuaSourceRoot luaSourceRoot, final int startOffset, final int endOffset) {
+		// traverse the root block on the file with this visitor
+		try {
+			MatchNodeVisitor matchNodeVisitor = new MatchNodeVisitor(startOffset, endOffset, LuaExpression.class);
+			luaSourceRoot.getInternalContent().getContent().traverse(matchNodeVisitor);
+			return (LuaExpression) matchNodeVisitor.getNode();
+
+			// CHECKSTYLE:OFF
+		} catch (Exception e) {
+			// CHECKSTYLE:ON
+			Activator.logError("unable to get expression at", e); //$NON-NLS-1$
+		}
+		return null;
 	}
 
 	/*

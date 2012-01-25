@@ -57,14 +57,14 @@ public class LuaSelectionEngine extends ScriptSelectionEngine {
 		IModelElement result = null;
 		ModuleDeclaration ast = SourceParserUtil.getModuleDeclaration(sourceModule);
 		if (ast != null) {
-			ASTNode node = findNodeAt(ast, start, end);
-			if (node != null) {
-				try {
-					result = findDefinition(node, sourceModule);
-				} catch (ModelException e) {
-					Activator.logWarning("Unable to find definition for node:" + node, e); //$NON-NLS-1$
-				}
-			}
+			// ASTNode node = findNodeAt(ast, start, end);
+			// if (node != null) {
+			// try {
+			// result = findDefinition(node, sourceModule);
+			// } catch (ModelException e) {
+			//					Activator.logWarning("Unable to find definition for node:" + node, e); //$NON-NLS-1$
+			// }
+			// }
 		}
 
 		if (result == null)
@@ -86,7 +86,7 @@ public class LuaSelectionEngine extends ScriptSelectionEngine {
 	 * @return Declaration in LuaModuleDeclaration at given offsets
 	 */
 	public static Declaration findMinimalDeclaration(ModuleDeclaration ast, int start, int end) {
-		MatchNodeVisitor visitor = new MatchNodeVisitor(start, end + 1);
+		MatchNodeVisitor visitor = new MatchNodeVisitor(start, end + 1, ASTNode.class);
 		try {
 			ast.traverse(visitor);
 			// CHECKSTYLE:OFF
@@ -119,7 +119,7 @@ public class LuaSelectionEngine extends ScriptSelectionEngine {
 	 * @return node found at the given offsets
 	 */
 	public static ASTNode findNodeAt(ModuleDeclaration ast, int start, int end) {
-		MatchNodeVisitor visitor = new MatchNodeVisitor(start, end + 1);
+		MatchNodeVisitor visitor = new MatchNodeVisitor(start, end + 1, ASTNode.class);
 		try {
 			ast.traverse(visitor);
 			// CHECKSTYLE:OFF

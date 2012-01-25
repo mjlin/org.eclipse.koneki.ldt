@@ -34,7 +34,9 @@ public class Index extends LuaExpression {
 
 	@Override
 	public void traverse(ASTVisitor visitor) throws Exception {
-		// TODO Auto-generated method stub
-
+		if (visitor.visit(this)) {
+			left.traverse(visitor);
+			visitor.endvisit(this);
+		}
 	}
 }

@@ -34,7 +34,9 @@ public class Invoke extends LuaExpression {
 
 	@Override
 	public void traverse(ASTVisitor visitor) throws Exception {
-		// TODO Auto-generated method stub
-
+		if (visitor.visit(this)) {
+			record.traverse(visitor);
+			visitor.endvisit(this);
+		}
 	}
 }
