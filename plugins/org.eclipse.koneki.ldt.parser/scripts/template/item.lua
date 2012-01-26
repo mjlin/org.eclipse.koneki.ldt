@@ -16,5 +16,6 @@ return
 	<em>$(item.type and '#'..item.type.typename)</em>
 # end
 $(item.name)</dt>
+<dd>$( markdown(item.shortdescription) )</dd>
 <dd>$( markdown(item.description) )</dd>
 </dl>]]

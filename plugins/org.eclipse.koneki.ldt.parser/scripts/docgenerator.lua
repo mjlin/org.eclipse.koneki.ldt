@@ -171,7 +171,8 @@ function M.file(file)
 		shortdescription= file.shortdescription,
 		tolist			= tolist,
 		typedefstring	= M.typedef,
-		types			= file.types
+		types			= file.types,
+		file = file
 	}
 	local html, error = pltemplate.substitute(filetemplate, filetable)
 	if error then

@@ -60,7 +60,8 @@ function M._item(name)
    return {
    tag = "item",
    name = name,
-   description =  description or "",
+   shortdescription = "",
+   description =  "",
    type = nil,
    occurences={},
    sourcerange = {min=0,max=0}

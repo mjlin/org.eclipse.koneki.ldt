@@ -16,17 +16,17 @@ return[[
 # --
 # local moduletyperef = returns and returns[1] and returns[1].types[1]
 # if moduletyperef then
-	<h1>Module <code>$(moduletyperef.typename)</code></h1>
+	<h1>Module <code>$(file.name)</code></h1>
 # end
 # --
 # -- Descriptions
 # --
 # local moduletype = moduletyperef and types[ moduletyperef.typename ]
 # if moduletype and moduletype.shortdescription then
-	$(markdown( moduletype.shortdescription) )
+	$(markdown( file.shortdescription) )
 # end
 # if moduletype and description then
-	<br/>$(markdown( moduletype.description ) )
+	<br/>$(markdown( file.description ) )
 # end
 # --
 # -- Current module index
@@ -55,7 +55,7 @@ return[[
 		<td class="name" nowrap="nowrap">
 			<a href="#$(moduletyperef.typename).$(item.name)">$(item.name)$(parameters)</a>
 		</td>
-		<td class="summary">$( markdown(item.description) )</td>
+		<td class="summary">$( markdown(item.shortdescription) )</td>
 		</tr>
 #	end
 	</table>
@@ -73,7 +73,7 @@ return[[
 #				for name, item in pairs(def.fields) do
 					<tr>
 					<td class="name" nowrap="nowrap"><a href="#$(defname).$(name)">$(name)</a></td>
-					<td class="summary">$( markdown(item.description) )</td>
+					<td class="summary">$( markdown(item.shortdescription) )</td>
 					</tr>
 #				end
 				</table>

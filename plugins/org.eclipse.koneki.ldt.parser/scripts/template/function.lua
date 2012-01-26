@@ -16,18 +16,20 @@ return [[
 	<h4>Parameter$(#func.params > 1 and 's')</h4>
 	<ul>
 #	for _, param in ipairs(func.params) do
-		<li><code><em>
-#		if param.type then
-			$(param.type.module)#$(param.type.typename)
-#		end
-		$(param.name)
-#		if param.optional then
-			$(param.optional)
-#		end
-#		if param.hidden then
-			$(param.hidden)
-#		end
+#     if param.name ~= "self" then 
+	   <li><code><em>
+#		  if param.type then
+			  $(param.type.module)#$(param.type.typename)
+#		  end
+		  $(param.name)
+#		  if param.optional then
+			  $(param.optional)
+#		  end
+#		  if param.hidden then
+			  $(param.hidden)
+#		  end
 		</em></code>: $( markdown(param.description) )</li>
+#		end
 #	end
 	</ul>
 # end
