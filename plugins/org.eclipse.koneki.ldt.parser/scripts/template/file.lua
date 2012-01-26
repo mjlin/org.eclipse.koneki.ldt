@@ -81,9 +81,9 @@ return[[
 #		end
 # 	end
 # end
+# if moduletype then
 <hr/>
 <h2>Detailed documentation</h2>
-# if moduletype then
 # 	for name, item in pairs(moduletype.fields) do
 #		local definition = item.type and types[item.type.typename]
 #		if definition then
@@ -103,9 +103,8 @@ return[[
 #		end
 # 	end
 # end
-
-<h2>Internal type(s)</h2>
 # if types then
+<h2>Internal type(s)</h2>
 # 	for name, def in pairs(types) do
 #		if def ~= moduletype and def.tag ~= 'functiontypedef' then
 			$( typedefstring(name, def, types, name) )

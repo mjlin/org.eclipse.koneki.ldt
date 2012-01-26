@@ -10,25 +10,13 @@
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
 return
-[[<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
-# if head and #head > 0 then
-	<head>
-#	for _, header in ipairs(head) do
-		$(header)
+[[<div id="navigation">
+# if #modules > 0 then
+<h2>Modules</h2>
+	<ul>
+#	for _, module in ipairs( modules ) do
+ 		<li><a href="$(module.name).html">$(module.name)</a></li>
 #	end
-	</head>
+	</ul>
 # end
-<body>
-<div id="container">
-<div id="product">
-	<div id="product_logo"></div>
-	<div id="product_name"><big><b></b></big></div>
-	<div id="product_description"></div>
-</div>
-<div id="main">
-$(body)
-</div>
-</body>
-</html>
-]]
+</div>]]

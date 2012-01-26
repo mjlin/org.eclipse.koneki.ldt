@@ -360,7 +360,7 @@ end
 ------------------------------------------------------------
 -- parse a comment block and return a table 
 function M.parse(stringcomment)
-	
+
 	local _comment = {description="", shortdescription=""}
 	
 	-- check if it's a ld comment

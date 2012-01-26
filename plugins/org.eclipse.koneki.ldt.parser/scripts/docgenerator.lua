@@ -21,12 +21,48 @@ local itemtemplate =		require 'template.item'
 local functiontemplate =	require 'template.function'
 local recordtemplate =		require 'template.record'
 local returntemplate =		require 'template.return'
+local indextemplate  =		require 'template.index'
+local lateraltemplate =		require 'template.lateralindex'
 
 -- Load template engine
 local pltemplate = require 'pl.template'
 
 -- Markdown handling
-local markdown = require 'markdown.markdown'
+local markdown = function (string)
+	local m = require 'markdown.markdown'
+	local result = m( string )
+	return result:gsub('^%s*<p>(.+)</p>%s*$','%1')
+end
+
+function M.index( modules )
+	local modtable = {
+		ipairs = ipairs,
+		modules = modules,
+		markdown = markdown
+	}
+	local html, error = pltemplate.substitute(indextemplate, modtable)
+	if error then
+		print ( 'Generating index:' )
+		table.print(modules, 1)
+		print ( error )
+		io.flush()
+	end
+	return html
+end
+function M.lateralmenu( modules )
+	local modtable = {
+		ipairs = ipairs,
+		modules = modules
+	}
+	local html, error = pltemplate.substitute(lateraltemplate, modtable)
+	if error then
+		print ( 'Generating lareral index:' )
+		table.print(modules, 1)
+		print ( error )
+		io.flush()
+	end
+	return html
+end
 ---
 -- Transfor a hash map in list
 -- <code>tolist({foo = 'bar'}) is equivalent to <code>{'bar'}</code>
@@ -175,12 +211,20 @@ function M.func(fun)
 	return html
 end
 --- Unused so far
-function M.html(body, title)
+function M.page(context)
 	local c = {
-		body = body,
-		title   = title
+		ipairs	= ipairs,
+		body	= context.body,
+		head	= context.head
 	}
-	return pltemplate.substitute(htmltemplate, c)
+	local page, error = pltemplate.substitute(htmltemplate, c)
+	if not page then
+		print ('Generating page template :')
+		print(error)
+		table.print(c, 1)
+		io.flush()
+	end
+	return page
 end
 ---
 -- Generate HTML documentation for a `item node.
