@@ -11,18 +11,25 @@
 package org.eclipse.koneki.ldt.parser;
 
 import org.eclipse.dltk.ast.ASTNode;
+import org.eclipse.dltk.ast.declarations.Declaration;
 import org.eclipse.dltk.ast.declarations.ModuleDeclaration;
 import org.eclipse.dltk.core.IField;
+import org.eclipse.dltk.core.IMember;
 import org.eclipse.dltk.core.IMethod;
 import org.eclipse.dltk.core.IModelElement;
 import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.dltk.core.IType;
+import org.eclipse.dltk.core.ModelException;
 import org.eclipse.dltk.core.SourceParserUtil;
 import org.eclipse.koneki.ldt.parser.api.external.Item;
+import org.eclipse.koneki.ldt.parser.api.external.LuaASTNode;
 import org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI;
 import org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef;
 import org.eclipse.koneki.ldt.parser.api.external.TypeDef;
+import org.eclipse.koneki.ldt.parser.ast.Block;
+import org.eclipse.koneki.ldt.parser.ast.Identifier;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
+import org.eclipse.koneki.ldt.parser.model.FakeField;
 
 public final class LuaASTModelUtils {
 	private LuaASTModelUtils() {
@@ -110,5 +117,53 @@ public final class LuaASTModelUtils {
 	public static IType getIType(ISourceModule module, RecordTypeDef recordtypeDef) {
 		IType type = module.getType(recordtypeDef.getName());
 		return type;
+	}
+
+	/**
+	 * Get IMember from Item <br/>
+	 * 
+	 * AST => DLTK Model
+	 */
+	public static IMember getIMember(ISourceModule sourceModule, Item item) {
+		LuaASTNode parent = item.getParent();
+		if (parent instanceof RecordTypeDef) {
+			// support record field
+			IType iType = getIType(sourceModule, (RecordTypeDef) parent);
+			if (iType != null) {
+				try {
+					for (IModelElement child : iType.getChildren()) {
+						if (child.getElementName().equals(item.getName()) && child instanceof IMember)
+							return (IMember) child;
+					}
+				} catch (ModelException e) {
+					Activator.logWarning("unable to get IMember corresponding to the given item " + item, e); //$NON-NLS-1$
+				}
+			}
+		} else if (parent instanceof Block) {
+			// support local variable
+			if (item.getOccurences().size() > 0) {
+				Identifier firstOccurence = item.getOccurences().get(0);
+				return new FakeField(sourceModule, item.getName(), firstOccurence.sourceStart(), firstOccurence.matchLength() + 1,
+						Declaration.D_DECLARATOR & Declaration.AccPrivate);
+			}
+		} else if (parent instanceof LuaFileAPI) {
+			// support global var
+		}
+
+		return null;
+	}
+
+	/**
+	 * Get IModelElement from ASTNode <br/>
+	 * 
+	 * AST => DLTK Model
+	 */
+	public static IModelElement getIModelElement(ISourceModule sourcemodule, LuaASTNode astNode) {
+		if (astNode instanceof RecordTypeDef) {
+			return getIType(sourcemodule, (RecordTypeDef) astNode);
+		} else if (astNode instanceof Item) {
+			return getIMember(sourcemodule, (Item) astNode);
+		}
+		return null;
 	}
 }

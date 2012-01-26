@@ -11,30 +11,16 @@
 package org.eclipse.koneki.ldt.parser.api.external;
 
 /**
- * Reference a type which is defined in another module
+ * TODO Comment this class
  */
-public class ExternalTypeRef extends TypeRef {
-	private final String moduleName;
-	private final String typeName;
-
-	public ExternalTypeRef(final String module, final String type) {
-		moduleName = module;
-		typeName = type;
-	}
-
-	public String getModuleName() {
-		return moduleName;
-	}
-
-	public String getTypeName() {
-		return typeName;
-	}
+public class LazyTypeRef extends TypeRef {
 
 	/**
 	 * @see org.eclipse.koneki.ldt.parser.api.external.TypeRef#toReadableString()
 	 */
 	@Override
 	public String toReadableString() {
-		return moduleName + "#" + typeName;
+		return "unresolved"; //$NON-NLS-1$
 	}
+
 }

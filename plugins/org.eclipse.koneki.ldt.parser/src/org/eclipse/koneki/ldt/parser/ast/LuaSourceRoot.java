@@ -19,7 +19,6 @@ package org.eclipse.koneki.ldt.parser.ast;
 
 import java.util.Map;
 
-import org.eclipse.dltk.ast.ASTNode;
 import org.eclipse.dltk.ast.ASTVisitor;
 import org.eclipse.dltk.ast.declarations.FieldDeclaration;
 import org.eclipse.dltk.ast.declarations.MethodDeclaration;
@@ -31,6 +30,7 @@ import org.eclipse.dltk.compiler.problem.DefaultProblemIdentifier;
 import org.eclipse.dltk.compiler.problem.IProblemIdentifier;
 import org.eclipse.dltk.compiler.problem.ProblemSeverity;
 import org.eclipse.dltk.utils.CorePrinter;
+import org.eclipse.koneki.ldt.parser.api.external.LuaASTNode;
 import org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI;
 import org.eclipse.koneki.ldt.parser.ast.declarations.DeclarationsContainer;
 
@@ -43,84 +43,14 @@ public class LuaSourceRoot extends ModuleDeclaration {
 	 * this is a complete representation of a lua file <br/>
 	 * External API + Local AST
 	 */
-	private static class LuaFile extends ASTNode {
+	private static class LuaFile extends LuaASTNode {
 
 		// this is the API of the current Lua file.
 		private LuaFileAPI fileAPI;
 		private LuaInternalContent internalContent;
 
 		public LuaFile() {
-			// fileapi = new LuaFileAPI();
-			// fileapi.setDocumentation("LUA FILE API DOCUMENTATION");
-			//
-			// Item field = new Item();
-			// field.setName("field");
-			// field.setDocumentation("field documentation");
-			// field.setType(new PrimitiveTypeRef("string"));
-			// fileapi.getGlobalvars().put(field.getName(), field);
-			//
-			// FunctionTypeDef functionTypeDef = new FunctionTypeDef();
-			// functionTypeDef.setDocumentation("FUNCTION DOCUMENTATION");
-			// functionTypeDef.getParameters().add(new Parameter("param1", new PrimitiveTypeRef("string"), "desc param 1"));
-			//
-			// RecordTypeDef recordTypeDef = new RecordTypeDef();
-			// recordTypeDef.setName("record1");
-			//
-			// fileapi.getTypes().put("f1", functionTypeDef);
-			// fileapi.getTypes().put(recordTypeDef.getName(), recordTypeDef);
-			//
-			// Item field1 = new Item();
-			// field1.setName("field1");
-			// field1.setDocumentation("field 1 documentation");
-			// field1.setType(new PrimitiveTypeRef("string"));
-			//
-			// recordTypeDef.getFields().put(field1.getName(), field1);
-			//
-			// Item field2 = new Item();
-			// field2.setName("field2");
-			// field2.setDocumentation("field  2 documentation");
-			// field2.setType(new InternalTypeRef("f1"));
-			// recordTypeDef.getFields().put(field2.getName(), field2);
-			//
-			// ReturnValues returnValues = new ReturnValues();
-			// returnValues.getTypes().add(new InternalTypeRef(recordTypeDef.getName()));
-			// fileapi.getReturns().add(returnValues);
-
 			internalContent = new LuaInternalContent();
-
-			// // root
-			// Block block = new Block();
-			// block.setStart(0);
-			// block.setEnd(100);
-			// internalContent.setContent(block);
-			//
-			// Item var = new Item();
-			// var.setName("var");
-			// var.setType(new PrimitiveTypeRef("string"));
-			// LocalVar localVar = new LocalVar(var, 2, 10);
-			// block.getLocalVars().add(localVar);
-			//
-			// Identifier identifier = new Identifier(var);
-			// identifier.setStart(6);
-			// identifier.setEnd(9);
-			// block.getContent().add(identifier);
-			//
-			// Block innerBlock = new Block();
-			// innerBlock.setStart(24);
-			// innerBlock.setEnd(55);
-			// block.getContent().add(innerBlock);
-			//
-			// Item var2 = new Item();
-			// var2.setName("var2");
-			// var2.setType(new PrimitiveTypeRef("string"));
-			// LocalVar localVar2 = new LocalVar(var2, 2, 10);
-			// innerBlock.getLocalVars().add(localVar2);
-			//
-			// Identifier identifier2 = new Identifier(var2);
-			// identifier2.setStart(29);
-			// identifier2.setEnd(32);
-			// innerBlock.getContent().add(identifier2);
-
 		}
 
 		public LuaInternalContent getInternalContent() {

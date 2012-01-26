@@ -51,4 +51,9 @@ public class FakeField extends SourceField implements ISourceRange {
 	public int getOffset() {
 		return offset;
 	}
+	
+	@Override
+	public String getType() throws ModelException {
+		return "";
+	}
 }

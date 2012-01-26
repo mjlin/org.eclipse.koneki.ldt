@@ -20,4 +20,12 @@ public class PrimitiveTypeRef extends TypeRef {
 		this.typeName = typeName;
 	}
 
+	/**
+	 * @see org.eclipse.koneki.ldt.parser.api.external.TypeRef#toReadableString()
+	 */
+	@Override
+	public String toReadableString() {
+		return "#" + typeName;
+	}
+
 }

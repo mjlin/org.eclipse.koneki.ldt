@@ -118,6 +118,8 @@ local function createexpr(expr,_block)
    if _expr then
       _expr.sourcerange.min = expr.lineinfo.first.offset - 1
       _expr.sourcerange.max = expr.lineinfo.last.offset -1
+      
+      expreto_expression[expr] = _expr
    end
    
    
@@ -157,8 +159,6 @@ local function createTreeStructure(ast)
           -- add it to parent block
           if _expression then
              table.insert(_blocks[#_blocks].content, _expression)
-             -- store this node as supported expr
-             expreto_expression[node] = _expression
           end  
       end
     end

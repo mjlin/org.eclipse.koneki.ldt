@@ -23,4 +23,8 @@ public class InternalTypeRef extends TypeRef {
 	public InternalTypeRef(String typeName) {
 		this.typeName = typeName;
 	}
+
+	public String toReadableString() {
+		return "#" + typeName; //$NON-NLS-1$
+	}
 }

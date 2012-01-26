@@ -31,6 +31,7 @@ public class Block extends LuaASTNode {
 
 	public void addLocalVar(final LocalVar var) {
 		localVars.add(var);
+		var.getVar().setParent(this);
 	}
 
 	public void addContent(final LuaASTNode node) {

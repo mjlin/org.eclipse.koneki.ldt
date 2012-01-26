@@ -34,6 +34,7 @@ public class LuaFileAPI extends LuaASTNode {
 
 	public void addGlobalVar(final String varName, final Item item) {
 		globalvars.put(varName, item);
+		item.setParent(this);
 	}
 
 	public void addReturns(final ReturnValues returnValue) {

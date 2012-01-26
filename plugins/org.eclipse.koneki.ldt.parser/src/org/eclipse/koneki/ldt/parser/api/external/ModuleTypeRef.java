@@ -10,7 +10,7 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.parser.api.external;
 
-public class ModuleTypeRef extends TypeRef {
+public class ModuleTypeRef extends LazyTypeRef {
 	private String moduleName;
 
 	public ModuleTypeRef(String moduleName, int returnPosition) {

@@ -16,20 +16,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.eclipse.dltk.ast.declarations.Argument;
 import org.eclipse.dltk.ast.declarations.Declaration;
 import org.eclipse.dltk.codeassist.ScriptCompletionEngine;
 import org.eclipse.dltk.compiler.env.IModuleSource;
 import org.eclipse.dltk.compiler.util.Util;
 import org.eclipse.dltk.core.CompletionProposal;
-import org.eclipse.dltk.core.Flags;
 import org.eclipse.dltk.core.IField;
 import org.eclipse.dltk.core.IMember;
 import org.eclipse.dltk.core.IMethod;
 import org.eclipse.dltk.core.IModelElement;
-import org.eclipse.dltk.core.IModelElementVisitor;
-import org.eclipse.dltk.core.IProjectFragment;
-import org.eclipse.dltk.core.IScriptProject;
 import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.dltk.core.IType;
 import org.eclipse.dltk.core.ModelException;
@@ -40,7 +35,6 @@ import org.eclipse.koneki.ldt.parser.LuaASTUtils.TypeResolution;
 import org.eclipse.koneki.ldt.parser.api.external.Item;
 import org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
-import org.eclipse.koneki.ldt.parser.ast.declarations.FunctionDeclaration;
 import org.eclipse.koneki.ldt.parser.model.FakeField;
 
 /**
@@ -101,33 +95,33 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 	 *            String that user just typed
 	 */
 	private void addGlobalDeclarations(ISourceModule sourceModule, final String start) throws ModelException {
-		IScriptProject project = sourceModule.getScriptProject();
-		IProjectFragment[] allProjectFragments = project.getAllProjectFragments();
-		for (IProjectFragment iProjectFragment : allProjectFragments) {
-			iProjectFragment.accept(new IModelElementVisitor() {
-				public boolean visit(IModelElement element) {
-					// manage only global member
-					if (element instanceof IMember) {
-						IMember member = (IMember) element;
-						try {
-							// manage public member except module
-							if (Flags.isPublic(member.getFlags()) && !LuaASTUtils.isModule(member)) {
-								final boolean goodStart = element.getElementName().toLowerCase().startsWith(start.toLowerCase());
-								final boolean nostart = start.isEmpty();
-								if (goodStart || nostart) {
-									createProposal(element.getElementName(), element);
-								}
-							}
-						} catch (ModelException e) {
-							Activator.logWarning("unable to acces to " + member + " to feed autocompletion.", e); //$NON-NLS-1$//$NON-NLS-2$
-						}
-						// don't go inside member.
-						return false;
-					}
-					return true;
-				}
-			});
-		}
+		// IScriptProject project = sourceModule.getScriptProject();
+		// IProjectFragment[] allProjectFragments = project.getAllProjectFragments();
+		// for (IProjectFragment iProjectFragment : allProjectFragments) {
+		// iProjectFragment.accept(new IModelElementVisitor() {
+		// public boolean visit(IModelElement element) {
+		// // manage only global member
+		// if (element instanceof IMember) {
+		// IMember member = (IMember) element;
+		// try {
+		// // manage public member except module
+		// if (Flags.isPublic(member.getFlags()) && !LuaASTUtils.isModule(member)) {
+		// final boolean goodStart = element.getElementName().toLowerCase().startsWith(start.toLowerCase());
+		// final boolean nostart = start.isEmpty();
+		// if (goodStart || nostart) {
+		// createProposal(element.getElementName(), element);
+		// }
+		// }
+		// } catch (ModelException e) {
+		//							Activator.logWarning("unable to acces to " + member + " to feed autocompletion.", e); //$NON-NLS-1$//$NON-NLS-2$
+		// }
+		// // don't go inside member.
+		// return false;
+		// }
+		// return true;
+		// }
+		// });
+		// }
 	}
 
 	/**
@@ -220,41 +214,6 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 		} catch (ModelException e) {
 			Activator.logWarning("Unable to get model element.", e); //$NON-NLS-1$
 		}
-	}
-
-	/**
-	 * @param declaration
-	 */
-	private void createProposal(Declaration declaration) {
-		final CompletionProposal proposal;
-		switch (declaration.getKind()) {
-		case Declaration.D_METHOD:
-			proposal = createProposal(CompletionProposal.METHOD_REF, actualCompletionPosition);
-			// All this just to cast Argument List to String Array
-			@SuppressWarnings("rawtypes")
-			final List parameters = ((FunctionDeclaration) declaration).getArguments();
-			ArrayList<String> list = new ArrayList<String>(parameters.size());
-			for (Object o : parameters) {
-				if (o instanceof Argument) {
-					list.add(((Argument) o).getName());
-				}
-			}
-			proposal.setParameterNames(list.toArray(new String[list.size()]));
-			break;
-		case Declaration.D_CLASS:
-			proposal = createProposal(CompletionProposal.TYPE_REF, actualCompletionPosition);
-			break;
-		default:
-			proposal = createProposal(CompletionProposal.LOCAL_VARIABLE_REF, actualCompletionPosition);
-			break;
-		}
-		final String name = declaration.getName();
-		proposal.setFlags(declaration.getModifiers() & Flags.AccPrivate);
-		proposal.setName(name);
-		proposal.setCompletion(name);
-		proposal.setReplaceRange(offset, offset + name.length());
-		proposal.setRelevance(3);
-		this.requestor.accept(proposal);
 	}
 
 	private void createProposal(String name, IModelElement element, Character lastOperator) {

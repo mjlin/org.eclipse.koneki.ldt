@@ -26,6 +26,15 @@ public class Item extends LuaASTNode implements IDocumentationHolder {
 	private String documentation;
 	private TypeRef type;
 	private List<Identifier> occurences = new ArrayList<Identifier>();
+	private LuaASTNode parent;
+
+	/**
+	 * @param parent
+	 *            the parent to set
+	 */
+	public void setParent(LuaASTNode parent) {
+		this.parent = parent;
+	}
 
 	public String getName() {
 		return name;
@@ -59,6 +68,10 @@ public class Item extends LuaASTNode implements IDocumentationHolder {
 
 	public List<Identifier> getOccurences() {
 		return occurences;
+	}
+
+	public LuaASTNode getParent() {
+		return parent;
 	}
 
 	/**

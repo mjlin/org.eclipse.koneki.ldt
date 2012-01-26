@@ -55,6 +55,7 @@ public class RecordTypeDef extends TypeDef {
 
 	public void addField(final String fieldName, final Item item) {
 		fields.put(fieldName, item);
+		item.setParent(this);
 	}
 
 	public void setName(String name) {
@@ -63,5 +64,9 @@ public class RecordTypeDef extends TypeDef {
 
 	public void setDocumentation(String documentation) {
 		this.documentation = documentation;
+	}
+
+	public String toReadableString() {
+		return "#" + name;
 	}
 }

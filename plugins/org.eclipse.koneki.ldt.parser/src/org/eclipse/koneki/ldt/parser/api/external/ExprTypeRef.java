@@ -12,7 +12,7 @@ package org.eclipse.koneki.ldt.parser.api.external;
 
 import org.eclipse.koneki.ldt.parser.ast.LuaExpression;
 
-public class ExprTypeRef extends TypeRef {
+public class ExprTypeRef extends LazyTypeRef {
 
 	private LuaExpression expression;
 	private int returnPosition;

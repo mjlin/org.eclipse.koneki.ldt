@@ -141,7 +141,7 @@ local paramparsers = {
       gg.sequence({
          builder = function (result)
                      raiserror(result)
-                     return { name = result[2].name, typeref = result[1]}
+                     return { name = result[2].name, type = result[1]}
                    end,
          '@','param', typerefparser, idparser
       }),
@@ -165,7 +165,7 @@ local fieldparsers = {
                      raiserror(result)
                      local tag = {}
                      copykey(result[1],tag)
-                     tag.typeref = result[2]
+                     tag.type = result[2]
                      tag.name = result[3].name
                      return tag
                    end,
@@ -177,7 +177,7 @@ local fieldparsers = {
       gg.sequence({
          builder = function (result)
                      raiserror(result)
-                     return { name = result[2].name, typeref = result[1]}
+                     return { name = result[2].name, type = result[1]}
                    end,
          '@','field', typerefparser, idparser
       }),

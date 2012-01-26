@@ -10,11 +10,12 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.parser.api.external;
 
-
 /**
  * this is a reference to a type
  */
 // CHECKSTYLE:OFF
 public abstract class TypeRef {
 	// CHECKSTYLE:ON
+
+	public abstract String toReadableString();
 }

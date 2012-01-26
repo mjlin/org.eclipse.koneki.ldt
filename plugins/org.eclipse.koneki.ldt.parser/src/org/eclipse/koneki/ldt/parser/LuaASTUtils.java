@@ -18,13 +18,10 @@ import java.util.Map;
 
 import org.eclipse.dltk.ast.ASTNode;
 import org.eclipse.dltk.ast.ASTVisitor;
-import org.eclipse.dltk.ast.declarations.ModuleDeclaration;
-import org.eclipse.dltk.compiler.env.IModuleSource;
 import org.eclipse.dltk.core.Flags;
 import org.eclipse.dltk.core.IMember;
 import org.eclipse.dltk.core.IMethod;
 import org.eclipse.dltk.core.IModelElement;
-import org.eclipse.dltk.core.IScriptProject;
 import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.dltk.core.IType;
 import org.eclipse.dltk.core.ModelException;
@@ -49,10 +46,7 @@ import org.eclipse.koneki.ldt.parser.ast.Invoke;
 import org.eclipse.koneki.ldt.parser.ast.LocalVar;
 import org.eclipse.koneki.ldt.parser.ast.LuaExpression;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
-import org.eclipse.koneki.ldt.parser.ast.declarations.ModuleReference;
 import org.eclipse.koneki.ldt.parser.ast.visitor.MatchNodeVisitor;
-import org.eclipse.koneki.ldt.parser.ast.visitor.ModuleReferenceVisitor;
-import org.eclipse.koneki.ldt.parser.ast.visitor.ScopeVisitor;
 
 public final class LuaASTUtils {
 	private LuaASTUtils() {
@@ -327,9 +321,57 @@ public final class LuaASTUtils {
 		return null;
 	}
 
-	/*
-	 * DECPRECATED METHODE
-	 */
+	public static class Definition {
+		private ISourceModule module;
+		private Item item;
+
+		public Definition(ISourceModule module, Item item) {
+			super();
+			this.module = module;
+			this.item = item;
+		}
+
+		public ISourceModule getModule() {
+			return module;
+		}
+
+		public Item getItem() {
+			return item;
+		}
+
+	}
+
+	public static Definition getDefinition(ISourceModule sourceModule, LuaExpression luaExpression) {
+		if (luaExpression instanceof Identifier) {
+			Identifier identifier = (Identifier) luaExpression;
+			if (identifier.getDefinition() != null) {
+				Item definition = identifier.getDefinition();
+				return new Definition(sourceModule, definition);
+			}
+		} else if (luaExpression instanceof Index) {
+			Index index = (Index) luaExpression;
+			TypeResolution resolveType = LuaASTUtils.resolveType(sourceModule, index.getLeft());
+			if (resolveType != null && resolveType.getTypeDef() instanceof RecordTypeDef) {
+				RecordTypeDef typeDef = (RecordTypeDef) resolveType.getTypeDef();
+				Item definition = typeDef.getFields().get(index.getRight());
+				return new Definition(resolveType.getModule(), definition);
+			}
+
+		} else if (luaExpression instanceof Invoke) {
+			Invoke invoke = (Invoke) luaExpression;
+			TypeResolution resolveType = LuaASTUtils.resolveType(sourceModule, invoke.getRecord());
+			if (resolveType != null && resolveType.getTypeDef() instanceof RecordTypeDef) {
+				RecordTypeDef typeDef = (RecordTypeDef) resolveType.getTypeDef();
+				Item definition = typeDef.getFields().get(invoke.getFunctionName());
+				return new Definition(resolveType.getModule(), definition);
+			}
+		} else if (luaExpression instanceof Call) {
+			Call call = (Call) luaExpression;
+			Definition definition = getDefinition(sourceModule, call.getFunction());
+			return definition;
+		}
+		return null;
+	}
 
 	private static boolean isModule(int flags) {
 		return (flags & Flags.AccModule) != 0;
@@ -351,38 +393,7 @@ public final class LuaASTUtils {
 		return member instanceof IType && Flags.isPrivate(member.getFlags());
 	}
 
-	public static ASTNode getClosestScope(ModuleDeclaration ast, int sourcePosition) throws Exception {
-		ScopeVisitor visitor = new ScopeVisitor(sourcePosition);
-		ast.traverse(visitor);
-		return visitor.getScope();
-	}
-
-	public static ModuleReference getModuleReferenceFromName(final ModuleDeclaration ast, final String lhsName) {
-		final ModuleReferenceVisitor visitor = new ModuleReferenceVisitor(lhsName);
-		try {
-			ast.traverse(visitor);
-			return visitor.getModuleReference();
-			// CHECKSTYLE:OFF
-		} catch (Exception e) {
-			// CHECKSTYLE:ON
-			return null;
-		}
-	}
-
-	public static IModelElement[] getModuleFields(ISourceModule module) throws ModelException {
-		return new IModelElement[0];
-	}
-
-	public static IModelElement[] getModuleFields(String name, IScriptProject project) throws ModelException {
-		IModuleSource moduleSource = LuaUtils.getModuleSource(name, project);
-		if (moduleSource instanceof ISourceModule) {
-			return getModuleFields((ISourceModule) moduleSource);
-		}
-		return new IModelElement[0];
-	}
-
 	public static boolean isAncestor(IModelElement element, IModelElement ancestor) {
 		return ancestor != null && element != null && (ancestor.equals(element.getParent()) || isAncestor(element.getParent(), ancestor));
 	}
-
 }
