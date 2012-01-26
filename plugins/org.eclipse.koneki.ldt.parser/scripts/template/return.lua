@@ -9,18 +9,23 @@
 --       Kevin KIN-FOO <kkinfoo@sierrawireless.com>
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
-return [[
-# if oreturns and #oreturns.types > 0 then
-<h4>Return value$(#oreturns.types > 1 and 's')</h4>
-#	if oreturns.types then
-		<ol>
-#		for _, type in ipairs(oreturns.types) do
-			<li><em>$(type.modulename)#$(type.typename)</em></li>
+return [[#
+# if oreturns and #oreturns > 0 then
+	<ol>
+#	for _, currentreturn in ipairs(oreturns) do
+		<li>
+#		if currentreturn.types and #currentreturn.types > 0 then
+#			local typelist = {}
+#			for _, type in ipairs(currentreturn.types) do
+#				typelist[ #typelist + 1 ] = (type.modulename or '')..'#'..type.typename
+#			end
+			<em>$(concat(typelist, ', '))</em>:
+#	 	end
+# 		if currentreturn.description then
+			$( markdown(currentreturn.description) )
 #		end
-		</ol>
+		</li>
 # 	end
-# end
-# if oreturns.description then
-	$( markdown(oreturns.description))
+	</ol>
 # end
 ]]

@@ -85,6 +85,7 @@ end
 -- @return #string HTML description of given node
 local returnstring = function ( ret )
 	local returntable = {
+		concat		= table.concat,
 		ipairs		= ipairs,
 		markdown	= markdown,
 		oreturns	= ret,

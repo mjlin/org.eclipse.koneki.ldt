@@ -9,7 +9,7 @@
 --       Kevin KIN-FOO <kkinfoo@sierrawireless.com>
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
-return[[
+return[[#
 <div id="content">
 # --
 # -- Module name
@@ -59,6 +59,10 @@ return[[
 		</tr>
 #	end
 	</table>
+# end
+# if returns and #returns > 0 then
+	<h3>Returns</h3>
+	$(returnstring(returns))
 # end
 # --
 # -- Listing other types than module
@@ -120,8 +124,5 @@ return[[
 #--	<h2>Global$(#globals>1 and 's')</h2>
 #-- $(concat(globals))
 #-- end
-# for _, ret in ipairs(returns) do
-	$(returnstring(ret))
-# end
 </div>
 ]]

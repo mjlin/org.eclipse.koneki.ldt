@@ -11,7 +11,7 @@
 --------------------------------------------------------------------------------
 ---
 -- Template used to generate function documentation HTML.
-return [[
+return [[#
 # if #func.params > 0 then
 	<h4>Parameter$(#func.params > 1 and 's')</h4>
 	<ul>
@@ -33,7 +33,5 @@ return [[
 #	end
 	</ul>
 # end
-# for _, ret in ipairs(func.returns) do
-	$(returnstring(ret))
-# end
+$(returnstring(func.returns))
 ]]
