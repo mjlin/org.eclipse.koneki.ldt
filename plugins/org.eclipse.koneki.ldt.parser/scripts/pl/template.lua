@@ -70,16 +70,23 @@ local template = {}
 -- <li><code>_brackets</code>; default is '()', can be any suitable bracket pair</li>
 -- <li><code>_escape</code>; default is '#' </li>
 -- </ul>
+local cache ={}
 function template.substitute(str,env)
-    env = env or {}
-    if rawget(env,"_parent") then
-        setmetatable(env,{__index = env._parent})
+    local fn = cache[str]
+    if not fn then
+       env = env or {}
+       if rawget(env,"_parent") then
+           setmetatable(env,{__index = env._parent})
+       end
+       local brackets = rawget(env,"_brackets") or '()'
+       local escape = rawget(env,"_escape") or '#'
+       local code = parseHashLines(str,brackets,escape)
+       local err
+       fn,err = utils.load(code,'TMP','t',env)
+       if not fn then return nil,err end
+       cache[str] = fn
     end
-    local brackets = rawget(env,"_brackets") or '()'
-    local escape = rawget(env,"_escape") or '#'
-    local code = parseHashLines(str,brackets,escape)
-    local fn,err = utils.load(code,'TMP','t',env)
-    if not fn then return nil,err end
+    setfenv(fn,env)
     fn = fn()
     local out = {}
     local res,err = xpcall(function() fn(function(s)
