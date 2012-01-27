@@ -15,6 +15,9 @@ return [[
 #	local def = item.type and types and types[item.type.typename]
 	<a id="$(parentname).$(name)"></a>
 #	if def and def.tag == 'functiontypedef' then
+      <dt>$(item.name)</dt>
+      <dd>$( markdown(item.shortdescription) )</dd>
+      <dd>$( markdown(item.description) )</dd>
 		$(funcstring(def))
 #	else
 		$( itemstring(item, name) )

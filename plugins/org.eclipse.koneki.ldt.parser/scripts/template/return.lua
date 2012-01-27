@@ -11,6 +11,7 @@
 --------------------------------------------------------------------------------
 return [[#
 # if oreturns and #oreturns > 0 then
+   <h3>Returns</h3>
 	<ol>
 #	for _, currentreturn in ipairs(oreturns) do
 		<li>

@@ -12,7 +12,7 @@
 ---
 -- Template used to generate function documentation HTML.
 return [[#
-# if #func.params > 0 then
+# if #func.params > 0  and not (#func.params == 1 and func.params[1].name == "self")  then
 	<h4>Parameter$(#func.params > 1 and 's')</h4>
 	<ul>
 #	for _, param in ipairs(func.params) do

@@ -22,10 +22,10 @@ return[[#
 # -- Descriptions
 # --
 # local moduletype = moduletyperef and types[ moduletyperef.typename ]
-# if moduletype and moduletype.shortdescription then
+# if file.shortdescription then
 	$(markdown( file.shortdescription) )
 # end
-# if moduletype and description then
+# if file.description then
 	<br/>$(markdown( file.description ) )
 # end
 # --
@@ -60,10 +60,10 @@ return[[#
 #	end
 	</table>
 # end
-# if returns and #returns > 0 then
-	<h3>Returns</h3>
-	$(returnstring(returns))
-# end
+# -- if returns and #returns > 0 then
+# -- 	<h3>Returns</h3>
+# -- $(returnstring(returns))
+# -- end
 # --
 # -- Listing other types than module
 # --
@@ -91,8 +91,10 @@ return[[#
 # 	for name, item in pairs(moduletype.fields) do
 #		local definition = item.type and types[item.type.typename]
 #		if definition then
-#			if definition.tag == 'functiontypedef' then
+#        if definition.tag == 'functiontypedef' then
+            <p>
 				$( typedefstring(name, definition, types, moduletyperef.typename) )
+	         </p>
 #			else
 				<h3>$(item.name)<a id="$(moduletyperef.typename).$(item.name)"></a></h3>
 				<p>
@@ -101,6 +103,7 @@ return[[#
 #				else
 					#$(item.name)
 #				end
+            $( markdown(item.shortdescription) )
 				$( markdown(item.description) )
 				</p>
 #			end
@@ -109,9 +112,9 @@ return[[#
 # end
 # if types then
 <h2>Internal type(s)</h2>
-# 	for name, def in pairs(types) do
+# 	for tname, def in pairs(types) do
 #		if def ~= moduletype and def.tag ~= 'functiontypedef' then
-			$( typedefstring(name, def, types, name) )
+			$( typedefstring(tname, def, types, name) )
 #		end
 # 	end
 # end

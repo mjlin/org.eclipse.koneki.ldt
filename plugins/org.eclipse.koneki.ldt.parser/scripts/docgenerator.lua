@@ -261,6 +261,7 @@ function M.record(record, types)
 		pairs		= pairs,
 		parentname	= record.parentname,
 		record		= record,
+		markdown     = markdown,
 		types		= types
 	}
 	local html, err = pltemplate.substitute(recordtemplate, rectable)
