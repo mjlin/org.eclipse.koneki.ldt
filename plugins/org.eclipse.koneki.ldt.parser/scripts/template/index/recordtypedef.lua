@@ -9,17 +9,12 @@
 --       Kevin KIN-FOO <kkinfoo@sierrawireless.com>
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
-return 
-[[<dl class="function">
-<dt>
-# if _item.type and _item.type.tag == 'internaltyperef' then
-	<em>$(_item.type and '#'..(_item.type.typename or ''))</em>
+return [[#
+# if not isempty(_recordtypedef.fields) then
+	<table class="function_list">
+#	for _, item in pairs( _recordtypedef.fields ) do
+		$( applytemplate(item, 'index.line') )
+# 	end
+	</table>
 # end
-$(_item.name)</dt>
-# if _item.shortdescription then
-	<dd>$( markdown(_item.shortdescription) )</dd>
-# end
-# if markdown(_item.description) then
-	<dd>$( markdown(_item.description) )</dd>
-# end
-</dl>]]
+# ]]

@@ -41,7 +41,7 @@ function M.createtyperef (type)
 end
 function M.createitem(def)
 	local i = item:new()
-	local desc = generator.item(def)
+	local desc = generator.applytemplate(def)
 	i:setDocumentation(desc)
 	i:setName(def.name)
 	i:setStart(def.sourcerange.min)
@@ -62,18 +62,18 @@ function M.createtypedef(name, definition, filemodel)
 		def:setEnd(definition.sourcerange.max)
 		-- Appending fields
 		for fieldname, item in pairs(definition.fields) do
-			-- Create java oject
+			-- Create java object
 			local javaitem =  M.createitem(item)
 			-- WARNING
 			-- If the current item points an internal function,
 			-- the documentation of referred type will be provided to java object.
 			-- As it is more useful than item documentation. 
-			if item.type and item.type.tag == 'internaltyperef' then
-				local type = filemodel.types [ item.type.typename ]
-				if type.tag == 'functiontypedef' then
-					javaitem:setDocumentation( generator.typedef(item.name, type) )
-				end
-			end
+--			if item.type and item.type.tag == 'internaltyperef' then
+--				local type = filemodel.types [ item.type.typename ]
+--				if type.tag == 'functiontypedef' then
+--					javaitem:setDocumentation( generator.typedef(item.name, type) )
+--				end
+--			end
 			def:addField(fieldname, javaitem)
 		end
 	else
@@ -92,8 +92,8 @@ function M.createtypedef(name, definition, filemodel)
 			def:addReturn(ret)
 		end
 	end
-	local desc = generator.typedef(name, definition, filemodel.types)
-	def:setDocumentation(desc)
+--	local desc = generator.typedef(name, definition, filemodel.types)
+--	def:setDocumentation(desc)
 	return def
 end
 ---
@@ -106,7 +106,7 @@ function M.createJAVAModel(model)
 	-- Fill file object
 	--
 	local file = fileapi:new()
-	local desc = generator.file(model)
+	local desc = generator.applytemplate(model)
 	file:setDocumentation(desc)
 	-- Adding gloval variables
 	for name, global in pairs(model.globalvars) do

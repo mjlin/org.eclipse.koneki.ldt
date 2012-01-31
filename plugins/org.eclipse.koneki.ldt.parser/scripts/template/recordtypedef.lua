@@ -9,18 +9,24 @@
 --       Kevin KIN-FOO <kkinfoo@sierrawireless.com>
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
-return [[
-<h3>Field(s)</h3>
-# for name, item in pairs( record.fields )do
-#	local def = item.type and types and types[item.type.typename]
-	<a id="$(parentname).$(name)"></a>
-#	if def and def.tag == 'functiontypedef' then
-      <dt>$(item.name)</dt>
-      <dd>$( markdown(item.shortdescription) )</dd>
-      <dd>$( markdown(item.description) )</dd>
-		$(funcstring(def))
-#	else
-		$( itemstring(item, name) )
-#	end
+return [[#
+<a id ="typedefanchor"></a>
+# --
+# -- Descriptions
+# --
+# if _recordtypedef.shortdescription then
+	<p>$( markdown( _recordtypedef.shortdescription ) )</p>
 # end
-]]
+# if _recordtypedef.description then
+	<p>$( markdown( _recordtypedef.description ) )</p>
+# end
+# --
+# -- Describe type fields
+# --
+# if not isempty( _recordtypedef.fields ) then
+	<h3>Field(s)</h3>
+#	for name, item in pairs( _recordtypedef.fields )do
+		<a id="resolveitemanchor"></a>
+		$( applytemplate(item) )
+#	end
+# end ]]

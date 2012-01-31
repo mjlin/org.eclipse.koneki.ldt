@@ -12,26 +12,26 @@
 ---
 -- Template used to generate function documentation HTML.
 return [[#
-# if #func.params > 0  and not (#func.params == 1 and func.params[1].name == "self")  then
-	<h4>Parameter$(#func.params > 1 and 's')</h4>
+# if #_functiontypedef.params > 0 and
+#	not (#_functiontypedef.params == 1 and _functiontypedef.params[1].name == "self")  then
+	<h4>Parameter$(#_functiontypedef.params > 1 and 's')</h4>
 	<ul>
-#	for _, param in ipairs(func.params) do
-#     if param.name ~= "self" then 
-	   <li><code><em>
-#		  if param.type then
-			  $(param.type.module)#$(param.type.typename)
-#		  end
-		  $(param.name)
-#		  if param.optional then
-			  $(param.optional)
-#		  end
-#		  if param.hidden then
-			  $(param.hidden)
-#		  end
-		</em></code>: $( markdown(param.description) )</li>
+#	for _, param in ipairs(_functiontypedef.params) do
+#		if param.name ~= "self" then
+			<li><code><em>
+#			if param.type then
+				$(param.type.module)#$(param.type.typename)
+#			end
+			$(param.name) $(param.optional) $(param.hidden)
+			</em></code>: $( markdown(param.description) )</li>
 #		end
 #	end
 	</ul>
 # end
-$(returnstring(func.returns))
-]]
+# if #_functiontypedef.returns > 0 then
+	<h4>Return$(#_functiontypedef.returns > 1 and 's')</h4>
+#	for _, _return in ipairs(_functiontypedef.returns) do
+		$(applytemplate(_return))
+#	end
+# end
+#]]

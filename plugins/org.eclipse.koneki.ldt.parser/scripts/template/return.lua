@@ -10,23 +10,10 @@
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
 return [[#
-# if oreturns and #oreturns > 0 then
-   <h3>Returns</h3>
-	<ol>
-#	for _, currentreturn in ipairs(oreturns) do
-		<li>
-#		if currentreturn.types and #currentreturn.types > 0 then
-#			local typelist = {}
-#			for _, type in ipairs(currentreturn.types) do
-#				typelist[ #typelist + 1 ] = (type.modulename or '')..'#'..type.typename
-#			end
-			<em>$(concat(typelist, ', '))</em>:
-#	 	end
-# 		if currentreturn.description then
-			$( markdown(currentreturn.description) )
-#		end
-		</li>
-# 	end
-	</ol>
+# if _return.types then
+	<em>$( magiclist(_return) )</em>:
 # end
-]]
+# if _return.description then
+	$( markdown(_return.description) )
+# end
+#]]

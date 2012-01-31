@@ -11,36 +11,55 @@
 --------------------------------------------------------------------------------
 local M = {}
 
-----
+--------------------------------------------------------------------------------
 -- API MODEL
---
+--------------------------------------------------------------------------------
+
 function M._file()
-   return {
-   tag = "file",
-   shortdescription = nil,
-   description = nil,
-   types = {},
-   globalvars ={},
-   returns={}
+   local file = {
+      -- FIELDS
+      tag = "file",
+      shortdescription, -- string
+      description,      -- string
+      types = {},       -- map from typename to type 
+      globalvars ={},
+      returns={},
+   
+      -- FUNCTIONS
+      addtype =  function (self,type)
+                     self.types[type.name] = type
+                     type.parent = self
+                  end
    }
+   return file
 end
 
-function M._recordtypedef(shortdescription,description)
-   return {
-   tag = "recordtypedef",
-   shortdescription = shortdescription or "",
-   description =  description or "",
-   fields = {},
-   sourcerange = {min=0,max=0}
+function M._recordtypedef()
+   local recordtype = {
+      -- FIELDS
+      tag = "recordtypedef",
+      name,             -- string
+      shortdescription, -- string
+      description,      -- string
+      fields = {},      -- map from fieldname to field
+      sourcerange = {min=0,max=0},
+   
+      -- FUNCTIONS
+      addfield = function (self,field)
+                     self.fields[field.name] = field
+                     field.parent = self
+                  end
    }
+   return recordtype
 end
 
 
-function M._functiontypedef(shortdescription,description)
+function M._functiontypedef()
    return {
    tag = "functiontypedef",
-   shortdescription = shortdescription or "",
-   description =  description or "",
+   name,             -- string
+   shortdescription, -- string
+   description ,     -- string
    params = {},
    returns ={}
    }

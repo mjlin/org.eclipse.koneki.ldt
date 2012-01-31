@@ -9,17 +9,9 @@
 --       Kevin KIN-FOO <kkinfoo@sierrawireless.com>
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
-return 
-[[<dl class="function">
-<dt>
-# if _item.type and _item.type.tag == 'internaltyperef' then
-	<em>$(_item.type and '#'..(_item.type.typename or ''))</em>
-# end
-$(_item.name)</dt>
-# if _item.shortdescription then
-	<dd>$( markdown(_item.shortdescription) )</dd>
-# end
-# if markdown(_item.description) then
-	<dd>$( markdown(_item.description) )</dd>
-# end
-</dl>]]
+return[[#
+<tr>
+<td class="name" nowrap="nowrap"><a href="resolvelink">$(_item.name)</a></td>
+<td class="summary">$( markdown(_item.shortdescription) )</td>
+</tr>
+#]]

@@ -13,263 +13,134 @@
 -- This library provide html description of elements from the externalapi
 local M = {}
 
--- Load templates, they are strings to fill
-local typedeftemplate =		require 'template.typedef'
-local filetemplate =		require 'template.file'
-local htmltemplate =		require 'template.html'
-local itemtemplate =		require 'template.item'
-local functiontemplate =	require 'template.function'
-local recordtemplate =		require 'template.record'
-local returntemplate =		require 'template.return'
-local indextemplate  =		require 'template.index'
-local lateraltemplate =		require 'template.lateralindex'
-
 -- Load template engine
 local pltemplate = require 'pl.template'
 
 -- Markdown handling
 local markdown = function (string)
-	local m = require 'markdown.markdown'
-	local result = m( string )
-	return result:gsub('^%s*<p>(.+)</p>%s*$','%1')
+   local m = require 'markdown.markdown'
+   local result = m( string )
+   return result:gsub('^%s*<p>(.+)</p>%s*$','%1')
 end
 
-function M.index( modules )
-	local modtable = {
-		ipairs = ipairs,
-		modules = modules,
-		markdown = markdown
-	}
-	local html, error = pltemplate.substitute(indextemplate, modtable)
-	if error then
-		print ( 'Generating index:' )
-		table.print(modules, 1)
-		print ( error )
-		io.flush()
+
+
+-- apply template to the given element
+function M.applytemplate(elem,templatetype)
+	-- define environment
+	local env = M.getenv(elem,templatetype)
+
+	-- load template
+	local template = M.gettemplate(elem,templatetype)
+	if not template then
+		templatetype = templatetype and ' "'.. templatetype.. '"' or ''
+		local elementname = ' for '.. (elem.tag or 'untagged element')
+		error('Unable to load'..templatetype..' template'..elementname)
 	end
-	return html
-end
-function M.lateralmenu( modules )
-	local modtable = {
-		ipairs = ipairs,
-		modules = modules
-	}
-	local html, error = pltemplate.substitute(lateraltemplate, modtable)
-	if error then
-		print ( 'Generating lareral index:' )
-		table.print(modules, 1)
-		print ( error )
-		io.flush()
+
+	-- apply template
+	local str, err = pltemplate.substitute(template, env)
+
+	--manage errors
+	if not str then
+		local templateerror = templatetype and ' parsing "'.. templatetype ..'" template ' or ''
+		error('An error occured' ..templateerror ..' for "'..elem.tag..'"\n'..err)
 	end
-	return html
-end
----
--- Transfor a hash map in list
--- <code>tolist({foo = 'bar'}) is equivalent to <code>{'bar'}</code>
--- @param map Table to transform
--- @result Tasformed table
--- @result #nil, #string Provide an error message in case of failure
-local function tolist(map)
-	if type(map) ~= 'table' then
-		return nil, 'Table is required'
-	end
-	local tab = {}
-	for _, value in pairs(map) do
-		table.insert(tab, value)
-	end
-	return tab
-end
----
--- Generates html description for 'return node
--- @param `return node
--- @return #string HTML description of given node
-local returnstring = function ( ret )
-	local returntable = {
-		concat		= table.concat,
-		ipairs		= ipairs,
-		markdown	= markdown,
-		oreturns	= ret,
-	}
-	local str, err = pltemplate.substitute(returntemplate, returntable)
-	if err then
-		print ( 'Generating return template:' )
-		table.print(ret, 1)
-		print ( err )
-		io.flush()
+	
+	-- Flush generated HTML in a temporary file, allow to preview file in a browser
+	-- For testing purpose
+	if str and elem and elem.tag =='file' then
+		local file = io.open('/tmp/docdebug.html', 'w')
+		file:write(str)
+		file:close()
 	end
 	return str
 end
----
--- Generates html description for type definition nodes
--- * recorddef
--- * functiondef
--- This function will use descriptions of given nodes and append the
--- results of M.func or M.record depending of given node type.
--- @param #string name associated to definition
--- @param typed Node to describe
--- @param parentname name of type's parent module, used for link generation
---		Used to match human redeable definition names.
--- @return #string HTML description of given node
-function M.typedef( name, typed, types, parentname)
-	local templatetable = {
-		concat = table.concat,
-		description = typed.description,
-		fields = typed.fields,
-		ipairs = ipairs,
-		itemstring = M.item,
-		markdown = markdown,
-		name = name,
-		pairs = pairs,
-		params = typed.params,
-		parentname = parentname,
-		returns = typed.returns,
-		returnstring = returnstring,
-		shortdescription = typed.shortdescription,
-		types = types,
-	}
-	local html, err = pltemplate.substitute(typedeftemplate, templatetable)
-	if err then
-		print ( 'Generating typedef template:' )
-		table.print(typed,1)
-		print ( err )
-		io.flush()
-	end
-	local specific, err
-	if typed.tag == 'functiontypedef' then
-		specific, err = M.func(templatetable)
+
+-- get the a new environment for this element
+function M.getenv(elem)
+   local currentenv ={}
+   for k,v in pairs(M.env) do currentenv[k] = v end
+   if elem and elem.tag then
+      currentenv['_'..elem.tag]= elem
+   end
+   return currentenv
+end
+
+-- get the template for this element
+function M.gettemplate(elem,templatetype)
+   local tag = elem and elem.tag
+   if tag then
+      if templatetype then
+         return require ("template." .. templatetype.. "." .. tag)
+      else
+         return require ("template." .. tag)
+      end
+   end
+end
+local magiclist =  function (tab)
+	if not tab then return '' end
+	-- Determine type of given elements
+	local type = tab.tag
+	if not type then return 'Elements given to magiclist() have no tags' end
+	-- Initialise list parameters
+	local inputelements, separator, first, last
+	if type == 'functiontypedef' then
+		separator =', '
+		first = '('
+		last = ')'
+		-- Output list will be a parameter list
+		inputelements = tab.params
+	elseif type == 'return' then
+		separator = ', '
+		first = ''
+		last = ''
+		inputelements = tab.types
 	else
-		specific, err = M.record(templatetable, types)
+		return 'No magic for '..type
 	end
-	if not specific then
-		print('Nothing computed for '.. typed .tag)
+	-- Append list beginning
+	local list = {first}
+
+	-- Build value list with gaps for separators
+	for i=1, #inputelements do
+		-- Format value depending on type
+		local currentelement = inputelements[i]
+		local value
+		if currentelement.tag == 'param' then
+			value = currentelement.name
+		elseif currentelement.tag == 'externaltyperef' then
+			value = currentelement.modulename ..'#'..currentelement.typename
+		elseif currentelement.tag == 'internaltyperef' or currentelement.tag == 'internaltyperef' then
+			value = '#'..currentelement.typename
+		end
+		list[ 2*i ] = value
 	end
-	if err then
-		print ( 'Generating '.. typed.tag .. ' template:')
-		table.print(typed,1)
-		print ( err )
-		io.flush()
+
+	-- Fill gaps with separators
+	for i=1, #inputelements-1 do
+		list[ 2*i + 1 ] = separator
 	end
-	return html..specific
+	-- Append list ending
+	table.insert(list, last)
+	return table.concat(list)
 end
----
--- Will generate HTML documentation for a `file node.
--- This method will rely on other methods from this module:
--- * M.item
--- * M.typedef
--- @param file from external api to describe
--- @return #string HTML code describing given object
-function M.file(file)
-	local filetable ={
-		concat			= table.concat,
-		description		= file.description,
-		globalvars		= file.globalvars,
-		ipairs			= ipairs,
-		itemstring		= M.item,
-		markdown		= markdown,
-		pairs			= pairs,
-		returns 		= file.returns,
-		returnstring	= returnstring,
-		shortdescription= file.shortdescription,
-		tolist			= tolist,
-		typedefstring	= M.typedef,
-		types			= file.types,
-		file = file
-	}
-	local html, error = pltemplate.substitute(filetemplate, filetable)
-	if error then
-		print ('Generating file template:')
-		table.print(file, 1)
-		print (error)
-		io.flush()
-	end
-	-- Flush generated HTML in a temporary file, allow to preview file in a browser
-	-- For testing purpose
---	if html then
---		local file = io.open('/tmp/docdebug.html', 'w')
---		file:write(html)
---		file:close()
---	end
-	return html
-end
----
--- Generate HTML documentation for a `functiontypedef node.
--- @param functiontypedef from external api to describe
--- @return #string HTML code describing given object
-function M.func(fun)
-	local f = {
-		func			= fun,
-		ipairs			= ipairs,
-		markdown		= markdown,
-		parentname		= fun.parentname,
-		returnstring	= returnstring,
-	}
-	local html, err = pltemplate.substitute(functiontemplate, f)
-	if err then
-		print ('Generating function template :')
-		table.print(f, 1)
-		print(err)
-		io.flush()
-	end
-	return html
-end
---- Unused so far
-function M.page(context)
-	local c = {
-		ipairs	= ipairs,
-		body	= context.body,
-		head	= context.head
-	}
-	local page, error = pltemplate.substitute(htmltemplate, c)
-	if not page then
-		print ('Generating page template :')
-		print(error)
-		table.print(c, 1)
-		io.flush()
-	end
-	return page
-end
----
--- Generate HTML documentation for a `item node.
--- @param `item from external api to describe
--- @return #string HTML code describing given object
-function M.item(it, name)
-	local itemtable = {
-		item		= it,
-		markdown	= markdown,
-	}
-	if name then
-		itemtable.item.name = name
-	end
-	local html, err = pltemplate.substitute(itemtemplate, itemtable)
-	if err then
-		table.print(it, 1)
-		print ('Parsing item: '..err)
-		io.flush()
-	end
-	return html
-end
----
--- Generate HTML documentation for a `recordtypedef node.
--- @param `recordtypedef from external api to describe
--- @types types defined in current module, use to resolve type names
--- @return #string HTML code describing given object
-function M.record(record, types)
-	local rectable = {
-		ipairs		= ipairs,
-		itemstring	= M.item,
-		funcstring	= M.func,
-		pairs		= pairs,
-		parentname	= record.parentname,
-		record		= record,
-		markdown     = markdown,
-		types		= types
-	}
-	local html, err = pltemplate.substitute(recordtemplate, rectable)
-	if err then
-		table.print(rectable, 1)
-		print ('Parsing record: '..err)
-		io.flush()
-	end
-	return html
-end
+	
+-- define default template environnement
+local defaultenv = {
+	table		= table,
+	ipairs		= ipairs,
+	pairs		= pairs,
+	markdown	= markdown,
+	applytemplate	= M.applytemplate,
+	isempty	= function(map)
+		local f = pairs(map)
+		return f(map) == nil
+	end,
+	magiclist = magiclist
+}
+
+-- this is the global env accessible in the templates
+-- env should be redefine by docgenerator user to add functions or redefine it.
+M.env = defaultenv
 return M

@@ -169,11 +169,11 @@ function M.createmoduleapi(ast)
          elseif parsedcomment["type"] then
             local td_type = parsedcomment["type"][1];
             -- create record type if it doesn't exist
-            local typename = td_type.name
-            local _recordtypedef = _file.types[typename]
+            local _recordtypedef = _file.types[td_type.name]
             if not _recordtypedef then
-               _recordtypedef = externalapi._recordtypedef()
-               _file.types[typename] = _recordtypedef
+           	   _recordtypedef = externalapi._recordtypedef()
+           	   _recordtypedef.name = td_type.name
+               _file:addtype(_recordtypedef)
             end
             
             -- define sourcerange
@@ -191,7 +191,7 @@ function M.createmoduleapi(ast)
                   -- define sourcerange only if we create it
                   _item.sourcerange.min = comment.lineinfo.first.offset-1
                   _item.sourcerange.max = comment.lineinfo.last.offset-1
-                  if _item then _recordtypedef.fields[_item.name] = _item end
+                  if _item then _recordtypedef:addfield(_item) end
                end
             end
           elseif parsedcomment["field"] then
@@ -214,7 +214,7 @@ function M.createmoduleapi(ast)
                      _recordtypedef.sourcerange.min = comment.lineinfo.first.offset-1
                      _recordtypedef.sourcerange.max = comment.lineinfo.last.offset-1
                   end
-                  _recordtypedef.fields[_item.name] = _item
+                  _recordtypedef:addfield(_item)
                end
             end
           elseif parsedcomment["function"] then
@@ -252,8 +252,8 @@ function M.createmoduleapi(ast)
             end
 
             -- define type name
-            local functioname = generatefunctiontypename(_functiontypedef)
-            _file.types[functioname]= _functiontypedef
+            _functiontypedef.name  = generatefunctiontypename(_functiontypedef)
+            _file:addtype(_functiontypedef)
 
             local _internaltyperef = externalapi._internaltyperef()
             _internaltyperef.typename = functioname
@@ -267,12 +267,13 @@ function M.createmoduleapi(ast)
                   local _recordtypedef = _file.types[scope.type]
                   if not _recordtypedef then
                      _recordtypedef = externalapi._recordtypedef()
-                     _file.types[scope.type] = _recordtypedef
+                     _recordtypedef.name = scope.type
+                     _file:addtype(_recordtypedef)
                      -- define sourcerange only if we create it
                      _recordtypedef.sourcerange.min = comment.lineinfo.first.offset-1
                      _recordtypedef.sourcerange.max = comment.lineinfo.last.offset-1
                   end
-                  _recordtypedef.fields[_item.name] = _item
+                  _recordtypedef:addfield(_item)
                end
             end
          end

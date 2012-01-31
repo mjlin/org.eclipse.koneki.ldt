@@ -14,118 +14,57 @@ return[[#
 # --
 # -- Module name
 # --
-# local moduletyperef = returns and returns[1] and returns[1].types[1]
-# if moduletyperef then
-	<h1>Module <code>$(file.name)</code></h1>
+# if _file.name then
+   <h1>Module <code>$(_file.name)</code></h1>
 # end
 # --
 # -- Descriptions
 # --
-# local moduletype = moduletyperef and types[ moduletyperef.typename ]
-# if file.shortdescription then
-	$(markdown( file.shortdescription) )
+# if _file.shortdescription then
+   $( markdown(_file.shortdescription) )
 # end
-# if file.description then
-	<br/>$(markdown( file.description ) )
+# if _file.description then
+   <br/>$( markdown(_file.description) )
 # end
 # --
-# -- Current module index
+# -- Show quick description of current type
 # --
-# local fieldlist = moduletyperef and tolist(types[moduletyperef.typename] and types[moduletyperef.typename].fields)
-# if fieldlist and #fieldlist > 0 then
-	<h2>Field(s)</h2>
-	<table class="function_list">
-#	for _, item in ipairs(fieldlist) do
-#		-- Append parameters for functions
-#		local parameters
-#		if item.type and item.type.tag == 'internaltyperef' then
-#			if types[item.type.typename] and types[item.type.typename].tag == 'functiontypedef' then
-#				local functiondef = types[item.type.typename]
-#				local tab = {'('}
-#				for i=1, #functiondef.params do
-#						tab[ #tab +1 ] = functiondef.params[i].name
-#						tab[ #tab +1 ] = ','
-#				end
-#				-- Overwrite last coma with closing parenthesis 
-#				tab[ #tab > 1 and #tab or 2 ] = ')'
-#				parameters = concat(tab)
-#			end				
+#
+# -- Locate type exposed by module
+# local currenttype = _file.returns[1] and _file.types[ _file.returns[1].types[1].typename ]
+# if currenttype then
+	<h2>Type <code>$(currenttype.name)</code></h2>
+	$( applytemplate(currenttype, 'index') )
+# end
+# --
+# -- Show quick description of other types
+# --
+# if _file.types then
+#	for name, type in pairs( _file.types ) do
+#		if not type ~= currenttype and type.tag == 'recordtypedef' then
+			<h2>Type <code>$(name)</code></h2>
+			$( applytemplate(type, 'index') )
 #		end
-		<tr>
-		<td class="name" nowrap="nowrap">
-			<a href="#$(moduletyperef.typename).$(item.name)">$(item.name)$(parameters)</a>
-		</td>
-		<td class="summary">$( markdown(item.shortdescription) )</td>
-		</tr>
 #	end
-	</table>
 # end
-# -- if returns and #returns > 0 then
-# -- 	<h3>Returns</h3>
-# -- $(returnstring(returns))
-# -- end
 # --
-# -- Listing other types than module
+# -- Long description of current type
 # --
-# local listtypes = tolist(types)
-# if listtypes and #listtypes > 0 then 
-# 	for defname, def in pairs(types) do
-#		if def ~= moduletype then
-#			if def.tag ~= 'functiontypedef' then
-				<h2>Type $(defname)</h2>
-				<table class="function_list">
-#				for name, item in pairs(def.fields) do
-					<tr>
-					<td class="name" nowrap="nowrap"><a href="#$(defname).$(name)">$(name)</a></td>
-					<td class="summary">$( markdown(item.shortdescription) )</td>
-					</tr>
-#				end
-				</table>
-#			end
-#		end
-# 	end
+# if currenttype then
+	<h2>Type <code>$(currenttype.name)</code></h2>
+	$( applytemplate(currenttype) )
 # end
-# if moduletype then
-<hr/>
-<h2>Detailed documentation</h2>
-# 	for name, item in pairs(moduletype.fields) do
-#		local definition = item.type and types[item.type.typename]
-#		if definition then
-#        if definition.tag == 'functiontypedef' then
-            <p>
-				$( typedefstring(name, definition, types, moduletyperef.typename) )
-	         </p>
-#			else
-				<h3>$(item.name)<a id="$(moduletyperef.typename).$(item.name)"></a></h3>
-				<p>
-#				if item.type.tag == 'internaltyperef' and item.type.typename then
-					<a href="#$(moduletyperef.typename).$(item.type.typename)">#$(item.type.typename)</a>
-#				else
-					#$(item.name)
-#				end
-            $( markdown(item.shortdescription) )
-				$( markdown(item.description) )
-				</p>
-#			end
+# --
+# -- Long description of other types
+# --
+# if not isempty( _file.types ) then
+	<h2>Other type(s)</h2>
+#	for name, type in pairs( _file.types ) do
+#		if type ~= currenttype  and type.tag == 'recordtypedef' then
+			<h2>Type <code>$(name)</code></h2>
+			$( applytemplate(type) )
 #		end
-# 	end
+#	end
 # end
-# if types then
-<h2>Internal type(s)</h2>
-# 	for tname, def in pairs(types) do
-#		if def ~= moduletype and def.tag ~= 'functiontypedef' then
-			$( typedefstring(tname, def, types, name) )
-#		end
-# 	end
-# end
-#-- Globals to be handled later
-#-- local globals = {}
-#-- for name, item in pairs(globalvars) do
-#--	globals[#globals] ='<h3>'..name..'</h3>'..itemstring(def)
-#-- end
-#-- if #globals > 0 then
-#--	<h2>Global$(#globals>1 and 's')</h2>
-#-- $(concat(globals))
-#-- end
 </div>
 ]]
