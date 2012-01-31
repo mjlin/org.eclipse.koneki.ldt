@@ -69,7 +69,7 @@ function M.build(source)
 
    -- create internal model
    local internalmodelbuilder = require "internalmodelbuilder"
-   local _internalcontent = internalmodelbuilder.createInternalContent(ast)
+   local _internalcontent = internalmodelbuilder.createinternalcontent(ast)
 --   table.print(_internalcontent,1)
 --  io.flush()
    

@@ -141,8 +141,8 @@ public final class LuaASTModelUtils {
 			}
 		} else if (parent instanceof Block) {
 			// support local variable
-			if (item.getOccurences().size() > 0) {
-				Identifier firstOccurence = item.getOccurences().get(0);
+			if (item.getOccurrences().size() > 0) {
+				Identifier firstOccurence = item.getOccurrences().get(0);
 				return new FakeField(sourceModule, item.getName(), firstOccurence.sourceStart(), firstOccurence.matchLength() + 1,
 						Declaration.D_DECLARATOR & Declaration.AccPrivate);
 			}

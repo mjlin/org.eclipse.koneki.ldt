@@ -82,7 +82,7 @@ function M._item(name)
    shortdescription = "",
    description =  "",
    type = nil,
-   occurences={},
+   occurrences={},
    sourcerange = {min=0,max=0}
    }
 end

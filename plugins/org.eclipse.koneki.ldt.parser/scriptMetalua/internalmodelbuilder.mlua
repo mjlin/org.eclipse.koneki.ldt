@@ -131,7 +131,7 @@ end
 
 ------------------------------------------------------------
 -- create block and expression node
-local function createTreeStructure(ast)
+local function createtreestructure(ast)
   -- create internal content 
   local _internalcontent = internalmodel._internalcontent()
 
@@ -271,13 +271,13 @@ end
 
 ------------------------------------------------------------
 -- create local vars, global vars and linked it with theirs occurences
-local function createVarDefinitions(internalcontent,ast)
+local function createvardefinitions(_internalcontent,ast)
   -- use bindings to get locals and globals definition
   local locals, globals = bindings( ast )
-
+  
   -- create locals var
   for binder, namesAndOccurrences in pairs(locals) do
-      for name, occurences in pairs(namesAndOccurrences) do
+      for name, occurrences in pairs(namesAndOccurrences) do
             -- create item
             local _item = externalapi._item(name)
             -- get type and id 
@@ -287,13 +287,13 @@ local function createVarDefinitions(internalcontent,ast)
                -- add definition as occurence
                -- we consider the identifier in the binder as an occurence
                local _identifierdef = idto_identifier[id]
-               table.insert(_item.occurences, _identifierdef)
+               table.insert(_item.occurrences, _identifierdef)
                _identifierdef.definition = _item 
                -- add occurences
-               for _,occurence in ipairs(occurences) do
-                  local _identifier = idto_identifier[occurence]
+               for _,occurrence in ipairs(occurrences) do
+                  local _identifier = idto_identifier[occurrence]
                   if _identifier then
-                    table.insert(_item.occurences, _identifier)
+                    table.insert(_item.occurrences, _identifier)
                     _identifier.definition = _item 
                   end 
                end
@@ -305,28 +305,34 @@ local function createVarDefinitions(internalcontent,ast)
    end
    
   -- create globals var
-  -- TODO IMPLEMENTS GLOVA VAR
-  --  for name, occurrences in pairs( globals ) do
-  -- local item = externalapi._item()
-  -- foreach occurence blabla
-  -- table.insert(internalcontent.unknownglobalvars,item)    
-  -- end
+  for name, occurrences in pairs( globals ) do
+      local _item = externalapi._item()
+      table.insert(_internalcontent.unknownglobalvars,_item)
+      -- add occurences
+      for _,occurence in ipairs(occurrences) do
+         local _identifier = idto_identifier[occurence]
+         if _identifier then
+            table.insert(_item.occurrences, _identifier)
+            _identifier.definition = _item 
+         end 
+      end
+  end
 end
 
 
 ------------------------------------------------------------
 -- create the internalcontent from an ast metalua 
-function M.createInternalContent (ast)
+function M.createinternalcontent (ast)
    -- init cache
    idto_block = {}  
    idto_identifier = {} 
    expreto_expression = {}
 
    -- create block and expression node
-   local internalcontent = createTreeStructure(ast)
+   local internalcontent = createtreestructure(ast)
    
    -- create Local vars, global vars and linked occurences (Items)
-   createVarDefinitions(internalcontent,ast)
+   createvardefinitions(internalcontent,ast)
    
    -- clean cache
    idto_block = {}  

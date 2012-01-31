@@ -57,7 +57,7 @@ public class LuaModelElementOccurrencesFinder extends ModelElementOccurrencesFin
 
 		// Highlight occurrences
 		ArrayList<OccurrenceLocation> list = new ArrayList<OccurrenceLocation>();
-		for (Identifier identifier : definition.getOccurences()) {
+		for (Identifier identifier : definition.getOccurrences()) {
 			list.add(new OccurrenceLocation(identifier.sourceStart(), identifier.matchLength() + 1, definition.getName()));
 		}
 		return list.toArray(new OccurrenceLocation[list.size()]);

@@ -25,7 +25,7 @@ public class Item extends LuaASTNode implements IDocumentationHolder {
 	private String name;
 	private String documentation;
 	private TypeRef type;
-	private List<Identifier> occurences = new ArrayList<Identifier>();
+	private List<Identifier> occurrences = new ArrayList<Identifier>();
 	private LuaASTNode parent;
 
 	/**
@@ -61,13 +61,13 @@ public class Item extends LuaASTNode implements IDocumentationHolder {
 		this.type = type;
 	}
 
-	public void addOccurence(Identifier identifier) {
-		occurences.add(identifier);
+	public void addOccurrence(Identifier identifier) {
+		occurrences.add(identifier);
 		identifier.setDefinition(this);
 	}
 
-	public List<Identifier> getOccurences() {
-		return occurences;
+	public List<Identifier> getOccurrences() {
+		return occurrences;
 	}
 
 	public LuaASTNode getParent() {

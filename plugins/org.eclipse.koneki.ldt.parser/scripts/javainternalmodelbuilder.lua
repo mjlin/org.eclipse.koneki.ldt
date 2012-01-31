@@ -30,10 +30,18 @@ function J._internalcontent(_internalcontent)
    local jblock = J._block(_internalcontent.content,handledexpr)
    jinternalcontent:setContent(jblock)
    
-   -- Appending variables
-   for _, item in ipairs(_internalcontent.unknownglobalvars) do
-      local jitem = externalapi.createitem(item)
+   -- Appending global variables
+   for _, _item in ipairs(_internalcontent.unknownglobalvars) do
+      local jitem = externalapi.createitem(_item)
       jinternalcontent:addUnknownglobalvar(jitem)
+      
+      -- add occurrences 
+      for _,_occurrence in ipairs(_item.occurrences) do
+         jidentifier = handledexpr[_occurrence]
+         if jidentifier then 
+            jitem:addOccurrence(jidentifier)
+         end
+      end
    end
    
    return jinternalcontent
@@ -60,11 +68,14 @@ function J._block(_block,handledexpr)
          jitem:getType():setExpression(handledexpr[_localvar.item.type.expression]) 
       end
       
+--table.print(_localvar.item.occurrences)
+io.flush()
       
-      for _,_occurence in ipairs(_localvar.item.occurences) do
-         jidentifier = handledexpr[_occurence]
+      -- add occurrence   
+      for _,_occurrence in ipairs(_localvar.item.occurrences) do
+         jidentifier = handledexpr[_occurrence]
          if jidentifier then 
-            jitem:addOccurence(jidentifier)
+            jitem:addOccurrence(jidentifier)
          end
       end
          
