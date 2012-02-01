@@ -68,9 +68,6 @@ function J._block(_block,handledexpr)
          jitem:getType():setExpression(handledexpr[_localvar.item.type.expression]) 
       end
       
---table.print(_localvar.item.occurrences)
-io.flush()
-      
       -- add occurrence   
       for _,_occurrence in ipairs(_localvar.item.occurrences) do
          jidentifier = handledexpr[_occurrence]
@@ -78,7 +75,6 @@ io.flush()
             jitem:addOccurrence(jidentifier)
          end
       end
-         
             
       -- Append Java local variable definition
       local jlocalvar  = localvarclass:new(jitem, _localvar.scope.min, _localvar.scope.max)

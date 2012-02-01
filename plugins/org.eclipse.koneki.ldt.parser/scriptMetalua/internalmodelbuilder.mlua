@@ -307,6 +307,7 @@ local function createvardefinitions(_internalcontent,ast)
   -- create globals var
   for name, occurrences in pairs( globals ) do
       local _item = externalapi._item()
+      _item.name = name
       table.insert(_internalcontent.unknownglobalvars,_item)
       -- add occurences
       for _,occurence in ipairs(occurrences) do

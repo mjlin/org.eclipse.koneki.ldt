@@ -45,6 +45,7 @@ import org.eclipse.koneki.ldt.parser.ast.Index;
 import org.eclipse.koneki.ldt.parser.ast.Invoke;
 import org.eclipse.koneki.ldt.parser.ast.LocalVar;
 import org.eclipse.koneki.ldt.parser.ast.LuaExpression;
+import org.eclipse.koneki.ldt.parser.ast.LuaInternalContent;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
 import org.eclipse.koneki.ldt.parser.ast.visitor.MatchNodeVisitor;
 
@@ -183,11 +184,11 @@ public final class LuaASTUtils {
 
 	public static TypeResolution resolveType(ISourceModule sourceModule, LuaExpression expr, int returnposition) {
 		if (expr instanceof Identifier) {
-			Item definition = ((Identifier) expr).getDefinition();
+			Definition definition = getDefinition(sourceModule, expr);
 			// resolve the type of the definition
-			if (definition == null || definition.getType() == null)
+			if (definition == null || definition.getItem() == null || definition.getItem().getType() == null)
 				return null;
-			return resolveType(sourceModule, definition.getType());
+			return resolveType(definition.getModule(), definition.getItem().getType());
 		} else if (expr instanceof Index) {
 			Index index = ((Index) expr);
 			// resolve left part of the index
@@ -346,6 +347,13 @@ public final class LuaASTUtils {
 			Identifier identifier = (Identifier) luaExpression;
 			if (identifier.getDefinition() != null) {
 				Item definition = identifier.getDefinition();
+				if (definition.getParent() instanceof LuaInternalContent) {
+					// in this case we have a unknown global var definition.
+					// we will try to resolved it
+					Definition globalVarDefinition = getGlobalVarDefinition(sourceModule, definition.getName());
+					if (globalVarDefinition != null)
+						return globalVarDefinition;
+				}
 				return new Definition(sourceModule, definition);
 			}
 		} else if (luaExpression instanceof Index) {
@@ -369,6 +377,32 @@ public final class LuaASTUtils {
 			Call call = (Call) luaExpression;
 			Definition definition = getDefinition(sourceModule, call.getFunction());
 			return definition;
+		}
+		return null;
+	}
+
+	public static Definition getGlobalVarDefinition(ISourceModule sourceModule, String varname) {
+		// get preloaded module
+		ISourceModule preloadedSourceModule = getPreloadSourceModule(sourceModule);
+		if (preloadedSourceModule == null)
+			return null;
+
+		// get luasourceroot
+		LuaSourceRoot luaSourceRoot = LuaASTModelUtils.getLuaSourceRoot(preloadedSourceModule);
+		if (luaSourceRoot == null)
+			return null;
+
+		// get a global var with this name
+		Item item = luaSourceRoot.getFileapi().getGlobalvars().get(varname);
+		if (item == null)
+			return null;
+
+		return new Definition(preloadedSourceModule, item);
+	}
+
+	public static ISourceModule getPreloadSourceModule(ISourceModule sourceModule) {
+		if (sourceModule != null && sourceModule.getScriptProject() != null) {
+			return LuaUtils.getSourceModule("global", sourceModule.getScriptProject()); //$NON-NLS-1$
 		}
 		return null;
 	}

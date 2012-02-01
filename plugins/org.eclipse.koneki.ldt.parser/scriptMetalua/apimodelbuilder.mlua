@@ -256,7 +256,7 @@ function M.createmoduleapi(ast)
             _file:addtype(_functiontypedef)
 
             local _internaltyperef = externalapi._internaltyperef()
-            _internaltyperef.typename = functioname
+            _internaltyperef.typename = _functiontypedef.name
             _item.type=_internaltyperef
 
             local scope = parsedcomment["function"][1].parent

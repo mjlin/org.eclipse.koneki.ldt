@@ -47,13 +47,6 @@ function M.applytemplate(elem,templatetype)
 		error('An error occured' ..templateerror ..' for "'..elem.tag..'"\n'..err)
 	end
 	
-	-- Flush generated HTML in a temporary file, allow to preview file in a browser
-	-- For testing purpose
-	if str and elem and elem.tag =='file' then
-		local file = io.open('/tmp/docdebug.html', 'w')
-		file:write(str)
-		file:close()
-	end
 	return str
 end
 

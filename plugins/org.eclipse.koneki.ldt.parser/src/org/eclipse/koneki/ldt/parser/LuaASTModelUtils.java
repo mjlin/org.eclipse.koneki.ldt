@@ -148,6 +148,14 @@ public final class LuaASTModelUtils {
 			}
 		} else if (parent instanceof LuaFileAPI) {
 			// support global var
+			try {
+				for (IModelElement child : sourceModule.getChildren()) {
+					if (child.getElementName().equals(item.getName()) && child instanceof IMember)
+						return (IMember) child;
+				}
+			} catch (ModelException e) {
+				Activator.logWarning("unable to get IMember corresponding to the given item " + item, e); //$NON-NLS-1$
+			}
 		}
 
 		return null;
