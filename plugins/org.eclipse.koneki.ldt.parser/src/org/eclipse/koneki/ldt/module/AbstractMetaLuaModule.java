@@ -8,7 +8,7 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-package org.eclipse.koneki.ldt.parser;
+package org.eclipse.koneki.ldt.module;
 
 import java.io.File;
 import java.io.IOException;

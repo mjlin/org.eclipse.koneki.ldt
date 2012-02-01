@@ -13,7 +13,7 @@ package org.eclipse.koneki.ldt.parser;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.koneki.ldt.internal.parser.DLTKObjectFactory;
+import org.eclipse.koneki.ldt.module.AbstractMetaLuaModule;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
 
 import com.naef.jnlua.LuaState;
@@ -35,8 +35,8 @@ public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 	private LuaState lua = null;
 
 	public synchronized LuaSourceRoot buildAST(final String string) {
-		// if (lua == null)
-		lua = loadLuaModule();
+		if (lua == null)
+			lua = loadLuaModule();
 
 		pushLuaModule(lua);
 		lua.getField(-1, "build"); //$NON-NLS-1$
@@ -45,23 +45,22 @@ public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 		LuaSourceRoot luaSourceRoot = lua.checkJavaObject(-1, LuaSourceRoot.class);
 		lua.pop(2);
 
-		lua.close();
+		// lua.close();
 
 		return luaSourceRoot;
 	}
 
 	/**
-	 * @see org.eclipse.koneki.ldt.parser.AbstractMetaLuaModule#loadLuaModule()
+	 * @see org.eclipse.koneki.ldt.module.AbstractMetaLuaModule#loadLuaModule()
 	 */
 	@Override
 	protected LuaState loadLuaModule() {
 		LuaState luaState = super.loadLuaModule();
-		DLTKObjectFactory.register(luaState);
 		return luaState;
 	}
 
 	/**
-	 * @see org.eclipse.koneki.ldt.parser.AbstractMetaLuaModule#getMetaLuaSourcePath()
+	 * @see org.eclipse.koneki.ldt.module.AbstractMetaLuaModule#getMetaLuaSourcePath()
 	 */
 	@Override
 	protected String getMetaLuaSourcePath() {
@@ -69,7 +68,7 @@ public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 	}
 
 	/**
-	 * @see org.eclipse.koneki.ldt.parser.AbstractMetaLuaModule#getMetaLuaFileToCompile()
+	 * @see org.eclipse.koneki.ldt.module.AbstractMetaLuaModule#getMetaLuaFileToCompile()
 	 */
 	@Override
 	protected List<String> getMetaLuaFileToCompile() {
@@ -82,7 +81,7 @@ public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 	}
 
 	/**
-	 * @see org.eclipse.koneki.ldt.parser.AbstractMetaLuaModule#getPluginID()
+	 * @see org.eclipse.koneki.ldt.module.AbstractMetaLuaModule#getPluginID()
 	 */
 	@Override
 	protected String getPluginID() {
@@ -90,7 +89,7 @@ public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 	}
 
 	/**
-	 * @see org.eclipse.koneki.ldt.parser.AbstractMetaLuaModule#getModuleName()
+	 * @see org.eclipse.koneki.ldt.module.AbstractMetaLuaModule#getModuleName()
 	 */
 	@Override
 	protected String getModuleName() {
@@ -98,7 +97,7 @@ public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 	}
 
 	/**
-	 * @see org.eclipse.koneki.ldt.parser.AbstractLuaModule#getLuaSourcePaths()
+	 * @see org.eclipse.koneki.ldt.module.AbstractLuaModule#getLuaSourcePaths()
 	 */
 	@Override
 	protected List<String> getLuaSourcePaths() {

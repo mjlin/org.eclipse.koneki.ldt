@@ -46,11 +46,7 @@ function M.applytemplate(elem,templatetype)
 		local templateerror = templatetype and ' parsing "'.. templatetype ..'" template ' or ''
 		error('An error occured' ..templateerror ..' for "'..elem.tag..'"\n'..err)
 	end
-	if elem.tag == 'file' then
-		local file = io.open('/tmp/docdebug.html', 'w')
-		file:write(str)
-		file:close() 
-	end
+	
 	return str
 end
 

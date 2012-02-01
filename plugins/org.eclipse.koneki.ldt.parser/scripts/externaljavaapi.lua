@@ -67,20 +67,12 @@ function M.createtypedef(name, definition, filemodel)
 		def:setName(name)
 		def:setStart(definition.sourcerange.min)
 		def:setEnd(definition.sourcerange.max)
+		local desc = generator.applytemplate(definition)
+        def:setDocumentation(desc)
 		-- Appending fields
 		for fieldname, item in pairs(definition.fields) do
 			-- Create java object
 			local javaitem =  M.createitem(item)
-			-- WARNING
-			-- If the current item points an internal function,
-			-- the documentation of referred type will be provided to java object.
-			-- As it is more useful than item documentation. 
---			if item.type and item.type.tag == 'internaltyperef' then
---				local type = filemodel.types [ item.type.typename ]
---				if type.tag == 'functiontypedef' then
---					javaitem:setDocumentation( generator.typedef(item.name, type) )
---				end
---			end
 			def:addField(fieldname, javaitem)
 		end
 	else
@@ -99,8 +91,6 @@ function M.createtypedef(name, definition, filemodel)
 			def:addReturn(ret)
 		end
 	end
---	local desc = generator.typedef(name, definition, filemodel.types)
---	def:setDocumentation(desc)
 	return def
 end
 ---

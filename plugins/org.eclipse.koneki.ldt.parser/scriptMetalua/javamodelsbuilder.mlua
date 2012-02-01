@@ -9,9 +9,8 @@
 --       Kevin KIN-FOO <kkinfoo@sierrawireless.com>
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
-require 'metalua.compiler'
-require 'metalua.walk'
--{ extension 'match' }
+
+local luasourcerootclass = java.require 'org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot'
 
 -- Just redefining classic print, as there is a flush problem calling it from Java
 local print = function (string) print(string) io.flush() end
@@ -31,7 +30,7 @@ function M.build(source)
    -- Build AST
    require 'errnode'
    local ast = getast( source )
-   local root = DLTK.LuaSourceRoot(#source, true)
+   local root = luasourcerootclass:new(#source, true)
 
    -- Check if an error occurred
    local aststatus, error = pcall(mlc.check_ast, ast)
@@ -44,16 +43,16 @@ function M.build(source)
       if errornode and errornode.lineinfo then
          local line, column = errornode.lineinfo.first.line or 1, errornode.lineinfo.first.column or 1
          local offset = errornode.lineinfo.first.offset or 1
-         DLTK.setProblem(root, line, column, offset, error)
+         root:setProblem(line, column, offset, error)
       else
-         DLTK.setProblem(root, 1, 1, 0, error)
+         root:setProblem(1, 1, 0, error)
       end
       return root
    elseif ast.tag == 'Error' then
       -- Dealing with error generated from errnode#getast
       local line, column, offset = ast.lineinfo.first[1] or 1, ast.lineinfo.first[2] or 1, ast.lineinfo.first[3] or 1
       local errorMessage = ast[1] or 'Unable to determine error'
-      DLTK.setProblem(root, line, column, offset, errorMessage )
+      root:setProblem(line, column, offset, errorMessage )
       return root
    end
 
@@ -79,7 +78,7 @@ function M.build(source)
 
    
    -- Append information from documentation
-   root:setDocumentationInformation(jfile)
+   root:setLuaFileApi(jfile)
    root:setInternalContent(jinternalcontent)
 
    local handledcomments={}

@@ -18,4 +18,12 @@ import org.eclipse.dltk.ast.ASTNode;
 // CHECKSTYLE:OFF
 public abstract class LuaASTNode extends ASTNode {
 	// CHECKSTYLE:ON
+
+	@Override
+	public int hashCode() {
+		// we do this only to avoid findbug errors.
+		// findbugs detects that ASTNode override equals but not hashcode
+		// but equals is override by super.equals ...
+		return super.hashCode();
+	}
 }

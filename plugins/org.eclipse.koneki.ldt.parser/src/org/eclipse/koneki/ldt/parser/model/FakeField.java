@@ -6,6 +6,7 @@ import org.eclipse.dltk.core.ModelException;
 import org.eclipse.dltk.internal.core.ModelElement;
 import org.eclipse.dltk.internal.core.SourceField;
 
+@SuppressWarnings("restriction")
 public class FakeField extends SourceField implements ISourceRange {
 	private final int offset;
 	private final int length;
@@ -51,9 +52,27 @@ public class FakeField extends SourceField implements ISourceRange {
 	public int getOffset() {
 		return offset;
 	}
-	
+
 	@Override
 	public String getType() throws ModelException {
-		return "";
+		return ""; //$NON-NLS-1$
+	}
+
+	/**
+	 * @see org.eclipse.dltk.internal.core.SourceField#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object o) {
+		// TODO we probably need to override it
+		return super.equals(o);
+	}
+
+	/**
+	 * @see org.eclipse.dltk.internal.core.ModelElement#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		// TODO we probably need to override it
+		return super.hashCode();
 	}
 }

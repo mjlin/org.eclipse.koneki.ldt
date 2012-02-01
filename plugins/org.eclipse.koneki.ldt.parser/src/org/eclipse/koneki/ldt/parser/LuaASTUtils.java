@@ -428,6 +428,9 @@ public final class LuaASTUtils {
 		return null;
 	}
 
+	/*****
+	 * DEPRECATED FUNCTION
+	 */
 	private static boolean isModule(int flags) {
 		return (flags & Flags.AccModule) != 0;
 	}

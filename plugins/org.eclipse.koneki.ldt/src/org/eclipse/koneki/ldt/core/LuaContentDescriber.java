@@ -24,7 +24,7 @@ import org.eclipse.dltk.core.ScriptContentDescriber;
 public class LuaContentDescriber extends ScriptContentDescriber {
 
 	/** Accepted patterns for headers. */
-	protected static Pattern[] header_patterns = { Pattern.compile("^#!.*lua.*", Pattern.MULTILINE) };//$NON-NLS-1$
+	protected static final Pattern[] HEADER_PATTERNS = { Pattern.compile("^#!.*lua.*", Pattern.MULTILINE) };//$NON-NLS-1$
 
 	/**
 	 * Instantiates a new Lua content describer.
@@ -40,6 +40,6 @@ public class LuaContentDescriber extends ScriptContentDescriber {
 	 */
 	@Override
 	protected Pattern[] getHeaderPatterns() {
-		return header_patterns;
+		return HEADER_PATTERNS;
 	}
 }

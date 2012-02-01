@@ -35,6 +35,6 @@ public class ExternalTypeRef extends TypeRef {
 	 */
 	@Override
 	public String toReadableString() {
-		return moduleName + "#" + typeName;
+		return moduleName + "#" + typeName; //$NON-NLS-1$
 	}
 }

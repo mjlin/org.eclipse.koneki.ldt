@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.koneki.ldt.metalua.MetaluaStateFactory;
-import org.eclipse.koneki.ldt.parser.AbstractLuaModule;
+import org.eclipse.koneki.ldt.module.AbstractLuaModule;
 import org.eclipse.koneki.ldt.parser.Activator;
 
 import com.naef.jnlua.LuaRuntimeException;
@@ -136,7 +136,7 @@ public final class FormatLuaModule extends AbstractLuaModule {
 	}
 
 	/**
-	 * @see org.eclipse.koneki.ldt.parser.AbstractLuaModule#getLuaSourcePaths()
+	 * @see org.eclipse.koneki.ldt.module.AbstractLuaModule#getLuaSourcePaths()
 	 */
 	@Override
 	protected List<String> getLuaSourcePaths() {
@@ -146,7 +146,7 @@ public final class FormatLuaModule extends AbstractLuaModule {
 	}
 
 	/**
-	 * @see org.eclipse.koneki.ldt.parser.AbstractLuaModule#getLuacSourcePaths()
+	 * @see org.eclipse.koneki.ldt.module.AbstractLuaModule#getLuacSourcePaths()
 	 */
 	@Override
 	protected List<String> getLuacSourcePaths() {
@@ -154,7 +154,7 @@ public final class FormatLuaModule extends AbstractLuaModule {
 	}
 
 	/**
-	 * @see org.eclipse.koneki.ldt.parser.AbstractLuaModule#createLuaState()
+	 * @see org.eclipse.koneki.ldt.module.AbstractLuaModule#createLuaState()
 	 */
 	@Override
 	protected LuaState createLuaState() {
@@ -162,7 +162,7 @@ public final class FormatLuaModule extends AbstractLuaModule {
 	}
 
 	/**
-	 * @see org.eclipse.koneki.ldt.parser.AbstractLuaModule#getPluginID()
+	 * @see org.eclipse.koneki.ldt.module.AbstractLuaModule#getPluginID()
 	 */
 	@Override
 	protected String getPluginID() {
@@ -170,7 +170,7 @@ public final class FormatLuaModule extends AbstractLuaModule {
 	}
 
 	/**
-	 * @see org.eclipse.koneki.ldt.parser.AbstractLuaModule#getModuleName()
+	 * @see org.eclipse.koneki.ldt.module.AbstractLuaModule#getModuleName()
 	 */
 	@Override
 	protected String getModuleName() {

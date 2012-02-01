@@ -67,6 +67,6 @@ public class RecordTypeDef extends TypeDef {
 	}
 
 	public String toReadableString() {
-		return "#" + name;
+		return "#" + name; //$NON-NLS-1$
 	}
 }

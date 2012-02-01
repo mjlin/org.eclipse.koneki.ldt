@@ -89,16 +89,22 @@ local expreto_expression = {} -- cache from  metalua expression to internal mode
 -- create an expression from a metalua node
 local function createexpr(expr,_block)
    local _expr = nil 
-
+   
    match expr with
     | `Id { name } ->
-         -- create identifier
-         local _identifier = internalmodel._identifier()
          -- we store the block which hold this node 
          -- to be able to define   
          idto_block[expr]= _block
-         idto_identifier[expr]= _identifier
          
+         -- if expr has not line info, it means expr has no representation in the code
+         -- so we don't need it.
+         if not expr.lineinfo then
+            return nil
+         end
+         
+         -- create identifier
+         local _identifier = internalmodel._identifier()
+         idto_identifier[expr]= _identifier
          _expr =  _identifier                                   
     | `Index { innerexpr, `String{fieldname} } ->
          -- create index
@@ -118,7 +124,7 @@ local function createexpr(expr,_block)
    if _expr then
       _expr.sourcerange.min = expr.lineinfo.first.offset - 1
       _expr.sourcerange.max = expr.lineinfo.last.offset -1
-      
+         
       expreto_expression[expr] = _expr
    end
    
@@ -287,8 +293,11 @@ local function createvardefinitions(_internalcontent,ast)
                -- add definition as occurence
                -- we consider the identifier in the binder as an occurence
                local _identifierdef = idto_identifier[id]
-               table.insert(_item.occurrences, _identifierdef)
-               _identifierdef.definition = _item 
+               if _identifierdef then
+                  table.insert(_item.occurrences, _identifierdef)
+                  _identifierdef.definition = _item
+               end
+                
                -- add occurences
                for _,occurrence in ipairs(occurrences) do
                   local _identifier = idto_identifier[occurrence]

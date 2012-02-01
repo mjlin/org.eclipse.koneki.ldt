@@ -14,26 +14,12 @@ import org.eclipse.dltk.compiler.SourceElementRequestVisitor;
 import org.eclipse.dltk.core.AbstractSourceElementParser;
 import org.eclipse.koneki.ldt.core.LuaNature;
 
-// TODO: Auto-generated Javadoc
-/**
- * The Class LuaSourceElementParser.
- */
 public class LuaSourceElementParser extends AbstractSourceElementParser {
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.dltk.core.AbstractSourceElementParser#createVisitor()
-	 */
 	public SourceElementRequestVisitor createVisitor() {
 		return new LuaSourceElementRequestorVisitor(getRequestor());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.dltk.core.AbstractSourceElementParser#getNatureId()
-	 */
 	@Override
 	protected String getNatureId() {
 		return LuaNature.LUA_NATURE;

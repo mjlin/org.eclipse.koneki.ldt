@@ -10,7 +10,6 @@
  ******************************************************************************/
 package org.eclipse.koneki.ldt.parser;
 
-import org.eclipse.dltk.ast.ASTNode;
 import org.eclipse.dltk.codeassist.ScriptSelectionEngine;
 import org.eclipse.dltk.compiler.env.IModuleSource;
 import org.eclipse.dltk.core.IModelElement;
@@ -19,25 +18,8 @@ import org.eclipse.koneki.ldt.parser.LuaASTUtils.Definition;
 import org.eclipse.koneki.ldt.parser.ast.LuaExpression;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
 
-/**
- * Retrieve {@link ASTNode}s under given source code position.
- * 
- * @author Kevin KIN-FOO <kkinfoo@sierrawireless.com>
- */
 public class LuaSelectionEngine extends ScriptSelectionEngine {
 
-	/**
-	 * Fetch {@link IModelElement} in an {@link IModuleSource} AST from source offset.
-	 * 
-	 * @param module
-	 *            Browsed AST
-	 * @param start
-	 *            offset
-	 * @param end
-	 *            offset
-	 * @return {@link IModelElement} representing definition of node at given offset
-	 * @see org.eclipse.dltk.codeassist.ISelectionEngine#select(IModuleSource, int, int)
-	 */
 	@Override
 	public IModelElement[] select(IModuleSource module, int start, int end) {
 		// get the corresponding ISourceModule

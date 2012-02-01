@@ -21,6 +21,10 @@ public class LuaInternalContent extends LuaASTNode {
 	private List<Item> unknownglovalvars = new ArrayList<Item>();
 	private Block content;
 
+	public LuaInternalContent() {
+		content = new Block();
+	}
+
 	public Block getContent() {
 		return content;
 	}
