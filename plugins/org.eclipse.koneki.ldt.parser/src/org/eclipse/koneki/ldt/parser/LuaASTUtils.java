@@ -98,7 +98,7 @@ public final class LuaASTUtils {
 		}
 	};
 
-	public static Item getClosestItem(final LuaSourceRoot luaSourceRoot, final String identifierName, final int position) {
+	public static Item getClosestLocalVar(final LuaSourceRoot luaSourceRoot, final String identifierName, final int position) {
 		// traverse the root block on the file with this visitor
 		try {
 			ClosestItemVisitor closestItemVisitor = new ClosestItemVisitor(position, identifierName);
@@ -379,6 +379,27 @@ public final class LuaASTUtils {
 			return definition;
 		}
 		return null;
+	}
+
+	public static List<Definition> getAllGlobalVarsDefinition(ISourceModule sourceModule, String start) {
+		// get preloaded module
+		ISourceModule preloadedSourceModule = getPreloadSourceModule(sourceModule);
+		if (preloadedSourceModule == null)
+			return null;
+
+		// get luasourceroot
+		LuaSourceRoot luaSourceRoot = LuaASTModelUtils.getLuaSourceRoot(preloadedSourceModule);
+		if (luaSourceRoot == null)
+			return null;
+
+		// get a global var with this name
+		final List<Definition> definitions = new ArrayList<Definition>();
+		for (Item globalvar : luaSourceRoot.getFileapi().getGlobalvars().values()) {
+			if (start == null || start.isEmpty() || globalvar.getName().startsWith(start))
+				definitions.add(new Definition(preloadedSourceModule, globalvar));
+		}
+
+		return definitions;
 	}
 
 	public static Definition getGlobalVarDefinition(ISourceModule sourceModule, String varname) {

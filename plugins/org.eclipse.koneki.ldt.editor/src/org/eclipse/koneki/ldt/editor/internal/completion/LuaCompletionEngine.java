@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.eclipse.dltk.ast.declarations.Declaration;
 import org.eclipse.dltk.codeassist.ScriptCompletionEngine;
 import org.eclipse.dltk.compiler.env.IModuleSource;
 import org.eclipse.dltk.compiler.util.Util;
@@ -31,11 +30,11 @@ import org.eclipse.dltk.core.ModelException;
 import org.eclipse.koneki.ldt.editor.Activator;
 import org.eclipse.koneki.ldt.parser.LuaASTModelUtils;
 import org.eclipse.koneki.ldt.parser.LuaASTUtils;
+import org.eclipse.koneki.ldt.parser.LuaASTUtils.Definition;
 import org.eclipse.koneki.ldt.parser.LuaASTUtils.TypeResolution;
 import org.eclipse.koneki.ldt.parser.api.external.Item;
 import org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
-import org.eclipse.koneki.ldt.parser.model.FakeField;
 
 /**
  * 
@@ -46,111 +45,76 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 
 	@Override
 	public void complete(IModuleSource module, int position, int k) {
-		try {
-			// Unable to parse to high level model element
-			final IModelElement modelElement = module.getModelElement();
-			ISourceModule sourceModule;
-			if (modelElement instanceof ISourceModule) {
-				sourceModule = (ISourceModule) modelElement;
-			} else {
-				Activator.logWarning(Messages.LuaCompletionEngineBadModelElement);
-				return;
-			}
-
-			// Retrieve start position of word current user is typing
-			final String start = getWordStarting(module.getSourceContents(), position).toLowerCase();
-			this.actualCompletionPosition = position;
-			this.offset = actualCompletionPosition - start.length();
-			this.requestor.beginReporting();
-
-			if (start.contains(".") || start.contains(":")) { //$NON-NLS-1$//$NON-NLS-2$
-				// Select between module fields if completion is asked after a module reference
-				final List<String> ids = new ArrayList<String>();
-				Character lastOperator = getExpressionIdentifiers(start, ids);
-				addFields(sourceModule, ids, this.offset, lastOperator);
-			} else {
-				// Search local declaration in AST
-				addLocalDeclarations(sourceModule, start, this.offset);
-
-				// Search global declaration in DLTK model
-				addGlobalDeclarations(sourceModule, start);
-
-				// Add keywords
-				addKeywords(start);
-			}
-		} catch (ModelException e) {
-			Activator.logError(Messages.LuaCompletionEngineIniTialization, e);
-		} finally {
-			this.requestor.endReporting();
+		// extract source module
+		final IModelElement modelElement = module.getModelElement();
+		if (!(modelElement instanceof ISourceModule)) {
+			Activator.logWarning("Unable to perform completion proposal. Module [" + module.getFileName() + "] has not source module associated."); //$NON-NLS-1$//$NON-NLS-2$
+			return;
 		}
+		ISourceModule sourceModule = (ISourceModule) modelElement;
 
+		// Retrieve start position of word current user is typing
+		String start = getWordStarting(module.getSourceContents(), position).toLowerCase();
+
+		this.requestor.beginReporting();
+		if (start.contains(".") || start.contains(":")) { //$NON-NLS-1$//$NON-NLS-2$
+			// Select between module fields if completion is asked after a module reference
+			final List<String> ids = new ArrayList<String>();
+			Character lastOperator = getExpressionIdentifiers(start, ids);
+			addFields(sourceModule, ids, position, lastOperator);
+		} else {
+			// Search local declaration in AST
+			addLocalDeclarations(sourceModule, start, position);
+
+			// Search global declaration in DLTK model
+			addGlobalDeclarations(sourceModule, start, position);
+
+			// Add keywords
+			addKeywords(start, position);
+		}
 	}
 
-	/**
-	 * Browse {@link ISourceModule} in order to find {@link IModelElement}s pertinent for completion stating with given string.
-	 * 
-	 * @param sourceModule
-	 *            Source representation browsed for variable {@link Declaration}s
-	 * @param start
-	 *            String that user just typed
-	 */
-	private void addGlobalDeclarations(ISourceModule sourceModule, final String start) throws ModelException {
-		// IScriptProject project = sourceModule.getScriptProject();
-		// IProjectFragment[] allProjectFragments = project.getAllProjectFragments();
-		// for (IProjectFragment iProjectFragment : allProjectFragments) {
-		// iProjectFragment.accept(new IModelElementVisitor() {
-		// public boolean visit(IModelElement element) {
-		// // manage only global member
-		// if (element instanceof IMember) {
-		// IMember member = (IMember) element;
-		// try {
-		// // manage public member except module
-		// if (Flags.isPublic(member.getFlags()) && !LuaASTUtils.isModule(member)) {
-		// final boolean goodStart = element.getElementName().toLowerCase().startsWith(start.toLowerCase());
-		// final boolean nostart = start.isEmpty();
-		// if (goodStart || nostart) {
-		// createProposal(element.getElementName(), element);
-		// }
-		// }
-		// } catch (ModelException e) {
-		//							Activator.logWarning("unable to acces to " + member + " to feed autocompletion.", e); //$NON-NLS-1$//$NON-NLS-2$
-		// }
-		// // don't go inside member.
-		// return false;
-		// }
-		// return true;
-		// }
-		// });
-		// }
+	private void addGlobalDeclarations(ISourceModule sourceModule, String start, int cursorPosition) {
+		// get all global variable which start by the string "start"
+		List<Definition> globalvars = LuaASTUtils.getAllGlobalVarsDefinition(sourceModule, start);
+
+		// for each global var, get the corresponding model element and create the proposal
+		for (Definition definition : globalvars) {
+			IMember member = LuaASTModelUtils.getIMember(definition.getModule(), definition.getItem());
+			if (member != null)
+				createMemberProposal(member, cursorPosition - start.length(), cursorPosition);
+		}
 	}
 
-	/**
-	 * Add commons Lua keywords to {@link CompletionProposal} list
-	 * 
-	 * @param start
-	 *            String that user just typed
-	 */
-	private void addKeywords(String start) {
+	private void addKeywords(String start, int cursorPosition) {
+		// TODO key word should be define in a static attribute
 		String[] keywords = new String[] { "and", "break", "do", "else", "elseif", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 				"end", "false", "for", "function", "if",//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 				"in", "local", "nil", "not", "or",//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 				"repeat", "return", "then", "true", "until", "while" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+
+		// create proposal for each keyword
 		for (int j = 0; j < keywords.length; j++) {
 			if (start.isEmpty() || keywords[j].startsWith(start)) {
-				createProposal(keywords[j], null);
+				createKeyWordProposal(keywords[j], cursorPosition - start.length(), cursorPosition);
 			}
 		}
 	}
 
-	private void addLocalDeclarations(ISourceModule sourceModule, String start, int position) {
+	private void addLocalDeclarations(ISourceModule sourceModule, String start, int cursorPosition) {
+		// get lua source root
 		LuaSourceRoot luaSourceRoot = LuaASTModelUtils.getLuaSourceRoot(sourceModule);
-		if (luaSourceRoot != null) {
-			Collection<Item> localVars = LuaASTUtils.getLocalVars(luaSourceRoot, position, start);
-			for (Item var : localVars) {
-				createProposal(var.getName(), new FakeField(sourceModule, var.getName(), offset, var.getName().length(), Declaration.D_DECLARATOR
-						& Declaration.AccPrivate));
-			}
+		if (luaSourceRoot == null)
+			return;
+
+		// find all local vars and create corresponding proposal
+		Collection<Item> localVars = LuaASTUtils.getLocalVars(luaSourceRoot, cursorPosition, start);
+		for (Item var : localVars) {
+			IMember member = LuaASTModelUtils.getIMember(sourceModule, var);
+			if (member != null)
+				createMemberProposal(member, cursorPosition - start.length(), cursorPosition);
 		}
+
 	}
 
 	private void addFields(final ISourceModule initialSourceModule, final List<String> ids, int position, Character lastOperator) {
@@ -161,12 +125,19 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 		// we support only Identifier root for now.
 		final String rootIdentifierName = ids.get(0);
 		final LuaSourceRoot luaSourceRoot = LuaASTModelUtils.getLuaSourceRoot(initialSourceModule);
-		final Item rootItem = LuaASTUtils.getClosestItem(luaSourceRoot, rootIdentifierName, position);
-		if (rootItem == null)
-			return;
+		Item rootItem = LuaASTUtils.getClosestLocalVar(luaSourceRoot, rootIdentifierName, position);
+		ISourceModule itemSourceModule = initialSourceModule;
+		if (rootItem == null) {
+			// try to find a global
+			Definition globalVarDefinition = LuaASTUtils.getGlobalVarDefinition(initialSourceModule, rootIdentifierName);
+			if (globalVarDefinition == null)
+				return;
+			rootItem = globalVarDefinition.getItem();
+			itemSourceModule = globalVarDefinition.getModule();
+		}
 
 		// resolve Item Type
-		TypeResolution typeResolution = LuaASTUtils.resolveType(initialSourceModule, rootItem.getType());
+		TypeResolution typeResolution = LuaASTUtils.resolveType(itemSourceModule, rootItem.getType());
 		if (typeResolution == null || !(typeResolution.getTypeDef() instanceof RecordTypeDef))
 			return;
 
@@ -199,79 +170,19 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 			IModelElement[] moduleFields = iType.getChildren();
 			// get field name
 			final String fieldName = ids.get(ids.size() - 1);
-			// Update replacement position as well just insert field name without module reference name
-			this.offset = actualCompletionPosition - fieldName.length();
 			// search field
 			for (final IModelElement field : moduleFields) {
-				if (field instanceof IField || field instanceof IMethod) {
+				if ((field instanceof IField && lastOperator == '.') || field instanceof IMethod) {
 					final boolean goodStart = field.getElementName().toLowerCase().startsWith(fieldName.toLowerCase());
 					final boolean nostart = fieldName.isEmpty();
 					if (goodStart || nostart) {
-						createProposal(field.getElementName(), field, lastOperator);
+						createMemberProposal((IMember) field, position - fieldName.length(), position, lastOperator);
 					}
 				}
 			}
 		} catch (ModelException e) {
 			Activator.logWarning("Unable to get model element.", e); //$NON-NLS-1$
 		}
-	}
-
-	private void createProposal(String name, IModelElement element, Character lastOperator) {
-		CompletionProposal proposal = null;
-		int relevance = 2;
-		try {
-			if (element == null) {
-				// Lower relevance for key words
-				relevance = 1;
-				proposal = this.createProposal(CompletionProposal.KEYWORD, this.actualCompletionPosition);
-			} else {
-				// Only collect global proposals
-				IMember member = (IMember) element;
-				if (lastOperator == ':' && member.getElementType() != IModelElement.METHOD)
-					return;
-
-				switch (member.getElementType()) {
-				case IModelElement.METHOD:
-					proposal = this.createProposal(CompletionProposal.METHOD_REF, this.actualCompletionPosition);
-					IMethod method = (IMethod) member;
-					if (lastOperator == ':') {
-						if (method.getParameterNames().length == 0)
-							return;
-
-						String[] parameterNames = method.getParameterNames();
-						String[] parameterNamesWithoutFirstOne = Arrays.copyOfRange(parameterNames, 1, parameterNames.length);
-						proposal.setParameterNames(parameterNamesWithoutFirstOne);
-					} else {
-						proposal.setParameterNames(method.getParameterNames());
-					}
-
-					break;
-				case IModelElement.FIELD:
-					proposal = this.createProposal(CompletionProposal.FIELD_REF, this.actualCompletionPosition);
-					proposal.setFlags(member.getFlags());
-					break;
-				case IModelElement.TYPE:
-					proposal = this.createProposal(CompletionProposal.TYPE_REF, this.actualCompletionPosition);
-					proposal.setFlags(((IType) element).getFlags());
-					break;
-				default:
-					return;
-				}
-				proposal.setFlags(member.getFlags());
-				proposal.setModelElement(member);
-			}
-			proposal.setName(name);
-			proposal.setCompletion(name);
-			proposal.setReplaceRange(offset, actualCompletionPosition);
-			proposal.setRelevance(relevance);
-			this.requestor.accept(proposal);
-		} catch (ModelException e) {
-			Activator.logWarning(Messages.LuaCompletionEngineProblemProcessingGlobals, e);
-		}
-	}
-
-	private void createProposal(String name, IModelElement element) {
-		createProposal(name, element, '\0');
 	}
 
 	// I'm unable to handle spaces in composed identifiers like 'someTable . someField'
@@ -339,5 +250,63 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 		result.add(nextId.toString());
 
 		return lastOperator;
+	}
+
+	private void createKeyWordProposal(String keyword, int startIndex, int endIndex) {
+		CompletionProposal proposal = CompletionProposal.create(CompletionProposal.KEYWORD, 0);
+		proposal.setRelevance(1);
+		proposal.setName(keyword);
+		proposal.setCompletion(keyword);
+		proposal.setReplaceRange(startIndex, endIndex);
+		this.requestor.accept(proposal);
+	}
+
+	private void createMemberProposal(IMember member, int startIndex, int endIndex) {
+		createMemberProposal(member, startIndex, endIndex, '\0');
+	}
+
+	private void createMemberProposal(IMember member, int startIndex, int endIndex, char operator) {
+		try {
+			CompletionProposal proposal = null;
+			switch (member.getElementType()) {
+			case IModelElement.METHOD:
+				// create method proposal
+				proposal = CompletionProposal.create(CompletionProposal.METHOD_REF, 0);
+				IMethod method = (IMethod) member;
+
+				if (operator == ':') {
+					// manage the invoke case
+					if (method.getParameterNames().length == 0)
+						return;
+
+					String[] parameterNames = method.getParameterNames();
+					String[] parameterNamesWithoutFirstOne = Arrays.copyOfRange(parameterNames, 1, parameterNames.length);
+					proposal.setParameterNames(parameterNamesWithoutFirstOne);
+				} else {
+					proposal.setParameterNames(method.getParameterNames());
+				}
+				break;
+			case IModelElement.FIELD:
+				proposal = CompletionProposal.create(CompletionProposal.FIELD_REF, 0);
+				break;
+			case IModelElement.TYPE:
+				proposal = CompletionProposal.create(CompletionProposal.TYPE_REF, 0);
+				break;
+			default:
+				return;
+			}
+
+			proposal.setFlags(member.getFlags());
+			proposal.setModelElement(member);
+			proposal.setName(member.getElementName());
+			proposal.setCompletion(member.getElementName());
+			proposal.setReplaceRange(startIndex, endIndex);
+			proposal.setRelevance(2);
+			this.requestor.accept(proposal);
+
+		} catch (ModelException e) {
+			Activator.logWarning(Messages.LuaCompletionEngineProblemProcessingGlobals, e);
+			return;
+		}
 	}
 }
