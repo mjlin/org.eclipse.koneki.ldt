@@ -12,6 +12,7 @@
 ---
 -- Template used to generate function documentation HTML.
 return [[#
+<a id="$(anchor(_functiontypedef))"/>
 # if #_functiontypedef.params > 0 and
 #	not (#_functiontypedef.params == 1 and _functiontypedef.params[1].name == "self")  then
 	<h4>Parameter$(#_functiontypedef.params > 1 and 's')</h4>

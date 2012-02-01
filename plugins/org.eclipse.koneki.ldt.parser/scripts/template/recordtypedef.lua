@@ -10,7 +10,7 @@
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
 return [[#
-<a id ="typedefanchor"></a>
+<a id ="anchor(_recordtypedef)"></a>
 # --
 # -- Descriptions
 # --
@@ -26,7 +26,6 @@ return [[#
 # if not isempty( _recordtypedef.fields ) then
 	<h3>Field(s)</h3>
 #	for name, item in pairs( _recordtypedef.fields )do
-		<a id="resolveitemanchor"></a>
 		$( applytemplate(item) )
 #	end
 # end ]]

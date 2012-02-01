@@ -33,6 +33,7 @@ return[[#
 # -- Locate type exposed by module
 # local currenttype = _file.returns[1] and _file.types[ _file.returns[1].types[1].typename ]
 # if currenttype then
+	<a id="$(anchor(currenttype))" />
 	<h2>Type <code>$(currenttype.name)</code></h2>
 	$( applytemplate(currenttype, 'index') )
 # end
@@ -41,7 +42,8 @@ return[[#
 # --
 # if _file.types then
 #	for name, type in pairs( _file.types ) do
-#		if not type ~= currenttype and type.tag == 'recordtypedef' then
+#		if type ~= currenttype and type.tag == 'recordtypedef' then
+			<a id="$(anchor(type))" />
 			<h2>Type <code>$(name)</code></h2>
 			$( applytemplate(type, 'index') )
 #		end

@@ -23,6 +23,13 @@ local mtyperef    = java.require ("org.eclipse.koneki.ldt.parser.api.external.Mo
 local exprtyperef    = java.require ("org.eclipse.koneki.ldt.parser.api.external.ExprTypeRef")
 
 local generator = require 'docgenerator'
+-- 
+-- Update documentation generator environment
+--
+local generatorenv = require 'utils'
+for functionname, body in pairs( generatorenv ) do
+	generator.env[ functionname ] = body
+end
 local print = function (string) print(string) io.flush() end
 
 function M.createtyperef (type)

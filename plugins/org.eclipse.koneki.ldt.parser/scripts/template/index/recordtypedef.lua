@@ -13,7 +13,10 @@ return [[#
 # if not isempty(_recordtypedef.fields) then
 	<table class="function_list">
 #	for _, item in pairs( _recordtypedef.fields ) do
-		$( applytemplate(item, 'index.line') )
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="#$(linkto(item))">$(item.name)</a></td>
+		<td class="summary">$( markdown(item.shortdescription) )</td>
+		</tr>
 # 	end
 	</table>
 # end
