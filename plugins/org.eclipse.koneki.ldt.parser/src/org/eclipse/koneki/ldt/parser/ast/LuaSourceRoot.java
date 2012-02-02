@@ -130,6 +130,7 @@ public class LuaSourceRoot extends ModuleDeclaration {
 			if (visitor.visit(this)) {
 				if (getApi() != null) {
 					fileAPI.traverse(visitor);
+					internalContent.traverse(visitor);
 				}
 				visitor.endvisit(this);
 			}

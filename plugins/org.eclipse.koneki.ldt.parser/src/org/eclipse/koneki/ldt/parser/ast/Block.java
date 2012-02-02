@@ -46,6 +46,11 @@ public class Block extends LuaASTNode {
 				node.traverse(visitor);
 			}
 
+			// traverse local var
+			for (LocalVar localvar : localVars) {
+				localvar.traverse(visitor);
+			}
+
 			visitor.endvisit(this);
 		}
 	}

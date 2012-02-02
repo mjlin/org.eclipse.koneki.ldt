@@ -39,7 +39,10 @@ public class LocalVar extends LuaASTNode {
 
 	@Override
 	public void traverse(ASTVisitor visitor) throws Exception {
-		// TODO Auto-generated method stub
+		if (visitor.visit(this)) {
+			var.traverse(visitor);
+			visitor.endvisit(this);
+		}
 
 	}
 }

@@ -10,9 +10,12 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.parser;
 
+import java.util.List;
+
 import org.eclipse.dltk.ast.ASTNode;
 import org.eclipse.dltk.ast.declarations.Declaration;
 import org.eclipse.dltk.ast.declarations.ModuleDeclaration;
+import org.eclipse.dltk.core.Flags;
 import org.eclipse.dltk.core.IField;
 import org.eclipse.dltk.core.IMember;
 import org.eclipse.dltk.core.IMethod;
@@ -26,8 +29,7 @@ import org.eclipse.koneki.ldt.parser.api.external.LuaASTNode;
 import org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI;
 import org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef;
 import org.eclipse.koneki.ldt.parser.api.external.TypeDef;
-import org.eclipse.koneki.ldt.parser.ast.Block;
-import org.eclipse.koneki.ldt.parser.ast.Identifier;
+import org.eclipse.koneki.ldt.parser.ast.LocalVar;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
 import org.eclipse.koneki.ldt.parser.model.FakeField;
 
@@ -87,7 +89,21 @@ public final class LuaASTModelUtils {
 			return typeDef.getFields().get(field.getElementName());
 		} else if (parent instanceof ISourceModule) {
 			LuaSourceRoot luaSourceRoot = getLuaSourceRoot((ISourceModule) parent);
-			return luaSourceRoot.getFileapi().getGlobalvars().get(field.getElementName());
+			try {
+				if (Flags.isPrivate(field.getFlags())) {
+					List<LocalVar> localVars = luaSourceRoot.getInternalContent().getContent().getLocalVars();
+					for (LocalVar localVar : localVars) {
+						if (localVar.getVar().getName().equals(field.getElementName()))
+							return localVar.getVar();
+					}
+				} else {
+
+					return luaSourceRoot.getFileapi().getGlobalvars().get(field.getElementName());
+				}
+			} catch (ModelException e) {
+				Activator.logError("unable to get item from field " + field, e); //$NON-NLS-1$
+				return null;
+			}
 		}
 		return null;
 	}
@@ -104,7 +120,21 @@ public final class LuaASTModelUtils {
 			return typeDef.getFields().get(method.getElementName());
 		} else if (parent instanceof ISourceModule) {
 			LuaSourceRoot luaSourceRoot = getLuaSourceRoot((ISourceModule) parent);
-			return luaSourceRoot.getFileapi().getGlobalvars().get(method.getElementName());
+			try {
+				if (Flags.isPrivate(method.getFlags())) {
+					List<LocalVar> localVars = luaSourceRoot.getInternalContent().getContent().getLocalVars();
+					for (LocalVar localVar : localVars) {
+						if (localVar.getVar().getName().equals(method.getElementName()))
+							return localVar.getVar();
+					}
+				} else {
+
+					return luaSourceRoot.getFileapi().getGlobalvars().get(method.getElementName());
+				}
+			} catch (ModelException e) {
+				Activator.logError("unable to get item from method " + method, e); //$NON-NLS-1$
+				return null;
+			}
 		}
 		return null;
 	}
@@ -126,7 +156,7 @@ public final class LuaASTModelUtils {
 	 */
 	public static IMember getIMember(ISourceModule sourceModule, Item item) {
 		LuaASTNode parent = item.getParent();
-		if (parent instanceof RecordTypeDef) {
+		if (LuaASTUtils.isTypeField(item)) {
 			// support record field
 			IType iType = getIType(sourceModule, (RecordTypeDef) parent);
 			if (iType != null) {
@@ -139,14 +169,11 @@ public final class LuaASTModelUtils {
 					Activator.logWarning("unable to get IMember corresponding to the given item " + item, e); //$NON-NLS-1$
 				}
 			}
-		} else if (parent instanceof Block) {
+		} else if (LuaASTUtils.isLocal(item)) {
+			// TODO retrieve local var which are in the model (so the local var in the first block)
 			// support local variable
-			if (item.getOccurrences().size() > 0) {
-				Identifier firstOccurence = item.getOccurrences().get(0);
-				return new FakeField(sourceModule, item.getName(), firstOccurence.sourceStart(), firstOccurence.matchLength() + 1,
-						Declaration.D_DECLARATOR & Declaration.AccPrivate);
-			}
-		} else if (parent instanceof LuaFileAPI) {
+			return new FakeField(sourceModule, item.getName(), item.sourceStart(), item.getName().length() + 1, Declaration.AccPrivate);
+		} else if (LuaASTUtils.isGlobal(item)) {
 			// support global var
 			try {
 				for (IModelElement child : sourceModule.getChildren()) {

@@ -18,19 +18,14 @@ import java.util.Map;
 
 import org.eclipse.dltk.ast.ASTNode;
 import org.eclipse.dltk.ast.ASTVisitor;
-import org.eclipse.dltk.core.Flags;
-import org.eclipse.dltk.core.IMember;
-import org.eclipse.dltk.core.IMethod;
-import org.eclipse.dltk.core.IModelElement;
 import org.eclipse.dltk.core.ISourceModule;
-import org.eclipse.dltk.core.IType;
-import org.eclipse.dltk.core.ModelException;
 import org.eclipse.koneki.ldt.core.LuaUtils;
 import org.eclipse.koneki.ldt.parser.api.external.ExprTypeRef;
 import org.eclipse.koneki.ldt.parser.api.external.ExternalTypeRef;
 import org.eclipse.koneki.ldt.parser.api.external.FunctionTypeDef;
 import org.eclipse.koneki.ldt.parser.api.external.InternalTypeRef;
 import org.eclipse.koneki.ldt.parser.api.external.Item;
+import org.eclipse.koneki.ldt.parser.api.external.LuaASTNode;
 import org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI;
 import org.eclipse.koneki.ldt.parser.api.external.ModuleTypeRef;
 import org.eclipse.koneki.ldt.parser.api.external.PrimitiveTypeRef;
@@ -71,6 +66,9 @@ public final class LuaASTUtils {
 
 		@Override
 		public boolean visit(ASTNode node) throws Exception {
+			if (node instanceof LocalVar)
+				return false;
+
 			// we go down util we found the closer block.
 			if (node instanceof Block) {
 				if (node.sourceStart() <= position && position <= node.sourceEnd()) {
@@ -347,7 +345,7 @@ public final class LuaASTUtils {
 			Identifier identifier = (Identifier) luaExpression;
 			if (identifier.getDefinition() != null) {
 				Item definition = identifier.getDefinition();
-				if (definition.getParent() instanceof LuaInternalContent) {
+				if (LuaASTUtils.isUnresolvedGlobal(definition)) {
 					// in this case we have a unknown global var definition.
 					// we will try to resolved it
 					Definition globalVarDefinition = getGlobalVarDefinition(sourceModule, definition.getName());
@@ -428,30 +426,63 @@ public final class LuaASTUtils {
 		return null;
 	}
 
-	/*****
-	 * DEPRECATED FUNCTION
-	 */
-	private static boolean isModule(int flags) {
-		return (flags & Flags.AccModule) != 0;
+	public static boolean isLocal(Item item) {
+		return item.getParent() instanceof Block;
 	}
 
-	public static boolean isModule(IMember member) throws ModelException {
-		return member instanceof IType && isModule(member.getFlags());
+	public static boolean isGlobal(Item item) {
+		return item.getParent() instanceof LuaFileAPI;
 	}
 
-	public static boolean isModuleFunction(IMember member) throws ModelException {
-		return member instanceof IMethod && isModule(member.getFlags());
+	public static boolean isTypeField(Item item) {
+		return item.getParent() instanceof RecordTypeDef;
 	}
 
-	public static boolean isGlobalTable(IMember member) throws ModelException {
-		return member instanceof IType && Flags.isPublic(member.getFlags());
+	public static boolean isModuleTypeField(LuaFileAPI luaFileAPI, Item item) {
+		LuaASTNode parent = item.getParent();
+		if (parent instanceof RecordTypeDef) {
+			return isModule(luaFileAPI, (RecordTypeDef) parent);
+		}
+		return false;
 	}
 
-	public static boolean isLocalTable(IMember member) throws ModelException {
-		return member instanceof IType && Flags.isPrivate(member.getFlags());
+	public static boolean isUnresolvedGlobal(Item item) {
+		return item.getParent() instanceof LuaInternalContent;
 	}
 
-	public static boolean isAncestor(IModelElement element, IModelElement ancestor) {
-		return ancestor != null && element != null && (ancestor.equals(element.getParent()) || isAncestor(element.getParent(), ancestor));
+	public static TypeDef resolveTypeLocaly(LuaFileAPI luaFileAPI, Item item) {
+		if (luaFileAPI == null)
+			return null;
+
+		TypeRef typeref = item.getType();
+		if (!(typeref instanceof InternalTypeRef))
+			return null;
+
+		InternalTypeRef internaltyperef = (InternalTypeRef) typeref;
+		TypeDef typeDef = luaFileAPI.getTypes().get(internaltyperef.getTypeName());
+
+		return typeDef;
+	}
+
+	public static boolean isModule(LuaFileAPI luaFileAPI, RecordTypeDef recordTypeDef) {
+		TypeRef moduleReturnTypeRef = getModuleReturnType(luaFileAPI);
+
+		if (!(moduleReturnTypeRef instanceof InternalTypeRef))
+			return false;
+		String typename = ((InternalTypeRef) moduleReturnTypeRef).getTypeName();
+
+		return luaFileAPI.getTypes().get(typename) == recordTypeDef;
+	}
+
+	public static TypeRef getModuleReturnType(LuaFileAPI luaFileAPI) {
+		ArrayList<ReturnValues> returns = luaFileAPI.getReturns();
+		if (returns.isEmpty())
+			return null;
+
+		ReturnValues returnValues = returns.get(0);
+		if (returnValues.getTypes().isEmpty())
+			return null;
+
+		return returnValues.getTypes().get(0);
 	}
 }

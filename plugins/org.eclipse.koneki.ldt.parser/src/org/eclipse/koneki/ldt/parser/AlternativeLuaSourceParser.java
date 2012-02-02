@@ -63,7 +63,7 @@ public class AlternativeLuaSourceParser extends AbstractSourceParser {
 			if (delta.getFlags() == IModelElementDelta.F_REMOVED_FROM_BUILDPATH) {
 				if (delta.getAffectedChildren().length == 0) {
 					for (IModelElement sourcemodule : new ArrayList<IModelElement>(cache.keySet())) {
-						if (LuaASTUtils.isAncestor(sourcemodule, element)) {
+						if (LuaDLTKModelUtils.isAncestor(sourcemodule, element)) {
 							cache.remove(sourcemodule);
 						}
 					}
