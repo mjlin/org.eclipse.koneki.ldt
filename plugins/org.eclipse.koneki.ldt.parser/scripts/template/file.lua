@@ -29,8 +29,20 @@ return[[#
 # --
 # -- Show quick description of current type
 # --
-#
-# -- Locate type exposed by module
+# 
+# -- show quick description for globals
+# if not isempty(_file.globalvars) then
+	<h2>Global(s)</h2>
+	<table class="function_list">
+#	for _, item in pairs(_file.globalvars) do
+		<tr>
+		<td class="name" nowrap="nowrap"><a href="#$(linkto(item))">$( prettyname(item) )</a></td>
+		<td class="summary">$( markdown(item.shortdescription) )</td>
+		</tr>
+# 	end
+	</table>
+# end
+# -- show quick description type exposed by module
 # local currenttype = _file.returns[1] and _file.types[ _file.returns[1].types[1].typename ]
 # if currenttype then
 	<a id="$(anchor(currenttype))" />
@@ -47,6 +59,15 @@ return[[#
 			<h2>Type <code>$(name)</code></h2>
 			$( applytemplate(type, 'index') )
 #		end
+#	end
+# end
+# --
+# -- Long description of globals
+# --
+# if not isempty(_file.globalvars) then
+	<h2>Global(s)</h2>
+#	for name, item in pairs(_file.globalvars)do
+		$( applytemplate(item) )
 #	end
 # end
 # --

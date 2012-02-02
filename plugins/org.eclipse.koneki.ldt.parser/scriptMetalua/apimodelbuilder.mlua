@@ -197,6 +197,8 @@ function M.createmoduleapi(ast)
           elseif parsedcomment["field"] then
             local td_field = parsedcomment["field"][1]
             local _item = createfield(td_field)
+            _item.shortdescription = parsedcomment.shortdescription
+            _item.description = parsedcomment.description
             -- define sourcerange
             _item.sourcerange.min = comment.lineinfo.first.offset-1
             _item.sourcerange.max = comment.lineinfo.last.offset-1
