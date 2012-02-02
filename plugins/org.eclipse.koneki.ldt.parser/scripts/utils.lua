@@ -29,14 +29,11 @@ end
 --
 -- @function [parent = #docutils]
 -- @param modelobject Object form API model
--- @result #string Anchor for an API model object
--- @result #nil, #string In case of error, error is described in error string.
+-- @result #string Anchor for an API model object, this function __may rise an error__
 -- @usage # -- In a template
 -- # local anchorname = anchor(someobject)
 -- <a id="$(anchorname)" />
 function M.anchor( modelobject )
-	if not modelobject then return nil, 'No API model object provided.' end
-	if not modelobject.tag then return nil, 'No tag given on current object' end
 	local tag = modelobject.tag
 	if tag == 'internaltyperef' then
 		return '#'..modelobject.typename
@@ -53,12 +50,18 @@ function M.anchor( modelobject )
 	end
 	error('No anchor available for '..tag)
 end
+---
+-- Generates text for HTML links from API model element
+--
+-- @function [parent = #docutils]
+-- @param modelobject Object form API model
+-- @result #string Links text for an API model element, this function __may rise an error__.
+-- @usage # -- In a template
+-- <a href="$( linkto(api) )">Some text</a>
 function M.linkto( apiobject )
-	if not apiobject then return nil, 'No API model object provided.' end
-	if not apiobject.tag then return nil, 'No tag given on current object' end
 	local tag = apiobject.tag
 	if tag == 'internaltyperef' then
-		return '#'..(apiobject.typename or '')
+		return '#' .. apiobject.typename
 	elseif tag == 'externaltyperef' then
 		return apiobject.modulename..'#'..apiobject.typename
 	elseif tag == 'item' then
@@ -72,5 +75,75 @@ function M.linkto( apiobject )
 	elseif tag == 'file' or tag == 'recordtypedef' then
 		return M.anchor( apiobject )
 	end
+	error('No link available for '..tag)
+end
+---
+-- Provide human readable overview from an API model element
+--
+-- Resolve all element needed to summurize nicely an element form API model.
+-- @usage $ print( prettyname(item) )
+--	module:somefunction(secondparameter)
+-- @function [parent = #docutils]
+-- @param apiobject Object form API model
+-- @result #string Human readable description of given element, ready to print
+--	__may rise error__.
+function M.prettyname( apiobject )
+	local tag = apiobject.tag
+	-- Process references
+	if tag == 'internaltyperef' or tag == 'primitivetyperef' then
+		return '#'..apiobject.typename
+	elseif tag == 'externaltyperef' then
+		return apiobject.modulename..'#'..apiobject.typename
+	elseif tag == 'item' then
+		--
+		-- Deal with items
+		--
+		if not apiobject.type then return apiobject.name end
+		-- Retrieve referenced type definition		
+		local parent = apiobject.parent
+		local global = parent == 'file'
+		local definition
+		if global then
+			definition = parent.types[ apiobject.type.typename ]
+		else
+			local file = parent.parent
+			definition = file.types[apiobject.type.typename ]
+		end
+		-- When type is not available, just provide item name
+		if not definition then
+			return apiobject.name
+		elseif definition.tag == 'recordtypedef' then
+			-- In case of record return item name prefixed with module name if available
+			return global and apiobject.name or apiobject.type.typename..'.'..apiobject.name
+		else
+			--
+			-- Dealing with a function
+			--
+			
+			-- Build parameter list
+			local paramlist = {}
+			local hasfirstself = false
+			for position, param in ipairs(definition.params) do
+				-- When first parameter is 'self', it will not be part of listed parameters
+				if position == 1 and param.name == 'self' then
+					hasfirstself = true
+				else
+					paramlist[#paramlist + 1] = param.name
+					if position ~= #definition.params then
+						paramlist[#paramlist + 1] =  ', '
+					end
+				end
+			end
+			-- Compose function prefix,
+			-- ':' if 'self' is first parameter, '.' else way
+			local fname = ''
+			if not global then
+				fname = fname .. parent.name..( hasfirstself and ':' or '.' )
+			end
+			-- Append function parameters
+			return fname .. apiobject.name .. '(' .. table.concat( paramlist ) ..')'
+		end
+	end
+	error('No pretty name for '..tag)
 end
 return M

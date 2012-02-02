@@ -60,7 +60,6 @@ return[[#
 # -- Long description of other types
 # --
 # if not isempty( _file.types ) then
-	<h2>Other type(s)</h2>
 #	for name, type in pairs( _file.types ) do
 #		if type ~= currenttype  and type.tag == 'recordtypedef' then
 			<h2>Type <code>$(name)</code></h2>

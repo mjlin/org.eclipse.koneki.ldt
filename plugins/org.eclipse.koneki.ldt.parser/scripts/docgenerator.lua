@@ -23,8 +23,6 @@ local markdown = function (string)
    return result:gsub('^%s*<p>(.+)</p>%s*$','%1')
 end
 
-
-
 -- apply template to the given element
 function M.applytemplate(elem,templatetype)
 	-- define environment
@@ -46,7 +44,6 @@ function M.applytemplate(elem,templatetype)
 		local templateerror = templatetype and ' parsing "'.. templatetype ..'" template ' or ''
 		error('An error occured' ..templateerror ..' for "'..elem.tag..'"\n'..err)
 	end
-	
 	return str
 end
 
@@ -71,62 +68,14 @@ function M.gettemplate(elem,templatetype)
       end
    end
 end
-local magiclist =  function (tab)
-	if not tab then return '' end
-	-- Determine type of given elements
-	local type = tab.tag
-	if not type then return 'Elements given to magiclist() have no tags' end
-	-- Initialise list parameters
-	local inputelements, separator, first, last
-	if type == 'functiontypedef' then
-		separator =', '
-		first = '('
-		last = ')'
-		-- Output list will be a parameter list
-		inputelements = tab.params
-	elseif type == 'return' then
-		separator = ', '
-		first = ''
-		last = ''
-		inputelements = tab.types
-	else
-		return 'No magic for '..type
-	end
-	-- Append list beginning
-	local list = {first}
-
-	-- Build value list with gaps for separators
-	for i=1, #inputelements do
-		-- Format value depending on type
-		local currentelement = inputelements[i]
-		local value
-		if currentelement.tag == 'param' then
-			value = currentelement.name
-		elseif currentelement.tag == 'externaltyperef' then
-			value = currentelement.modulename ..'#'..currentelement.typename
-		elseif currentelement.tag == 'internaltyperef' or currentelement.tag == 'internaltyperef' then
-			value = '#'..currentelement.typename
-		end
-		list[ 2*i ] = value
-	end
-
-	-- Fill gaps with separators
-	for i=1, #inputelements-1 do
-		list[ 2*i + 1 ] = separator
-	end
-	-- Append list ending
-	table.insert(list, last)
-	return table.concat(list)
-end
 	
 -- define default template environnement
 local defaultenv = {
-	table		= table,
-	ipairs		= ipairs,
-	pairs		= pairs,
-	markdown	= markdown,
+	table			= table,
+	ipairs			= ipairs,
+	pairs			= pairs,
+	markdown		= markdown,
 	applytemplate	= M.applytemplate,
-	magiclist = magiclist
 }
 
 -- this is the global env accessible in the templates
