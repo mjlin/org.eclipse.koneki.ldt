@@ -101,11 +101,12 @@ function M.prettyname( apiobject )
 		if not apiobject.type then return apiobject.name end
 		-- Retrieve referenced type definition		
 		local parent = apiobject.parent
-		local global = parent == 'file'
+		local global = parent and  parent.tag == 'file'
+		local typefield = parent and parent.tag == 'recordtypedef'
 		local definition
 		if global then
 			definition = parent.types[ apiobject.type.typename ]
-		else
+		elseif typefield then
 			local file = parent.parent
 			definition = file.types[apiobject.type.typename ]
 		end
