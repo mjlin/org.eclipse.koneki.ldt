@@ -82,23 +82,26 @@ $( prettyname(_item) )</dt>
 #	if fdef and #fdef.returns > 0 then
 		<h3>Return value$(#fdef.returns > 1 and 's')</h3>
 #		--
+#		-- Format nice type list
+#		--
+#		local function niceparmlist( parlist )
+#			local typelist = {}
+#			for position, type in ipairs(parlist) do
+#				typelist[#typelist + 1] = prettyname( type )
+#				-- Append end separator or separating comma 
+#				typelist[#typelist + 1] = position == #parlist and ':' or ', '
+#			end
+#			return table.concat( typelist )
+#		end
+#		--
 #		-- Generate a list if they are several return clauses
 #		--
 #		if #fdef.returns > 1 then
 			<ol>
 #			for position, ret in ipairs(fdef.returns) do
-#				--
-#				-- Show nice type list
-#				--
-#				local typelist = {}
-#				for position, type in ipairs(ret.types) do
-#					typelist[#typelist + 1] = prettyname( type )
-#					-- Append end separator or separating comma 
-#					typelist[#typelist + 1] = position == #ret.types and ':' or ', '
-#				end
 				<li>
-#				if #typelist > 0 then
-					<em>$( table.concat(typelist) )</em>
+#				if #ret.types > 0 then
+					<em>$( niceparmlist(ret.types) )</em>
 #				end
 				$(ret.description and markdown(ret.description))
 				</li>
@@ -107,8 +110,8 @@ $( prettyname(_item) )</dt>
 #		else
 			<p>
 #			-- Show return type if provided
-#			if fdef.returns[1].type then
-				<em>$( prettyname(fdef.returns[1].type) ):</em>
+#			if fdef.returns and #fdef.returns > 0 then
+				<em>$( niceparmlist(fdef.returns[1].types) )</em>
 #			end
 #			if fdef.returns[1].description then
 				$( markdown(fdef.returns[1].description) )
