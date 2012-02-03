@@ -18,9 +18,9 @@ local pltemplate = require 'pl.template'
 
 -- Markdown handling
 local markdown = function (string)
-   local m = require 'markdown.markdown'
-   local result = m( string )
-   return result:gsub('^%s*<p>(.+)</p>%s*$','%1')
+	local m = require 'markdown.markdown'
+	local result = m( string )
+	return result:gsub('^%s*<p>(.+)</p>%s*$','%1')
 end
 
 -- apply template to the given element
@@ -49,26 +49,26 @@ end
 
 -- get the a new environment for this element
 function M.getenv(elem)
-   local currentenv ={}
-   for k,v in pairs(M.env) do currentenv[k] = v end
-   if elem and elem.tag then
-      currentenv['_'..elem.tag]= elem
-   end
-   return currentenv
+	local currentenv ={}
+	for k,v in pairs(M.env) do currentenv[k] = v end
+	if elem and elem.tag then
+		currentenv['_'..elem.tag]= elem
+	end
+	return currentenv
 end
 
 -- get the template for this element
 function M.gettemplate(elem,templatetype)
-   local tag = elem and elem.tag
-   if tag then
-      if templatetype then
-         return require ("template." .. templatetype.. "." .. tag)
-      else
-         return require ("template." .. tag)
-      end
-   end
+	local tag = elem and elem.tag
+	if tag then
+		if templatetype then
+			return require ("template." .. templatetype.. "." .. tag)
+		else
+			return require ("template." .. tag)
+		end
+	end
 end
-	
+
 -- define default template environnement
 local defaultenv = {
 	table			= table,

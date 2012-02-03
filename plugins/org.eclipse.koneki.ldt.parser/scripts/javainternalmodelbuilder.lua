@@ -4,13 +4,13 @@
 --  are made available under the terms of the Eclipse Public License v1.0
 --  which accompanies this distribution, and is available at
 --  http://www.eclipse.org/legal/epl-v10.html
--- 
+--
 --  Contributors:
 --       Kevin KIN-FOO <kkinfoo@sierrawireless.com>
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
 local J = {}
-local externalapi = require 'externaljavaapi'
+local javaapimodelbuilder = require 'javaapimodelbuilder'
 
 local blockclass =           java.require 'org.eclipse.koneki.ldt.parser.ast.Block'
 local callclass  =           java.require 'org.eclipse.koneki.ldt.parser.ast.Call'
@@ -23,28 +23,28 @@ local localvarclass =        java.require 'org.eclipse.koneki.ldt.parser.ast.Loc
 --------------------------------------
 -- create internal content java object
 function J._internalcontent(_internalcontent)
-   local jinternalcontent = internalcontentclass:new()
-   
-   -- Setting body
-   local handledexpr ={} 
-   local jblock = J._block(_internalcontent.content,handledexpr)
-   jinternalcontent:setContent(jblock)
-   
-   -- Appending global variables
-   for _, _item in ipairs(_internalcontent.unknownglobalvars) do
-      local jitem = externalapi.createitem(_item)
-      jinternalcontent:addUnknownglobalvar(jitem)
-      
-      -- add occurrences 
-      for _,_occurrence in ipairs(_item.occurrences) do
-         jidentifier = handledexpr[_occurrence]
-         if jidentifier then 
-            jitem:addOccurrence(jidentifier)
-         end
-      end
-   end
-   
-   return jinternalcontent
+	local jinternalcontent = internalcontentclass:new()
+
+	-- Setting body
+	local handledexpr ={}
+	local jblock = J._block(_internalcontent.content,handledexpr)
+	jinternalcontent:setContent(jblock)
+
+	-- Appending global variables
+	for _, _item in ipairs(_internalcontent.unknownglobalvars) do
+		local jitem = javaapimodelbuilder._item(_item)
+		jinternalcontent:addUnknownglobalvar(jitem)
+
+		-- add occurrences
+		for _,_occurrence in ipairs(_item.occurrences) do
+			jidentifier = handledexpr[_occurrence]
+			if jidentifier then
+				jitem:addOccurrence(jidentifier)
+			end
+		end
+	end
+
+	return jinternalcontent
 end
 
 --------------------------------------
@@ -54,33 +54,33 @@ function J._block(_block,handledexpr)
 	local jblock = blockclass:new()
 	jblock:setStart(_block.sourcerange.min)
 	jblock:setEnd(_block.sourcerange.max)
-	
+
 	-- Append nodes to block
 	for _, _expr in pairs(_block.content) do
 		local jexpr = J._expression(_expr,handledexpr)
 		jblock:addContent(jexpr)
 	end
-	
+
 	for _, _localvar in pairs(_block.localvars) do
-      -- Create Java item
-      local jitem = externalapi.createitem(_localvar.item)
-      if _localvar.item.type and _localvar.item.type.tag == "exprtyperef" then
-         jitem:getType():setExpression(handledexpr[_localvar.item.type.expression]) 
-      end
-      
-      -- add occurrence   
-      for _,_occurrence in ipairs(_localvar.item.occurrences) do
-         jidentifier = handledexpr[_occurrence]
-         if jidentifier then 
-            jitem:addOccurrence(jidentifier)
-         end
-      end
-            
-      -- Append Java local variable definition
-      local jlocalvar  = localvarclass:new(jitem, _localvar.scope.min, _localvar.scope.max)
-      jblock:addLocalVar(jlocalvar)
-   end
-   return jblock
+		-- Create Java item
+		local jitem = javaapimodelbuilder._item(_localvar.item)
+		if _localvar.item.type and _localvar.item.type.tag == "exprtyperef" then
+			jitem:getType():setExpression(handledexpr[_localvar.item.type.expression])
+		end
+
+		-- add occurrence
+		for _,_occurrence in ipairs(_localvar.item.occurrences) do
+			jidentifier = handledexpr[_occurrence]
+			if jidentifier then
+				jitem:addOccurrence(jidentifier)
+			end
+		end
+
+		-- Append Java local variable definition
+		local jlocalvar  = localvarclass:new(jitem, _localvar.scope.min, _localvar.scope.max)
+		jblock:addLocalVar(jlocalvar)
+	end
+	return jblock
 end
 
 --------------------------------------
@@ -95,8 +95,8 @@ function J._expression(_expr,handledexpr)
 		return J._call(_expr,handledexpr)
 	elseif tag == "MInvoke" then
 		return J._invoke(_expr,handledexpr)
-   elseif tag == "MBlock" then
-      return J._block(_expr,handledexpr)
+	elseif tag == "MBlock" then
+		return J._block(_expr,handledexpr)
 	end
 	return nil
 end
@@ -107,8 +107,8 @@ function J._identifier(_identifier,handledexpr)
 	local jidentifier = identifierclass:new()
 	jidentifier:setStart(_identifier.sourcerange.min)
 	jidentifier:setEnd  (_identifier.sourcerange.max)
-	
-	handledexpr[_identifier] =jidentifier 
+
+	handledexpr[_identifier] =jidentifier
 	return jidentifier
 end
 
@@ -120,32 +120,32 @@ function J._index(_index,handledexpr)
 	jindex:setEnd  (_index.sourcerange.max)
 	jindex:setLeft (J._expression(_index.left,handledexpr))
 	jindex:setRight(_index.right)
-	
-	handledexpr[_index] =jindex 
+
+	handledexpr[_index] =jindex
 	return jindex
 end
 
 --------------------------------------
 -- create call java object
 function J._call(_call,handledexpr)
-   local jcall = callclass:new()
-   jcall:setStart(_call.sourcerange.min)
-   jcall:setEnd  (_call.sourcerange.max)
-   jcall:setFunction(J._expression(_call.func,handledexpr))
-   
-   handledexpr[_call] =jcall 
-   return jcall
+	local jcall = callclass:new()
+	jcall:setStart(_call.sourcerange.min)
+	jcall:setEnd  (_call.sourcerange.max)
+	jcall:setFunction(J._expression(_call.func,handledexpr))
+
+	handledexpr[_call] =jcall
+	return jcall
 end
 
 --------------------------------------
 -- create invoke java object
 function J._invoke(_invoke,handledexpr)
-  local jinvoke = invokeclass:new()
+	local jinvoke = invokeclass:new()
 	jinvoke:setStart(_invoke.sourcerange.min)
 	jinvoke:setEnd  (_invoke.sourcerange.max)
 	jinvoke:setFunctionName(_invoke.functionname)
 	jinvoke:setRecord(J._expression(_invoke.record,handledexpr))
-	
+
 	handledexpr[_invoke] =jinvoke
 	return jinvoke
 end

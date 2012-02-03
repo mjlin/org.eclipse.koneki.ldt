@@ -23,7 +23,7 @@ public class LuaFileAPI extends LuaASTNode {
 	private String documentation;
 	private HashMap<String, TypeDef> types = new HashMap<String, TypeDef>();
 	private HashMap<String, Item> globalvars = new HashMap<String, Item>();
-	private ArrayList<ReturnValues> returns = new ArrayList<ReturnValues>();
+	private ArrayList<Return> returns = new ArrayList<Return>();
 
 	public LuaFileAPI() {
 	}
@@ -37,7 +37,7 @@ public class LuaFileAPI extends LuaASTNode {
 		item.setParent(this);
 	}
 
-	public void addReturns(final ReturnValues returnValue) {
+	public void addReturns(final Return returnValue) {
 		returns.add(returnValue);
 	}
 
@@ -57,7 +57,7 @@ public class LuaFileAPI extends LuaASTNode {
 		return globalvars;
 	}
 
-	public ArrayList<ReturnValues> getReturns() {
+	public ArrayList<Return> getReturns() {
 		return returns;
 	}
 

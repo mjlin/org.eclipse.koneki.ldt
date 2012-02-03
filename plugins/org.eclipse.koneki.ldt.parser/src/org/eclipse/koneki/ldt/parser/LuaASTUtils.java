@@ -30,7 +30,7 @@ import org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI;
 import org.eclipse.koneki.ldt.parser.api.external.ModuleTypeRef;
 import org.eclipse.koneki.ldt.parser.api.external.PrimitiveTypeRef;
 import org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef;
-import org.eclipse.koneki.ldt.parser.api.external.ReturnValues;
+import org.eclipse.koneki.ldt.parser.api.external.Return;
 import org.eclipse.koneki.ldt.parser.api.external.TypeDef;
 import org.eclipse.koneki.ldt.parser.api.external.TypeRef;
 import org.eclipse.koneki.ldt.parser.ast.Block;
@@ -156,9 +156,9 @@ public final class LuaASTUtils {
 		LuaSourceRoot luaSourceRoot = LuaASTModelUtils.getLuaSourceRoot(referencedSourceModule);
 		LuaFileAPI fileapi = luaSourceRoot.getFileapi();
 		if (fileapi != null) {
-			ArrayList<ReturnValues> returns = fileapi.getReturns();
+			ArrayList<Return> returns = fileapi.getReturns();
 			if (returns.size() > 0) {
-				ReturnValues returnValues = returns.get(0);
+				Return returnValues = returns.get(0);
 				if (returnValues.getTypes().size() > moduleTypeRef.getReturnPosition() - 1) {
 					TypeRef typeRef = returnValues.getTypes().get(moduleTypeRef.getReturnPosition() - 1);
 					return resolveType(referencedSourceModule, typeRef);
@@ -475,11 +475,11 @@ public final class LuaASTUtils {
 	}
 
 	public static TypeRef getModuleReturnType(LuaFileAPI luaFileAPI) {
-		ArrayList<ReturnValues> returns = luaFileAPI.getReturns();
+		ArrayList<Return> returns = luaFileAPI.getReturns();
 		if (returns.isEmpty())
 			return null;
 
-		ReturnValues returnValues = returns.get(0);
+		Return returnValues = returns.get(0);
 		if (returnValues.getTypes().isEmpty())
 			return null;
 

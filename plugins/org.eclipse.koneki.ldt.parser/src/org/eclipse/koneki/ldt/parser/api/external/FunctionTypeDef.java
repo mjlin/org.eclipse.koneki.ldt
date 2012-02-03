@@ -21,7 +21,7 @@ import org.eclipse.dltk.ast.ASTVisitor;
 public class FunctionTypeDef extends TypeDef {
 	private String documentation;
 	private ArrayList<Parameter> parameters = new ArrayList<Parameter>();
-	private ArrayList<ReturnValues> returns = new ArrayList<ReturnValues>();
+	private ArrayList<Return> returns = new ArrayList<Return>();
 
 	public String getDocumentation() {
 		return documentation;
@@ -35,7 +35,7 @@ public class FunctionTypeDef extends TypeDef {
 		return parameters;
 	}
 
-	public List<ReturnValues> getReturns() {
+	public List<Return> getReturns() {
 		return returns;
 	}
 
@@ -43,7 +43,7 @@ public class FunctionTypeDef extends TypeDef {
 		parameters.add(parameter);
 	}
 
-	public void addReturn(final ReturnValues values) {
+	public void addReturn(final Return values) {
 		returns.add(values);
 	}
 

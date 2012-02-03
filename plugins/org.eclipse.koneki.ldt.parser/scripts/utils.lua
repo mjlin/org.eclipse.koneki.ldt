@@ -99,7 +99,7 @@ function M.prettyname( apiobject )
 		-- Deal with items
 		--
 		if not apiobject.type then return apiobject.name end
-		-- Retrieve referenced type definition		
+		-- Retrieve referenced type definition
 		local parent = apiobject.parent
 		local global = parent and  parent.tag == 'file'
 		local typefield = parent and parent.tag == 'recordtypedef'
@@ -110,6 +110,7 @@ function M.prettyname( apiobject )
 			local file = parent.parent
 			definition = file.types[apiobject.type.typename ]
 		end
+
 		-- When type is not available, just provide item name
 		if not definition then
 			return apiobject.name
@@ -120,7 +121,7 @@ function M.prettyname( apiobject )
 			--
 			-- Dealing with a function
 			--
-			
+
 			-- Build parameter list
 			local paramlist = {}
 			local hasfirstself = false

@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * A ReturnValues mean a list of value return by a function
  */
-public class ReturnValues {
+public class Return {
 	private ArrayList<TypeRef> types = new ArrayList<TypeRef>();
 
 	public List<TypeRef> getTypes() {
