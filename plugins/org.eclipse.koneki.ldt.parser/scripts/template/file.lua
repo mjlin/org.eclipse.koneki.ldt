@@ -42,8 +42,20 @@ return[[#
 # 	end
 	</table>
 # end
+#
+# -- get type corresponding to this file (module)
+# local currenttype 
+# if not isempty(_file.returns) and _file.returns[1] and not isempty(_file.returns[1].types) then
+#  	local typeref = _file.returns[1].types[1]
+#  	if typeref.tag == "internaltyperef" then 
+#			local typedef = _file.types[typeref.typename]
+#			if typedef and typedef.tag == "recordtypdef" then
+#				currenttype = typedef 
+#			end
+#		end 
+#	end
+#
 # -- show quick description type exposed by module
-# local currenttype = _file.returns[1] and _file.types[ _file.returns[1].types[1].typename ]
 # if currenttype then
 	<a id="$(anchor(currenttype))" />
 	<h2>Type <code>$(currenttype.name)</code></h2>

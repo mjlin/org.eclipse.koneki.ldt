@@ -21,85 +21,8 @@ local handledcomments={} -- cache to know the comment already handled
 
 ----
 -- UTILITY METHODS
-local primitivetypes = {string=true, boolean=true, ["nil"]=true, table=true, number=true}
+local primitivetypes = {["nil"]=true, string=true, boolean=true, number=true, table=true}
 
--- create a typeref from the typref doc_tag
-local function createtyperef(dt_typeref)
-	local _typref
-	if dt_typeref.tag == "typeref" then
-		if dt_typeref.module then
-			-- manage external type
-			_typeref = apimodel._externaltypref()
-			_typeref.modulename = dt_typeref.module
-			_typeref.typename = dt_typeref.type
-		else
-			if primitivetypes[dt_typeref.type] then
-				-- manage primitive type
-				_typeref = apimodel._primitivetyperef()
-				_typeref.typename = dt_typeref.type
-			else
-				-- manage internal type
-				_typeref = apimodel._internaltyperef()
-				_typeref.typename = dt_typeref.type
-			end
-		end
-	end
-	return _typeref
-end
-
--- create a return from the return doc_tag
-local function createreturn(dt_return)
-	local _return = apimodel._return()
-
-	_return.description = dt_return.description
-
-	-- manage typeref
-	if dt_return.types then
-		for _, dt_typeref in ipairs(dt_return.types) do
-			local _typeref = createtyperef(dt_typeref)
-			if _typeref then
-				table.insert(_return.types,_typeref)
-			end
-		end
-	end
-	return _return
-end
-
--- create a item from the field doc_tag
-local function createfield(dt_field)
-	if not dt_field.name then return nil end
-		
-	local _item = apimodel._item(dt_field.name)
-
-	if dt_field.shortdescription then
-		_item.shortdescription = dt_field.shortdescription
-		_item.description = dt_field.description
-	else
-		_item.shortdescription = dt_field.description
-	end
-
-	-- manage typeref
-	local dt_typeref = dt_field.type
-	if dt_typeref then
-		_item.type =  createtyperef(dt_typeref)
-	end
-	return _item
-end
-
--- create a param from the param doc_tag
-local function createparam(dt_param)
-	if not dt_param.name then return nil end
-	
-	local _parameter = apimodel._parameter(dt_param.name)
-	_parameter.description = dt_param.description
-	
-	-- manage typeref
-	local dt_typeref = dt_param.type
-	if dt_typeref then
-		_parameter.type =  createtyperef(dt_typeref)
-	end
-	return _parameter
-end
 
 -- get or create the typedef with the name "name"
 local function gettypedef(_file,name,kind,sourcerangemin,sourcerangemax)
@@ -126,6 +49,88 @@ local function gettypedef(_file,name,kind,sourcerangemin,sourcerangemax)
 		end
 	end
 	return nil
+end
+
+
+-- create a typeref from the typref doc_tag
+local function createtyperef(dt_typeref,_file,sourcerangemin,sourcerangemax)
+	local _typref
+	if dt_typeref.tag == "typeref" then
+		if dt_typeref.module then
+			-- manage external type
+			_typeref = apimodel._externaltypref()
+			_typeref.modulename = dt_typeref.module
+			_typeref.typename = dt_typeref.type
+		else
+			if primitivetypes[dt_typeref.type] then
+				-- manage primitive type
+				_typeref = apimodel._primitivetyperef()
+				_typeref.typename = dt_typeref.type
+			else
+				-- manage internal type
+				_typeref = apimodel._internaltyperef()
+				_typeref.typename = dt_typeref.type
+				if _file then
+					gettypedef(_file, _typeref.typename, "recordtypedef", sourcerangemin,sourcerangemax)
+				end
+			end
+		end
+	end
+	return _typeref
+end
+
+-- create a return from the return doc_tag
+local function createreturn(dt_return,_file,sourcerangemin,sourcerangemax)
+	local _return = apimodel._return()
+
+	_return.description = dt_return.description
+
+	-- manage typeref
+	if dt_return.types then
+		for _, dt_typeref in ipairs(dt_return.types) do
+			local _typeref = createtyperef(dt_typeref,_file,sourcerangemin,sourcerangemax)
+			if _typeref then
+				table.insert(_return.types,_typeref)
+			end
+		end
+	end
+	return _return
+end
+
+-- create a item from the field doc_tag
+local function createfield(dt_field,_file,sourcerangemin,sourcerangemax)
+	if not dt_field.name then return nil end
+		
+	local _item = apimodel._item(dt_field.name)
+
+	if dt_field.shortdescription then
+		_item.shortdescription = dt_field.shortdescription
+		_item.description = dt_field.description
+	else
+		_item.shortdescription = dt_field.description
+	end
+
+	-- manage typeref
+	local dt_typeref = dt_field.type
+	if dt_typeref then
+		_item.type =  createtyperef(dt_typeref,_file,sourcerangemin,sourcerangemax)
+	end
+	return _item
+end
+
+-- create a param from the param doc_tag
+local function createparam(dt_param,_file,sourcerangemin,sourcerangemax)
+	if not dt_param.name then return nil end
+	
+	local _parameter = apimodel._parameter(dt_param.name)
+	_parameter.description = dt_param.description
+	
+	-- manage typeref
+	local dt_typeref = dt_param.type
+	if dt_typeref then
+		_parameter.type =  createtyperef(dt_typeref,_file,sourcerangemin,sourcerangemax)
+	end
+	return _parameter
 end
 
 -- get or create the typedef with the name "name"
@@ -201,14 +206,32 @@ function M.createmoduleapi(ast)
 				_file.shortdescription = parsedcomment.shortdescription
 				_file.description = parsedcomment.description
 
+				local sourcerangemin = comment.lineinfo.first.offset-1
+				local sourcerangemax = comment.lineinfo.last.offset-1
+				
 				-- manage returns
 				if parsedcomment ["return"] then
 					for _, dt_return in ipairs(parsedcomment ["return"]) do
-						local _return = createreturn(dt_return)
+						local _return = createreturn(dt_return,_file,sourcerangemin,sourcerangemax)
 						table.insert(_file.returns,_return)
 					end
 				end
-
+				-- if no returns on module create a defaultreturn of type #modulename
+				if #_file.returns == 0 and _file.name then
+					-- create internal type ref
+					_typeref = apimodel._internaltyperef()
+					_typeref.typename = _file.name
+					
+					-- create return
+					local _return = apimodel._return()
+					table.insert(_return.types,_typeref)
+					
+					-- add return
+					table.insert(_file.returns,_return)
+					
+					--create recordtypedef is not define
+					gettypedef(_file,_typeref.typename,"recordtypedef",sourcerangemin,sourcerangemax)
+				end
 				-- manage "type" comment
 			elseif parsedcomment["type"] and parsedcomment["type"][1].name and parsedcomment["type"][1].name ~= "global" then
 				local dt_type = parsedcomment["type"][1];
@@ -224,7 +247,7 @@ function M.createmoduleapi(ast)
 				-- manage fields
 				if parsedcomment["field"] then
 					for _, dt_field in ipairs(parsedcomment["field"]) do
-						local _item = createfield(dt_field)
+						local _item = createfield(dt_field,_file,sourcerangemin,sourcerangemax)
 						-- define sourcerange only if we create it
 						_item.sourcerange.min = comment.lineinfo.first.offset-1
 						_item.sourcerange.max = comment.lineinfo.last.offset-1
@@ -234,7 +257,7 @@ function M.createmoduleapi(ast)
 			elseif parsedcomment["field"] then
 				local dt_field = parsedcomment["field"][1]
 				-- create item
-				local _item = createfield(dt_field)
+				local _item = createfield(dt_field,_file,sourcerangemin,sourcerangemax)
 				_item.shortdescription = parsedcomment.shortdescription
 				_item.description = parsedcomment.description
 				
@@ -267,7 +290,7 @@ function M.createmoduleapi(ast)
 				-- manage params
 				if parsedcomment["param"] then
 					for _, dt_param in ipairs(parsedcomment["param"]) do
-						local _param = createparam(dt_param)
+						local _param = createparam(dt_param,_file,sourcerangemin,sourcerangemax)
 						table.insert(_functiontypedef.params,_param)
 					end
 				end
@@ -275,7 +298,9 @@ function M.createmoduleapi(ast)
 				-- manage returns
 				if parsedcomment["return"] then
 					for _, dt_return in ipairs(parsedcomment["return"]) do
-						local _return = createreturn(dt_return)
+						local sourcerangemin = comment.lineinfo.first.offset-1
+						local sourcerangemax = comment.lineinfo.last.offset-1
+						local _return = createreturn(dt_return,_file,sourcerangemin,sourcerangemax)
 						table.insert(_functiontypedef.returns,_return)
 					end
 				end
