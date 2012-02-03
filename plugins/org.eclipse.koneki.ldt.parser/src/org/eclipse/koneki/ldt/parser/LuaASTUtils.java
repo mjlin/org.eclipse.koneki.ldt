@@ -12,6 +12,7 @@ package org.eclipse.koneki.ldt.parser;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -383,12 +384,12 @@ public final class LuaASTUtils {
 		// get preloaded module
 		ISourceModule preloadedSourceModule = getPreloadSourceModule(sourceModule);
 		if (preloadedSourceModule == null)
-			return null;
+			return Collections.emptyList();
 
 		// get luasourceroot
 		LuaSourceRoot luaSourceRoot = LuaASTModelUtils.getLuaSourceRoot(preloadedSourceModule);
 		if (luaSourceRoot == null)
-			return null;
+			return Collections.emptyList();
 
 		// get a global var with this name
 		final List<Definition> definitions = new ArrayList<Definition>();
