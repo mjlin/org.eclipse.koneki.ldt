@@ -35,8 +35,8 @@ public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 	private LuaState lua = null;
 
 	public synchronized LuaSourceRoot buildAST(final String string) {
-		// if (lua == null)
-		lua = loadLuaModule();
+		if (lua == null)
+			lua = loadLuaModule();
 
 		pushLuaModule(lua);
 		lua.getField(-1, "build"); //$NON-NLS-1$
@@ -45,7 +45,7 @@ public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 		LuaSourceRoot luaSourceRoot = lua.checkJavaObject(-1, LuaSourceRoot.class);
 		lua.pop(2);
 
-		lua.close();
+		// lua.close();
 
 		return luaSourceRoot;
 	}

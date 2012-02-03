@@ -31,7 +31,7 @@ local function gettypedef(_file,name,kind,sourcerangemin,sourcerangemax)
 	if _typedef then
 		if _typedef.tag == kind then return _typedef end
 	else
-		if kind == "recordtypedef" then
+		if kind == "recordtypedef" and name ~= "global" then
 			_recordtypedef = apimodel._recordtypedef(name)
 			
 			-- define sourcerange
@@ -249,8 +249,8 @@ function M.createmoduleapi(ast)
 					for _, dt_field in ipairs(parsedcomment["field"]) do
 						local _item = createfield(dt_field,_file,sourcerangemin,sourcerangemax)
 						-- define sourcerange only if we create it
-						_item.sourcerange.min = comment.lineinfo.first.offset-1
-						_item.sourcerange.max = comment.lineinfo.last.offset-1
+						_item.sourcerange.min = sourcerangemin
+						_item.sourcerange.max = sourcerangemax
 						if _item then _recordtypedef:addfield(_item) end
 					end
 				end
@@ -262,12 +262,12 @@ function M.createmoduleapi(ast)
 				_item.description = parsedcomment.description
 				
 				-- define sourcerange
-				_item.sourcerange.min = comment.lineinfo.first.offset-1
-				_item.sourcerange.max = comment.lineinfo.last.offset-1
-
-				-- add item to its parent
 				local sourcerangemin = comment.lineinfo.first.offset-1
 				local sourcerangemax = comment.lineinfo.last.offset-1
+				_item.sourcerange.min = sourcerangemin
+				_item.sourcerange.max = sourcerangemax
+
+				-- add item to its parent
 				local scope = parsedcomment["field"][1].parent
 				additemtoparent(_file,_item,scope,sourcerangemin,sourcerangemax)
 			elseif parsedcomment["function"] and parsedcomment["function"][1].name then
@@ -277,8 +277,10 @@ function M.createmoduleapi(ast)
 				_item.description = parsedcomment.description
 
 				-- define sourcerange
-				_item.sourcerange.min = comment.lineinfo.first.offset-1
-				_item.sourcerange.max = comment.lineinfo.last.offset-1
+				local sourcerangemin = comment.lineinfo.first.offset-1
+				local sourcerangemax = comment.lineinfo.last.offset-1
+				_item.sourcerange.min = sourcerangemin
+				_item.sourcerange.max = sourcerangemax
 
 
 				-- create function type
@@ -298,8 +300,6 @@ function M.createmoduleapi(ast)
 				-- manage returns
 				if parsedcomment["return"] then
 					for _, dt_return in ipairs(parsedcomment["return"]) do
-						local sourcerangemin = comment.lineinfo.first.offset-1
-						local sourcerangemax = comment.lineinfo.last.offset-1
 						local _return = createreturn(dt_return,_file,sourcerangemin,sourcerangemax)
 						table.insert(_functiontypedef.returns,_return)
 					end
