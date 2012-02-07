@@ -325,7 +325,7 @@ function M.createmoduleapi(ast)
 
 	local function parsecomment(node, parent, ...)
 		-- check for comments before this node
-		if node.lineinfo.first.comments then
+		if node.lineinfo and node.lineinfo.first.comments then
 			local comments = node.lineinfo.first.comments
 			-- check all comments
 			for _,comment in ipairs(comments) do
@@ -337,7 +337,7 @@ function M.createmoduleapi(ast)
 			end
 		end
 		-- check for comments after this node
-		if node.lineinfo.last.comments then
+		if node.lineinfo and node.lineinfo.last.comments then
 			local comments = node.lineinfo.last.comments
 			-- check all comments
 			for _,comment in ipairs(comments) do

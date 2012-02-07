@@ -95,26 +95,27 @@ local function createexpr(expr,_block)
 				-- we store the block which hold this node 
 				-- to be able to define	
 				idto_block[expr]= _block
-				
+	
 				-- if expr has not line info, it means expr has no representation in the code
 				-- so we don't need it.
-				if not expr.lineinfo then
-						return nil
-				end
+				if not expr.lineinfo then	return nil end
 				
 				-- create identifier
 				local _identifier = internalmodel._identifier()
 				idto_identifier[expr]= _identifier
 				_expr =	_identifier
 		| `Index { innerexpr, `String{fieldname} } ->
-			-- create index
+				if not expr.lineinfo then	return nil end
+				-- create index
 				local _expression = createexpr(innerexpr,_block)
 				if _expression then _expr =	internalmodel._index(_expression,fieldname) end
 		| `Call{innerexpr, ...} ->
-			-- create call 
+				if not expr.lineinfo then	return nil end
+				-- create call 
 				local _expression = createexpr(innerexpr,_block)
 				if _expression then _expr =	internalmodel._call(_expression) end
 		| `Invoke{innerexpr,`String{functionname},...} ->
+				if not expr.lineinfo then	return nil end
 				-- create invoke
 				local _expression = createexpr(innerexpr,_block)
 				if _expression then _expr = internalmodel._invoke(functionname,_expression) end
