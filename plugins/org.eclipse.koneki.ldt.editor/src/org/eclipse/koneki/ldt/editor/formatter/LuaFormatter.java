@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Sierra Wireless and others.
+ * Copyright (c) 2011, 2012 Sierra Wireless and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -33,6 +33,7 @@ public class LuaFormatter extends AbstractScriptFormatter {
 	private final int indentationSize;
 	private final String delimiter;
 	private final String tabulation;
+	private final boolean formatTableValues;
 
 	private final FormatLuaModule formatLuaModule = new FormatLuaModule();
 
@@ -44,9 +45,12 @@ public class LuaFormatter extends AbstractScriptFormatter {
 		 */
 		tabPolicy = TabStyle.forName(preferences.get(LuaFormatterPreferenceConstants.FORMATTER_TAB_CHAR));
 		String string = preferences.get(LuaFormatterPreferenceConstants.FORMATTER_TAB_SIZE);
-		tabSize = string == null || string.isEmpty() ? 0 : Integer.parseInt(string);
+		tabSize = (string == null || string.isEmpty()) ? 0 : Integer.parseInt(string);
 		string = preferences.get(LuaFormatterPreferenceConstants.FORMATTER_INDENTATION_SIZE);
-		indentationSize = string == null || string.isEmpty() ? 0 : Integer.parseInt(string);
+		indentationSize = (string == null || string.isEmpty()) ? 0 : Integer.parseInt(string);
+		string = preferences.get(LuaFormatterPreferenceConstants.FORMATTER_INDENT_TABLE_VALUES);
+		formatTableValues = (string == null || string.isEmpty()) ? false : Boolean.parseBoolean(string);
+
 		/*
 		 * Build separator character
 		 */
@@ -76,10 +80,10 @@ public class LuaFormatter extends AbstractScriptFormatter {
 		final String formatted;
 		// With mixed white spaces
 		if (tabPolicy == TabStyle.MIXED) {
-			formatted = formatLuaModule.indent(source, delimiter, tabSize, indentationSize, 0);
+			formatted = formatLuaModule.indent(source, delimiter, tabSize, indentationSize, formatTableValues, 0);
 		} else {
 			// With one type of tabulation
-			formatted = formatLuaModule.indent(source, delimiter, tabulation, 0);
+			formatted = formatLuaModule.indent(source, delimiter, tabulation, formatTableValues, 0);
 		}
 		if (length < source.length()) {
 			final Document doc = new Document(source);
