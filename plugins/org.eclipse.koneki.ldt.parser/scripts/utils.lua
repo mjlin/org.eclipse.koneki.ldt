@@ -62,8 +62,8 @@ function M.linkto( apiobject )
 	local tag = apiobject.tag
 	if tag == 'internaltyperef' then
 		return '#' .. apiobject.typename
-	elseif tag == 'externaltyperef' then
-		return apiobject.modulename..'#'..apiobject.typename
+	elseif tag == 'externaltyperef' or tag == 'primitivetyperef'then
+		return nil
 	elseif tag == 'item' then
 		if not apiobject.parent then
 			-- This item reference a global definition

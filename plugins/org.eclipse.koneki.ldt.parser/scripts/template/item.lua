@@ -17,21 +17,26 @@ return
 # -- Resolve item type definition
 # --
 # local typedef
-# if  _item.parent and _item.type and _item.type.tag == 'internaltyperef' then
+#if  _item.parent and _item.type and _item.type.tag == 'internaltyperef' then
 #	if _item.parent.tag == 'recordtypedef' then
 #		local file = _item.parent.parent
 #		typedef = file.types[ _item.type.typename ]
 #	elseif _item.parent.tag == 'file' then
 #		typedef = _item.parent.types[ _item.type.typename ]
 #	end
-# end
+#end
 #
 # -- Show item type for internal type
-# if typedef and typedef.tag ~= 'functiontypedef'
-#	and _item.type and _item.type.tag == 'internaltyperef'
-# then
-	<em><a href="$( linkto(_item.type) )">$(prettyname(_item.type))</a></em>
-# end
+#
+#if _item.type and (not typedef or typedef.tag ~= 'functiontypedef') then
+#	--Show link only when available 
+#	local link = linkto(_item.type)
+#	if link then
+		<em><a href="$( linkto(_item.type) )">$(prettyname(_item.type))</a></em>
+#	else
+		<em>$(prettyname(_item.type))</em>
+#	end
+#end
 $( prettyname(_item) )</dt>
 # if _item.shortdescription then
 	<dd>$( markdown(_item.shortdescription) )</dd>
