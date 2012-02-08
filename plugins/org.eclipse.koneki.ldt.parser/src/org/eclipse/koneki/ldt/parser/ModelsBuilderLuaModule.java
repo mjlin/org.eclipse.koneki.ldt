@@ -20,16 +20,16 @@ import com.naef.jnlua.LuaState;
 
 public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 
-	public static final String META_LIB_PATH = "/scriptMetalua/";//$NON-NLS-1$
-	public static final String LIB_PATH = "/scripts/";//$NON-NLS-1$
+	public static final String LOCAL_LIB_PATH = "/script/local";//$NON-NLS-1$
+	public static final String EXTERNAL_LIB_PATH = "/script/external";//$NON-NLS-1$
 
 	public static final String MODELS_BUILDER = "javamodelsbuilder";//$NON-NLS-1$
 	public static final String MODELS_BUILDER_SCRIPT = MODELS_BUILDER + ".mlua";//$NON-NLS-1$
 
-	public static final String INTERNAL_MODEL_BUILDER = "internalmodelbuilder";//$NON-NLS-1$
+	public static final String INTERNAL_MODEL_BUILDER = "models/internalmodelbuilder";//$NON-NLS-1$
 	public static final String INTERNAL_MODEL_BUILDER_SCRIPT = INTERNAL_MODEL_BUILDER + ".mlua";//$NON-NLS-1$
 
-	public static final String API_MODEL_BUILDER = "apimodelbuilder";//$NON-NLS-1$
+	public static final String API_MODEL_BUILDER = "models/apimodelbuilder";//$NON-NLS-1$
 	public static final String API_MODEL_BUILDER_SCRIPT = API_MODEL_BUILDER + ".mlua";//$NON-NLS-1$
 
 	private LuaState lua = null;
@@ -63,8 +63,11 @@ public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 	 * @see org.eclipse.koneki.ldt.module.AbstractMetaLuaModule#getMetaLuaSourcePath()
 	 */
 	@Override
-	protected String getMetaLuaSourcePath() {
-		return META_LIB_PATH;
+	protected List<String> getMetaLuaSourcePaths() {
+		ArrayList<String> sourcepaths = new ArrayList<String>();
+		sourcepaths.add(LOCAL_LIB_PATH);
+		sourcepaths.add(EXTERNAL_LIB_PATH);
+		return sourcepaths;
 	}
 
 	/**
@@ -76,7 +79,6 @@ public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 		sourcepaths.add(MODELS_BUILDER_SCRIPT);
 		sourcepaths.add(INTERNAL_MODEL_BUILDER_SCRIPT);
 		sourcepaths.add(API_MODEL_BUILDER_SCRIPT);
-		// sourcepaths.add("metalua/treequery/walk.mlua");
 		return sourcepaths;
 	}
 
@@ -102,7 +104,8 @@ public class ModelsBuilderLuaModule extends AbstractMetaLuaModule {
 	@Override
 	protected List<String> getLuaSourcePaths() {
 		ArrayList<String> sourcepaths = new ArrayList<String>();
-		sourcepaths.add(LIB_PATH);
+		sourcepaths.add(LOCAL_LIB_PATH);
+		sourcepaths.add(EXTERNAL_LIB_PATH);
 		return sourcepaths;
 	}
 }

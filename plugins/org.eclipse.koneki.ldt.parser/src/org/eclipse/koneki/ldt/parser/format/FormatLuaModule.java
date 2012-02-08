@@ -28,8 +28,8 @@ import com.naef.jnlua.LuaState;
  * @author Kevin KIN-FOO <kkinfoo@sierrawireless.com>
  */
 public final class FormatLuaModule extends AbstractLuaModule {
-	public static final String FORMATTER_PATH = "/scripts/"; //$NON-NLS-1$
-	public static final String FORMATTER_LIB_NAME = "format"; //$NON-NLS-1$
+	public static final String FORMATTER_PATH = "/script/ext"; //$NON-NLS-1$
+	public static final String FORMATTER_LIB_NAME = "luaformater"; //$NON-NLS-1$
 	public static final String INDENTATION_FUNTION = "indentCode"; //$NON-NLS-1$
 
 	public FormatLuaModule() {
