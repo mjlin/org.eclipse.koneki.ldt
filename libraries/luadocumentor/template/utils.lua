@@ -46,7 +46,7 @@ function M.anchor( modelobject )
 			return M.anchor(modelobject.parent)..'.'..modelobject.name
 		end
 	elseif tag == 'file' or tag == 'recordtypedef' then
-		return modelobject.name
+		return modelobject.name or ''
 	end
 	error('No anchor available for '..tag)
 end

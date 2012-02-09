@@ -10,49 +10,55 @@
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
 require 'metalua.compiler'
-local builder = require 'apimodelbuilder'
+local builder = require 'models.apimodelbuilder'
 --
 -- Load documentation generator and update its path
 --
 local docgen  = require 'templateengine'
-for name, def in pairs( require 'utils' ) do
+for name, def in pairs( require 'template.utils' ) do
 	docgen.env [ name ] = def
 end
+
+--
+-- Load documentation extractor and set handled languages
+--
+local extractor = require 'lddextractor'
+local languageextractors = require 'extractors'
+-- Support Lua comment extracting
+extractor.supportedlanguages['lua'] = languageextractors.lua
+-- Support C comment extracting
+for _,c in ipairs({'c', 'cpp', 'c++'}) do
+	extractor.supportedlanguages[c] = languageextractors.c
+end
+
 local M = {}
 M.defaultsitemainpagename = 'index'
-local function generateapielementforfile(filepath)
-	-- Get ast from file
-	local status, ast = pcall(mlc.luafile_to_ast, filepath)
-	--
-	-- Detect errors
-	--
-	if not status then return nil, ast end
-	local status, error = pcall(mlc.check_ast, ast)
-	if not status then return nil, error end
 
-	-- Create API module
-	local apimodule = builder.createmoduleapi(ast)
-	if apimodule and apimodule.name then
-		return apimodule, apimodule.name
-	end
-	return nil, 'No module name provided for '..filepath
-end
-local function generateapielementforcfile( filepath )
-	
-end
 function M.generatedocforfiles(filenames, cssname)
-	if not filenames then return nil, 'No files provided' end
+	if not filenames then return nil, 'No files provided.' end
 	--
 	-- Generate API model elements for all files
 	--
 	local generatedfiles = {}
+	local wrongfiles = {}
 	for _, filename in pairs( filenames ) do
-		local file, name = generateapielementforfile( filename )
-		if file then
-			table.insert(generatedfiles, file)
-		else
-			-- Return error string
-			return nil, name
+		-- Load file content
+		local file, error = io.open(filename, 'r')
+		if not file then return nil, 'Unable to read "'..filename..'"\n'..err end
+		local code = file:read('*all')
+		file:close()
+		-- Get module for current file
+		local apimodule, err =	extractor.generateapimodule(filename, code)
+		
+		-- Handle modules with module name
+		if  apimodule and apimodule.name then
+			table.insert(generatedfiles, apimodule)
+		elseif not apimodule then
+			-- Track faulty files
+			table.insert(wrongfiles, 'Unable to extract comments from "'..filename..'".\n'..err)
+		elseif not apimodule.name then
+			-- Do not generate documentation for unnamed modules
+			table.insert(wrongfiles, 'Unable to create documentation for "'..filename..'", no module name provided.')
 		end
 	end
 	--
@@ -68,7 +74,7 @@ function M.generatedocforfiles(filenames, cssname)
 	--
 	-- Define page cursor
 	--
-	local pagecursor = {
+	local page = {
 		currentmodule = nil,
 		headers = { [[<link rel="stylesheet" href="]].. cssname ..[[" type="text/css"/>]] },
 		modules = generatedfiles,
@@ -80,12 +86,12 @@ function M.generatedocforfiles(filenames, cssname)
 	--
 	for _, module in ipairs( generatedfiles ) do
 		-- Update current cursor page
-		pagecursor.currentmodule = module
+		page.currentmodule = module
 		-- Generate page
-		local content, error = docgen.applytemplate(pagecursor)
+		local content, error = docgen.applytemplate(page)
 		if not content then return nil, error end
 		module.body = content
 	end
-	return generatedfiles
+	return generatedfiles, wrongfiles
 end
 return M
