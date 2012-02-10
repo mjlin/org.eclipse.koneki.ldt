@@ -10,26 +10,17 @@
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
 require 'metalua.compiler'
-local builder = require 'models.apimodelbuilder'
+
 --
 -- Load documentation generator and update its path
 --
-local docgen  = require 'templateengine'
+local templateengine  = require 'templateengine'
 for name, def in pairs( require 'template.utils' ) do
-	docgen.env [ name ] = def
+	templateengine.env [ name ] = def
 end
 
---
 -- Load documentation extractor and set handled languages
---
-local extractor = require 'lddextractor'
-local languageextractors = require 'extractors'
--- Support Lua comment extracting
-extractor.supportedlanguages['lua'] = languageextractors.lua
--- Support C comment extracting
-for _,c in ipairs({'c', 'cpp', 'c++'}) do
-	extractor.supportedlanguages[c] = languageextractors.c
-end
+local lddextractor = require 'lddextractor'
 
 local M = {}
 M.defaultsitemainpagename = 'index'
@@ -48,7 +39,7 @@ function M.generatedocforfiles(filenames, cssname)
 		local code = file:read('*all')
 		file:close()
 		-- Get module for current file
-		local apimodule, err =	extractor.generateapimodule(filename, code)
+		local apimodule, err = lddextractor.generateapimodule(filename, code)
 		
 		-- Handle modules with module name
 		if  apimodule and apimodule.name then
@@ -88,7 +79,7 @@ function M.generatedocforfiles(filenames, cssname)
 		-- Update current cursor page
 		page.currentmodule = module
 		-- Generate page
-		local content, error = docgen.applytemplate(page)
+		local content, error = templateengine.applytemplate(page)
 		if not content then return nil, error end
 		module.body = content
 	end

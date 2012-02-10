@@ -10,9 +10,22 @@
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
 require 'metalua.compiler'
-local builder = require 'models.apimodelbuilder'
+local apimodelbuilder = require 'models.apimodelbuilder'
 local M = {}
+
+--
+-- Define default supported languages
+--
 M.supportedlanguages = {}
+local extractors = require 'extractors'
+
+-- Support Lua comment extracting
+M.supportedlanguages['lua'] = extractors.lua
+
+-- Support C comment extracting
+for _,c in ipairs({'c', 'cpp', 'c++'}) do
+	M.supportedlanguages[c] = extractors.c
+end
 
 -- Extract comment from code,
 -- type of code is deduced from filename extension
@@ -44,11 +57,11 @@ function M.generatecommentfile(filename, code)
 	end
 	local filecontent = {}
 	for _, comment in ipairs( comments ) do
-		table.insert(filecontent, "--[[\n")
+		table.insert(filecontent, "--[[")
 		table.insert(filecontent, comment)
-		table.insert(filecontent, "\n]]\n")
+		table.insert(filecontent, "\n]]\n\n")
 	end
-	return table.concat(filecontent)..'\nreturn nil'
+	return table.concat(filecontent)..'return nil\n'
 end
 -- Create API Model module from a 'comment only' lua file
 function M.generateapimodule(filename, code)
@@ -66,6 +79,6 @@ function M.generateapimodule(filename, code)
 	if not status then
 		return nil, '"'..filename..'" contains an error.\n'..error
 	end
-	return builder.createmoduleapi(ast)
+	return apimodelbuilder.createmoduleapi(ast)
 end
 return M

@@ -19,12 +19,14 @@ function M.c(code)
 	local comments = {}
 	-- Loop over comments stripping cosmetic '*'
 	for comment in code:gmatch('%s*/%*%*+(.-)%*+/') do
-		table.insert(comments, comment)
+		-- All Lua special comment are prefixed with an '-',
+		-- so we also comment C comment to make them compliant
+		table.insert(comments, '-'..comment)
 	end
 	return comments
 end
 
--- Enable to retrieve "---" comments frim lua code 
+-- Enable to retrieve "---" comments from Lua code
 function M.lua( code )
 	if not code then return nil, 'No code provided' end
 	-- Get ast from file

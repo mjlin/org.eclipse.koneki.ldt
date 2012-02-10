@@ -20,7 +20,6 @@ local function iswindows()
 	p:close()
 	return result == "Windows_NT"
 end
-local modulefolder = 'modules'
 M.separator = iswindows() and [[\]] or [[/]]
 ---
 -- Will recursively browse given directories and list files encountered
@@ -44,6 +43,11 @@ local function appendfiles(tab, dirorfile)
 		if elementnature == 'file' then
 			table.insert(tab, path)
 		else if elementnature == 'directory' then
+
+				-- Check if folder is accessible
+				local status, error = pcall(lfs.dir, path)
+				if not status then return nil, error end
+
 				--
 				-- Handle folders
 				--

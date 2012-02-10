@@ -18,13 +18,16 @@
 -- This message is compliant to 'lapp', which will match options and arguments
 -- from commande line.
 local help = [[luadocumentor, documentation for Lua
-	-e, --emptyfiles Will produce documentation only .lua files instead of html files
+	-f, --format (default doc) Define output format, here are available formats
+		* doc: Will produce HTML documentation from specified files.
+		* sdk: Will produce Lua source file(s) made of parsed file(s) special comments.
 	-d, --dir (default docs) Output directory
 	-h, --help This help.
 	-s, --style (default !) File for style sheet (ldd.css)
 	[dirs] Directories parsed for .lua files
 ]]
-local generator = require 'docgenerator'
+local docgenerator = require 'docgenerator'
+local lddextractor = require 'lddextractor'
 local lapp = require 'pl.lapp'
 local args = lapp( help )
 
@@ -54,7 +57,7 @@ local allpresent, missing = fs.checkdirectory(args)
 -- Some of given directories are absent
 if missing then
 	-- List missing directories
-	print 'Unable to find'
+	print 'Unable to open'
 	for _, file in ipairs( missing ) do
 		print('\t'.. file)
 	end
@@ -71,37 +74,40 @@ end
 --
 -- Generate documentation only files
 --
-if args.emptyfiles then
-	local extractor = require 'lddextractor'
+if args.format == 'sdk' then
 	for _, filename in ipairs( filestoparse ) do
 
 		-- Loading file content
 		print('Dealing with "'..filename..'".')
-		local file = io.open(filename, 'r')
-		local code = file:read('*all')
-		file:close()
-
-		--
-		-- Creating comment file
-		--
-		local commentfile, error = extractor.generatecommentfile(filename, code)
-
-		-- Getting module name
-		-- Optimize me
-		local module, moduleerror = extractor.generateapimodule(filename, code)
-		if not commentfile then
-			print('Unable to create documentation file for "'..filename..'"\n'..error)
-		elseif not module or not module.name then
-			local error = moduleerror and '\n'..moduleerror or ''
-			print('Unable to compute module name for "'..filename..'".'..error)
+		local file, error = io.open(filename, 'r')
+		if not file then
+			print ('Unable to open "'..filename.."'.\n"..error)
 		else
+			local code = file:read('*all')
+			file:close()
+
 			--
-			-- Flush documentation file on disk
+			-- Creating comment file
 			--
-			local path = args.dir..fs.separator..module.name..'.lua'
-			local status, err = fs.fill(path, commentfile)
-			if not status then
-				print(err)
+			local commentfile, error = lddextractor.generatecommentfile(filename, code)
+
+			-- Getting module name
+			-- Optimize me
+			local module, moduleerror = lddextractor.generateapimodule(filename, code)
+			if not commentfile then
+				print('Unable to create documentation file for "'..filename..'"\n'..error)
+			elseif not module or not module.name then
+				local error = moduleerror and '\n'..moduleerror or ''
+				print('Unable to compute module name for "'..filename..'".'..error)
+			else
+				--
+				-- Flush documentation file on disk
+				--
+				local path = args.dir..fs.separator..module.name..'.lua'
+				local status, err = fs.fill(path, commentfile)
+				if not status then
+					print(err)
+				end
 			end
 		end
 	end
@@ -109,8 +115,13 @@ if args.emptyfiles then
 	return
 end
 
+-- Deal only supported output types
+if args.format ~= 'doc' then
+	print ('"'..args.format..'" format is not handled.')
+	return
+end
 -- Generate html form files
-local parsedfiles, unparsed = generator.generatedocforfiles(filestoparse, args.style)
+local parsedfiles, unparsed = docgenerator.generatedocforfiles(filestoparse, args.style)
 
 -- Show warnings on unparsed files
 if #unparsed > 0 then
@@ -133,9 +144,9 @@ end
 print (generated .. ' file(s) generated.')
 
 -- Copying css
-local css = io.open(args.style, 'r')
+local css, error = io.open(args.style, 'r')
 if not css then
-	print('"'..args.style .. '" does not exist.')
+	print('Unable to open "'..args.style .. '".\n'..error)
 	return
 end
 local csscontent = css:read("*all")
