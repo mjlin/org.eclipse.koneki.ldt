@@ -46,9 +46,11 @@ function M.anchor( modelobject )
 			return M.anchor(modelobject.parent)..'.'..modelobject.name
 		end
 	elseif tag == 'file' or tag == 'recordtypedef' then
-		return modelobject.name or ''
+		return modelobject.name
+	elseif not tag then
+		return nil, 'No anchor generation available as no tag has been provided.'
 	end
-	error('No anchor available for '..tag)
+	return nil, 'No anchor available for '..tag
 end
 ---
 -- Generates text for HTML links from API model element
@@ -78,8 +80,10 @@ function M.linkto( apiobject )
 		return M.anchor( apiobject )..'.html'
 	elseif tag == 'index' then
 		return 'index.html'
+	elseif not tag then
+		return nil, 'Link generation is impossible as no tag has been provided.'
 	end
-	error('No link available for '..tag)
+	return nil, 'No link generation available for `'..tag..'.'
 end
 ---
 -- Provide human readable overview from an API model element
@@ -151,7 +155,9 @@ function M.prettyname( apiobject )
 			-- Append function parameters
 			return fname .. apiobject.name .. '(' .. table.concat( paramlist ) ..')'
 		end
+	elseif not tag then
+		return nil, 'No pretty name available as no tag has been provided.'
 	end
-	error('No pretty name for '..tag)
+	return nil, 'No pretty name for `'..tag..'.'
 end
 return M

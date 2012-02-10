@@ -47,8 +47,10 @@ function M.anchor( modelobject )
 		end
 	elseif tag == 'file' or tag == 'recordtypedef' then
 		return modelobject.name
+	elseif not tag then
+		return nil, 'No anchor generation available as no tag has been provided.'
 	end
-	error('No anchor available for '..tag)
+	return nil, 'No anchor available for '..tag
 end
 ---
 -- Generates text for HTML links from API model element
@@ -63,7 +65,7 @@ function M.linkto( apiobject )
 	if tag == 'internaltyperef' then
 		return '#' .. apiobject.typename
 	elseif tag == 'externaltyperef' or tag == 'primitivetyperef'then
-		return nil
+		return nil, 'So far IDE does not provide links for `'..tag..'.'
 	elseif tag == 'item' then
 		if not apiobject.parent then
 			-- This item reference a global definition
@@ -74,8 +76,10 @@ function M.linkto( apiobject )
 		end
 	elseif tag == 'file' or tag == 'recordtypedef' then
 		return M.anchor( apiobject )
+	elseif not tag then
+		return nil, 'Link generation is impossible as no tag has been provided.'
 	end
-	error('No link available for '..tag)
+	return nil, 'No link generation available for `'..tag..'.'
 end
 ---
 -- Provide human readable overview from an API model element
@@ -145,7 +149,9 @@ function M.prettyname( apiobject )
 			-- Append function parameters
 			return fname .. apiobject.name .. '(' .. table.concat( paramlist ) ..')'
 		end
+	elseif not tag then
+		return nil, 'No pretty name available as no tag has been provided.'
 	end
-	error('No pretty name for '..tag)
+	return nil, 'No pretty name for `'..tag..'.'
 end
 return M
