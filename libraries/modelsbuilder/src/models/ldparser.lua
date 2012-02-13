@@ -390,13 +390,13 @@ function M.parse(stringcomment)
 	if firstpart:find("^[^@]") then
 		-- if the comment part don't start by @
 		-- it's the part which contains descriptions
-		local startoffset,endoffset = firstpart:find("[.?][%s\n\r]*")
+		local startoffset,endoffset = firstpart:find("[.?][%s\n\r]+")
 		if startoffset then
 			_comment.shortdescription = firstpart:sub(1,startoffset)
 			_comment.description = cleandescription(firstpart:sub(endoffset+1,-1))
 		else
 			_comment.shortdescription = firstpart
-			_comment.description = firstpart
+			_comment.description = ""
 		end
 	end
 

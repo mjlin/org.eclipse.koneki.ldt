@@ -10,7 +10,7 @@
 --       Kevin KIN-FOO <kkinfoo@sierrawireless.com>
 --           - initial API and implementation and initial documentation
 --------------------------------------------------------------------------------
-
+package.path = "./?.lua;./?.luac;"..package.path
 --
 -- Defining help message.
 --

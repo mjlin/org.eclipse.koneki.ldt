@@ -27,12 +27,12 @@ import com.naef.jnlua.LuaState;
  * 
  * @author Kevin KIN-FOO <kkinfoo@sierrawireless.com>
  */
-public final class FormatLuaModule extends AbstractLuaModule {
-	public static final String FORMATTER_PATH = "/script/ext"; //$NON-NLS-1$
-	public static final String FORMATTER_LIB_NAME = "luaformater"; //$NON-NLS-1$
+public final class LuaFormatterModule extends AbstractLuaModule {
+	public static final String FORMATTER_PATH = "/script/external"; //$NON-NLS-1$
+	public static final String FORMATTER_LIB_NAME = "luaformatter"; //$NON-NLS-1$
 	public static final String INDENTATION_FUNTION = "indentCode"; //$NON-NLS-1$
 
-	public FormatLuaModule() {
+	public LuaFormatterModule() {
 	}
 
 	/**
@@ -121,8 +121,8 @@ public final class FormatLuaModule extends AbstractLuaModule {
 	 * @return indented Lua source code
 	 * @see #indent(String, String, String, int)
 	 */
-	public String indent(final String source, final String delimiter, final int tabSize, final int indentationSize,
-			final boolean indentInTable, final int originalIndentationLevel) {
+	public String indent(final String source, final String delimiter, final int tabSize, final int indentationSize, final boolean indentInTable,
+			final int originalIndentationLevel) {
 		final LuaState lua = loadLuaModule();
 		pushLuaModule(lua);
 		lua.getField(-1, INDENTATION_FUNTION);

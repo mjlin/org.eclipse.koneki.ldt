@@ -21,7 +21,7 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.koneki.ldt.editor.Activator;
-import org.eclipse.koneki.ldt.parser.format.FormatLuaModule;
+import org.eclipse.koneki.ldt.parser.format.LuaFormatterModule;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
@@ -35,7 +35,7 @@ public class LuaFormatter extends AbstractScriptFormatter {
 	private final String tabulation;
 	private final boolean formatTableValues;
 
-	private final FormatLuaModule formatLuaModule = new FormatLuaModule();
+	private final LuaFormatterModule formatLuaModule = new LuaFormatterModule();
 
 	protected LuaFormatter(final String lineDelimiter, final Map<String, String> preferences) {
 		super(preferences);

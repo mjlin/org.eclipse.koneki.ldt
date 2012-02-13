@@ -12,7 +12,7 @@
 <project name="librariesBuilder" default="build">
 	<!-- folder where lua script file should be get -->
 	<property name="librariesFolder" value="../../libraries" />
-	<property name="luaformaterFolder" value="${librariesFolder}/luaformater" />
+	<property name="luaformatterFolder" value="${librariesFolder}/luaformatter" />
 	<property name="markdownFolder" value="${librariesFolder}/markdown" />
 	<property name="modelsbuilderFolder" value="${librariesFolder}/modelsbuilder/src" />
 	<property name="penlightFolder" value="${librariesFolder}/penlight" />
@@ -26,7 +26,7 @@
 	<target name="build">
 		<!-- copy lua file -->
 		<copy todir="${destinationLuaFolder}">
-			<fileset dir="${luaformaterFolder}" includes="**/*.lua"/>
+			<fileset dir="${luaformatterFolder}" includes="**/*.lua"/>
 		</copy>
 		<copy todir="${destinationLuaFolder}">
 			<fileset dir="${markdownFolder}" includes="**/*.lua"/>
