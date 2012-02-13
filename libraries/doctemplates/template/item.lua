@@ -37,12 +37,14 @@ return
 		<em>$(prettyname(_item.type))</em>
 #	end
 #end
-$( prettyname(_item) )</dt>
+<strong>$( prettyname(_item) )</strong>
+</dt>
+<dd>
 # if _item.shortdescription then
-	<dd>$( markdown(_item.shortdescription) )</dd>
+	$( markdown(_item.shortdescription) )
 # end
 # if markdown(_item.description) then
-	<dd>$( markdown(_item.description) )</dd>
+	$( markdown(_item.description) )
 # end
 #
 # --
@@ -125,4 +127,5 @@ $( prettyname(_item) )</dt>
 #		end
 # 	end
 # end
+</dd>
 </dl>]]
