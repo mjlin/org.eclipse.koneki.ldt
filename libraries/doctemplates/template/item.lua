@@ -44,7 +44,7 @@ return
 	$( markdown(_item.shortdescription) )
 # end
 # if markdown(_item.description) then
-	$( markdown(_item.description) )
+	<br/>$( markdown(_item.description) )
 # end
 #
 # --
