@@ -26,7 +26,7 @@ import org.eclipse.dltk.ui.wizards.ILocationGroup;
 import org.eclipse.dltk.ui.wizards.IProjectWizard;
 import org.eclipse.dltk.ui.wizards.ProjectCreator;
 import org.eclipse.jface.wizard.IWizardPage;
-import org.eclipse.koneki.ldt.core.LuaContants;
+import org.eclipse.koneki.ldt.core.LuaConstants;
 
 public class LuaProjectCreator extends ProjectCreator {
 
@@ -60,7 +60,7 @@ public class LuaProjectCreator extends ProjectCreator {
 
 		if (!locationGroup.isExistingLocation()) {
 			// Create a source folder and add it to build path
-			final IFolder sourcefolder = getProject().getFolder(LuaContants.SOURCE_FOLDER);
+			final IFolder sourcefolder = getProject().getFolder(LuaConstants.SOURCE_FOLDER);
 			final IBuildpathEntry newSourceEntry = DLTKCore.newSourceEntry(sourcefolder.getFullPath());
 			buildPath.add(newSourceEntry);
 		}
@@ -88,11 +88,11 @@ public class LuaProjectCreator extends ProjectCreator {
 		@Override
 		public void execute(IProject project, IProgressMonitor monitor) throws CoreException, InterruptedException {
 			monitor.beginTask(Messages.LuaProjectCreatorInitializingSourceFolder, 1);
-			final IFolder sourcefolder = project.getFolder(LuaContants.SOURCE_FOLDER);
+			final IFolder sourcefolder = project.getFolder(LuaConstants.SOURCE_FOLDER);
 			if (sourcefolder.exists() && !locationGroup.isExistingLocation()) {
 				// Create main file for application project
-				final byte[] bytes = LuaContants.MAIN_FILE_CONTENT.getBytes();
-				final IFile mainFile = sourcefolder.getFile(LuaContants.DEFAULT_MAIN_FILE);
+				final byte[] bytes = LuaConstants.MAIN_FILE_CONTENT.getBytes();
+				final IFile mainFile = sourcefolder.getFile(LuaConstants.DEFAULT_MAIN_FILE);
 				mainFile.create(new ByteArrayInputStream(bytes), false, new SubProgressMonitor(monitor, 1));
 			}
 			monitor.done();
