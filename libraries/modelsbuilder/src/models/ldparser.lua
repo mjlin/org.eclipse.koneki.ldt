@@ -14,10 +14,10 @@ local M = {} -- module
 local lx -- lexer used to parse tag
 local registeredparsers -- table {tagname => {list de parsers}}
 
--- raise an error if  result contains a node error
+-- raise an error if result contains a node error
 local function raiserror(result)
 	for i, node in ipairs(result) do
-		-- if node.tag == "Error" then table.print(node) end
+--		 if node.tag == "Error" then table.print(node) end
 		assert(not node or node.tag ~= "Error")
 	end
 end
@@ -254,7 +254,13 @@ local moduleparsers = {
 		'@','module'
 	})
 }
-
+local thirdtagsparser = gg.sequence({
+	builder = 	function (result)
+		raiserror(result)
+		return { name = result[1].name }
+	end,
+	'@', idparser
+})
 ------------------------------------------------------------
 -- init parser
 local function initparser()
@@ -323,9 +329,35 @@ local function parsetag(part)
 			end
 		end
 	end
-	return nil;
+	return nil
 end
 
+------------------------------------------------------------
+-- Parse third party tags.
+--
+-- Enable to parse a tag not defined in language.
+-- So for, accepted format is: @sometagname adescription 
+local function parsethirdtag( part )
+
+	-- Check it there is someting to process
+	if not part.comment:find("^@") then
+		return nil, 'No tag to parse'
+	end
+
+	-- Apply parser
+	local status, parsedtag = pcall(thirdtagsparser, lx:newstream(part.comment, 'Third party tag lexer'))
+	if not status then
+		return nil, "Unable to parse given string."
+	end
+
+	-- Define tagname	
+	parsedtag.tagname = parsedtag.name
+	
+	-- Retrive description
+	local endoffset = parsedtag.lineinfo.last.offset
+	parsedtag.description =  cleandescription(part.comment:sub(endoffset+2,-1))
+	return parsedtag
+end
 ------------------------------------------------------------
 -- split string comment in several part
 -- return list of {comment = string, offset = number}
@@ -402,18 +434,40 @@ function M.parse(stringcomment)
 
 	-- Extract tags
 	-------------------------------
-	-- parse tag
+	-- Parse regular tags
+	local tag
 	for i, part in ipairs(commentparts) do
 		tag = parsetag(part)
 		--if it's a supported tag (so tag is not nil, it's a table)
 		if tag then
-			if not _comment[tag.tagname] then
-				_comment[tag.tagname] = {}
+			if not _comment.tags then _comment.tags = {} end 
+			if not _comment.tags[tag.tagname] then
+				_comment.tags[tag.tagname] = {}
 			end
-			table.insert(_comment[tag.tagname],tag)
+			table.insert(_comment.tags[tag.tagname], tag)
+		else
+		
+			-- Try user defined tags, so far they will look like
+			-- @identifier description
+			local thirdtag = parsethirdtag( part )
+			if thirdtag then
+				--
+				-- Append found tag
+				--
+				local reservedname = 'unknowntags'
+				if not _comment.unknowntags then
+					_comment.unknowntags = {}
+				end
+
+				-- Create specific section for parsed tag
+				if not _comment.unknowntags[thirdtag.tagname] then
+					_comment.unknowntags[thirdtag.tagname] = {}
+				end
+				-- Append to specific section
+				table.insert(_comment.unknowntags[thirdtag.tagname], thirdtag)
+			end
 		end
 	end
-
 	return _comment
 end
 return M

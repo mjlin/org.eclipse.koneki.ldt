@@ -27,6 +27,15 @@ return[[#
    <br/>$( markdown(_file.description) )
 # end
 # --
+# -- Handle "@usage" special tag
+# --
+#if _file.metadata and _file.metadata.usage and #_file.metadata.usage > 0 then
+	<h2>Usage examples</h2>
+#	for _, usage in ipairs( _file.metadata.usage ) do
+		<pre><code>$( securechevrons(usage.description) )</code></pre>
+#	end
+#end
+# --
 # -- Show quick description of current type
 # --
 # 

@@ -27,7 +27,7 @@ end
 ---
 -- Provides anchor string for an object of API mode
 --
--- @function [parent = #docutils]
+-- @function [parent = #docutils] anchor
 -- @param modelobject Object form API model
 -- @result #string Anchor for an API model object, this function __may rise an error__
 -- @usage # -- In a template
@@ -159,5 +159,15 @@ function M.prettyname( apiobject )
 		return nil, 'No pretty name available as no tag has been provided.'
 	end
 	return nil, 'No pretty name for `'..tag..'.'
+end
+---
+-- Just make a string print table in HTML.
+-- @function [parent = #docutils] securechevrons
+-- @param #string String to convert.
+-- @usage securechevrons('<markup>') => '&lt;markup&gt;'
+-- @return #string Converted string.
+function M.securechevrons( str )
+	if not str then return nil, 'String expected.' end
+	return string.gsub(str:gsub('<', '&lt;'), '>', '&gt;')
 end
 return M

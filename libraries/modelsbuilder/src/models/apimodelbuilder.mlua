@@ -194,13 +194,23 @@ function M.createmoduleapi(ast)
 	local _file = apimodel._file()
 
 	local function handlecomment(comment)
+	
+		-- Extract information from tagged comments
 		local parsedcomment = ldp.parse(comment[1])
+		
+		-- Get tags from the languages
+		local regulartags = parsedcomment and parsedcomment.tags
+		
+		-- Will contain last API object generated from comments
+		local _lastapiobject
+		
 		-- if comment is an ld comment
-		if parsedcomment then
+		if regulartags then
 			-- manage "module" comment
-			if parsedcomment["module"] then
+			if regulartags["module"] then
 				-- get name
-				_file.name = parsedcomment["module"][1].name
+				_file.name = regulartags["module"][1].name
+				_lastapiobject = _file
 
 				-- manage descriptions
 				_file.shortdescription = parsedcomment.shortdescription
@@ -210,8 +220,8 @@ function M.createmoduleapi(ast)
 				local sourcerangemax = comment.lineinfo.last.offset-1
 				
 				-- manage returns
-				if parsedcomment ["return"] then
-					for _, dt_return in ipairs(parsedcomment ["return"]) do
+				if regulartags ["return"] then
+					for _, dt_return in ipairs(regulartags ["return"]) do
 						local _return = createreturn(dt_return,_file,sourcerangemin,sourcerangemax)
 						table.insert(_file.returns,_return)
 					end
@@ -233,20 +243,21 @@ function M.createmoduleapi(ast)
 					gettypedef(_file,_typeref.typename,"recordtypedef",sourcerangemin,sourcerangemax)
 				end
 				-- manage "type" comment
-			elseif parsedcomment["type"] and parsedcomment["type"][1].name and parsedcomment["type"][1].name ~= "global" then
-				local dt_type = parsedcomment["type"][1];
+			elseif regulartags["type"] and regulartags["type"][1].name and regulartags["type"][1].name ~= "global" then
+				local dt_type = regulartags["type"][1];
 				-- create record type if it doesn't exist
 				local sourcerangemin = comment.lineinfo.first.offset-1
 				local sourcerangemax = comment.lineinfo.last.offset-1
 				local _recordtypedef = gettypedef (_file, dt_type.name ,"recordtypedef",sourcerangemin,sourcerangemax)
+				_lastapiobject = _recordtypedef
 				
 				-- manage description
 				_recordtypedef.shortdescription = parsedcomment.shortdescription
 				_recordtypedef.description = parsedcomment.description
 
 				-- manage fields
-				if parsedcomment["field"] then
-					for _, dt_field in ipairs(parsedcomment["field"]) do
+				if regulartags["field"] then
+					for _, dt_field in ipairs(regulartags["field"]) do
 						local _item = createfield(dt_field,_file,sourcerangemin,sourcerangemax)
 						-- define sourcerange only if we create it
 						_item.sourcerange.min = sourcerangemin
@@ -254,12 +265,13 @@ function M.createmoduleapi(ast)
 						if _item then _recordtypedef:addfield(_item) end
 					end
 				end
-			elseif parsedcomment["field"] then
-				local dt_field = parsedcomment["field"][1]
+			elseif regulartags["field"] then
+				local dt_field = regulartags["field"][1]
 				-- create item
 				local _item = createfield(dt_field,_file,sourcerangemin,sourcerangemax)
 				_item.shortdescription = parsedcomment.shortdescription
 				_item.description = parsedcomment.description
+				_lastapiobject = _item
 				
 				-- define sourcerange
 				local sourcerangemin = comment.lineinfo.first.offset-1
@@ -268,13 +280,14 @@ function M.createmoduleapi(ast)
 				_item.sourcerange.max = sourcerangemax
 
 				-- add item to its parent
-				local scope = parsedcomment["field"][1].parent
+				local scope = regulartags["field"][1].parent
 				additemtoparent(_file,_item,scope,sourcerangemin,sourcerangemax)
-			elseif parsedcomment["function"] and parsedcomment["function"][1].name then
+			elseif regulartags["function"] and regulartags["function"][1].name then
 				-- create item
-				local _item = apimodel._item(parsedcomment["function"][1].name)
+				local _item = apimodel._item(regulartags["function"][1].name)
 				_item.shortdescription = parsedcomment.shortdescription
 				_item.description = parsedcomment.description
+				_lastapiobject = _item
 
 				-- define sourcerange
 				local sourcerangemin = comment.lineinfo.first.offset-1
@@ -290,16 +303,16 @@ function M.createmoduleapi(ast)
 
 
 				-- manage params
-				if parsedcomment["param"] then
-					for _, dt_param in ipairs(parsedcomment["param"]) do
+				if regulartags["param"] then
+					for _, dt_param in ipairs(regulartags["param"]) do
 						local _param = createparam(dt_param,_file,sourcerangemin,sourcerangemax)
 						table.insert(_functiontypedef.params,_param)
 					end
 				end
 
 				-- manage returns
-				if parsedcomment["return"] then
-					for _, dt_return in ipairs(parsedcomment["return"]) do
+				if regulartags["return"] then
+					for _, dt_return in ipairs(regulartags["return"]) do
 						local _return = createreturn(dt_return,_file,sourcerangemin,sourcerangemax)
 						table.insert(_functiontypedef.returns,_return)
 					end
@@ -317,8 +330,28 @@ function M.createmoduleapi(ast)
 				-- add item to its parent
 				local sourcerangemin = comment.lineinfo.first.offset-1
 				local sourcerangemax = comment.lineinfo.last.offset-1
-				local scope = parsedcomment["function"][1].parent
+				local scope = regulartags["function"][1].parent
 				additemtoparent(_file,_item,scope,sourcerangemin,sourcerangemax)
+			end
+			
+			--
+			-- Store user defined tags
+			--
+			local thirdtags = parsedcomment and parsedcomment.unknowntags
+			if thirdtags and _lastapiobject then
+			
+				-- Define a storage index for user defined tags on current API element
+				if not _lastapiobject.metadata then _lastapiobject.metadata = {} end
+				
+				-- Loop over user defined tags
+				for usertag, taglist in pairs(thirdtags) do
+					if not _lastapiobject.metadata[ usertag ] then
+						_lastapiobject.metadata[ usertag ] = {}
+					end
+					for _, tag in ipairs( taglist ) do
+						table.insert(_lastapiobject.metadata[usertag], tag)
+					end
+				end
 			end
 		end
 	end

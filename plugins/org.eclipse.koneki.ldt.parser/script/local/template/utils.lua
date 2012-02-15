@@ -154,4 +154,8 @@ function M.prettyname( apiobject )
 	end
 	return nil, 'No pretty name for `'..tag..'.'
 end
+function M.securechevrons( str )
+	if not str then return nil, 'String expected.' end
+	return string.gsub(str:gsub('<', '&lt;'), '>', '&gt;')
+end
 return M

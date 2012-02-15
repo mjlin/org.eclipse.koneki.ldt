@@ -25,9 +25,9 @@ return
 #		typedef = _item.parent.types[ _item.type.typename ]
 #	end
 #end
-#
+# --
 # -- Show item type for internal type
-#
+# --
 #if _item.type and (not typedef or typedef.tag ~= 'functiontypedef') then
 #	--Show link only when available 
 #	local link = linkto(_item.type)
@@ -50,7 +50,7 @@ return
 # --
 # -- For function definitions, describe parameters and return values
 # --
-# if typedef and typedef.tag == 'functiontypedef' then
+#if typedef and typedef.tag == 'functiontypedef' then
 #	--
 #	-- Describe parameters
 #	--
@@ -125,7 +125,25 @@ return
 #			end
 			</p>
 #		end
-# 	end
+#	end
+#end
+#--
+#-- Show usage samples
+#--
+#if _item.metadata and _item.metadata.usage then
+	<h3>Usage:</h3>
+	<ul>
+#	if #_item.metadata.usage > 1 then
+#		-- Loop over several usage description
+#		for _, usage in ipairs(_item.metadata.usage) do
+			 <li><pre class="example">$( securechevrons(usage.description) )</pre></li>
+#		end
+# else
+#		-- Show unique usage sample
+#		local usage = _item.metadata.usage[1]
+		<pre class="example">$( securechevrons(usage.description) )</pre>
 # end
+  </ul>
+#end
 </dd>
 </dl>]]
