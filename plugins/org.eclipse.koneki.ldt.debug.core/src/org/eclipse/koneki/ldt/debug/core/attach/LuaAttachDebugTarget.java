@@ -8,7 +8,7 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-package org.eclipse.koneki.ldt.debug.core.remote;
+package org.eclipse.koneki.ldt.debug.core.attach;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
@@ -29,15 +29,13 @@ import org.eclipse.koneki.ldt.debug.core.LuaDebugConstant;
 import org.eclipse.koneki.ldt.debug.core.LuaDebugTarget;
 import org.eclipse.koneki.ldt.debug.core.LuaModuleURIBreakpointPathMapper;
 
-public abstract class LuaRemoteDebugTarget extends LuaDebugTarget {
+public abstract class LuaAttachDebugTarget extends LuaDebugTarget {
 
-	public LuaRemoteDebugTarget(String modelId, IDbgpService dbgpService, String sessionId, final ILaunch launch, IProcess process) {
+	public LuaAttachDebugTarget(String modelId, IDbgpService dbgpService, String sessionId, final ILaunch launch, IProcess process) {
 		super(modelId, dbgpService, sessionId, launch, process);
 
 		// initialize DBGP client
-		String mappingType = LaunchConfigurationUtils.getString(launch.getLaunchConfiguration(), LuaDebugConstant.ATTR_LUA_SOURCE_MAPPING_TYPE,
-				LuaDebugConstant.LOCAL_MAPPING_TYPE);
-		if (mappingType.equals(LuaDebugConstant.MODULE_MAPPING_TYPE)) {
+		if (LuaDebugConstant.MODULE_MAPPING_TYPE.equals(getSourceMappingType())) {
 			setScriptDebugThreadConfigurator(new IScriptDebugThreadConfigurator() {
 
 				@Override
@@ -78,14 +76,12 @@ public abstract class LuaRemoteDebugTarget extends LuaDebugTarget {
 	 */
 	@Override
 	protected IScriptBreakpointPathMapper createPathMapper() {
-		String mappingType = LaunchConfigurationUtils.getString(getLaunch().getLaunchConfiguration(), LuaDebugConstant.ATTR_LUA_SOURCE_MAPPING_TYPE,
-				LuaDebugConstant.LOCAL_MAPPING_TYPE);
-
+		String mappingType = getSourceMappingType();
 		if (mappingType.equals(LuaDebugConstant.MODULE_MAPPING_TYPE)) {
 			return new LuaModuleURIBreakpointPathMapper(getScriptProject());
 		} else if (mappingType.equals(LuaDebugConstant.REPLACE_PATH_MAPPING_TYPE)) {
 
-			return new LuaRemoteBreakpointPathMapper(getScriptProject(), folder());
+			return new LuaAttachBreakpointPathMapper(getScriptProject(), folder());
 		} else {
 			return new LuaAbsoluteFileURIBreakpointPathMapper();
 		}
@@ -98,4 +94,9 @@ public abstract class LuaRemoteDebugTarget extends LuaDebugTarget {
 	 * @return folder name on remote
 	 */
 	protected abstract String folder();
+
+	protected String getSourceMappingType() {
+		return LaunchConfigurationUtils.getString(getLaunch().getLaunchConfiguration(), LuaDebugConstant.ATTR_LUA_SOURCE_MAPPING_TYPE,
+				LuaDebugConstant.LOCAL_MAPPING_TYPE);
+	}
 }

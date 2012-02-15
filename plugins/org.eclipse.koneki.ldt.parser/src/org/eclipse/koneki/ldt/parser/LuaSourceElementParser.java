@@ -22,6 +22,6 @@ public class LuaSourceElementParser extends AbstractSourceElementParser {
 
 	@Override
 	protected String getNatureId() {
-		return LuaNature.LUA_NATURE;
+		return LuaNature.ID;
 	}
 }

@@ -8,7 +8,7 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-package org.eclipse.koneki.ldt.debug.core.remote;
+package org.eclipse.koneki.ldt.debug.core.attach;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -26,12 +26,12 @@ import org.eclipse.koneki.ldt.debug.core.Activator;
 /**
  * Breakpoint path mapper for lua project use to translate uri of breakpoint from ide file system to remote file system
  */
-public class LuaRemoteBreakpointPathMapper implements IScriptBreakpointPathMapperExtension {
+public class LuaAttachBreakpointPathMapper implements IScriptBreakpointPathMapperExtension {
 	private HashMap<URI, URI> cache;
 	private String mapTo;
 	private IScriptProject scriptProject;
 
-	public LuaRemoteBreakpointPathMapper(IScriptProject project, String mapTo) {
+	public LuaAttachBreakpointPathMapper(IScriptProject project, String mapTo) {
 		this.mapTo = mapTo;
 		this.scriptProject = project;
 		this.cache = new HashMap<URI, URI>();

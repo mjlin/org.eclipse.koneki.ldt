@@ -8,7 +8,7 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-package org.eclipse.koneki.ldt.debug.core.remote;
+package org.eclipse.koneki.ldt.debug.core.attach;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunch;
@@ -24,7 +24,7 @@ import org.eclipse.koneki.ldt.debug.core.Activator;
 /**
  * Debugging Engine Runner for lua in attach mode
  */
-public class LuaRemoteDebugingEngineRunner extends RemoteDebuggingEngineRunner {
+public class LuaAttachDebugingEngineRunner extends RemoteDebuggingEngineRunner {
 
 	private String remoteFolder;
 
@@ -32,7 +32,7 @@ public class LuaRemoteDebugingEngineRunner extends RemoteDebuggingEngineRunner {
 	 * @param process
 	 * @param install
 	 */
-	public LuaRemoteDebugingEngineRunner() {
+	public LuaAttachDebugingEngineRunner() {
 		super(null);
 	}
 
@@ -49,13 +49,13 @@ public class LuaRemoteDebugingEngineRunner extends RemoteDebuggingEngineRunner {
 	 */
 	@Override
 	public String getDebugModelId() {
-		return ScriptDebugManager.getInstance().getDebugModelByNature(LuaNature.LUA_NATURE);
+		return ScriptDebugManager.getInstance().getDebugModelByNature(LuaNature.ID);
 	}
 
 	@Override
 	protected IScriptDebugTarget createDebugTarget(ILaunch launch, IDbgpService dbgpService) throws CoreException {
 		remoteFolder = getRemoteFolder(launch.getLaunchConfiguration());
-		return new LuaRemoteDebugTarget(getDebugModelId(), dbgpService, getSessionId(launch.getLaunchConfiguration()), launch, null) {
+		return new LuaAttachDebugTarget(getDebugModelId(), dbgpService, getSessionId(launch.getLaunchConfiguration()), launch, null) {
 			@Override
 			protected String folder() {
 				return remoteFolder;

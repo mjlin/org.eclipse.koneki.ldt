@@ -32,5 +32,5 @@ public class LuaNature extends ScriptNature {
 	 * 
 	 * @return String
 	 */
-	public static final String LUA_NATURE = Activator.PLUGIN_ID + ".nature"; //$NON-NLS-1$
+	public static final String ID = Activator.PLUGIN_ID + ".nature"; //$NON-NLS-1$
 }

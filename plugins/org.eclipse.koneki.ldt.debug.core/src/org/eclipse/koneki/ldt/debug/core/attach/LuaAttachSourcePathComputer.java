@@ -8,7 +8,7 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-package org.eclipse.koneki.ldt.debug.core.remote;
+package org.eclipse.koneki.ldt.debug.core.attach;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -21,7 +21,7 @@ import org.eclipse.koneki.ldt.debug.core.LuaDebugConstant;
 import org.eclipse.koneki.ldt.debug.core.LuaModuleURIBuildpathSourceContainer;
 import org.eclipse.koneki.ldt.debug.core.LuaReplacePathSourceContainer;
 
-public class LuaRemoteSourcePathComputer extends ScriptSourcePathComputer {
+public class LuaAttachSourcePathComputer extends ScriptSourcePathComputer {
 
 	@Override
 	public ISourceContainer[] computeSourceContainers(ILaunchConfiguration configuration, IProgressMonitor monitor) throws CoreException {

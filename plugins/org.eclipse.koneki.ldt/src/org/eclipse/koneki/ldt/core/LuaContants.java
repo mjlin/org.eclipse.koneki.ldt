@@ -8,16 +8,16 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-package org.eclipse.koneki.ldt.wizards;
+package org.eclipse.koneki.ldt.core;
 
 /**
  * Common values used across Lua wizards
  */
-public final class LuaWizardContants {
+public final class LuaContants {
 	public static final String DEFAULT_MAIN_FILE = "main.lua"; //$NON-NLS-1$
 	public static final String MAIN_FILE_CONTENT = "local function main()\n\nend\nmain()\n"; //$NON-NLS-1$
 	public static final String SOURCE_FOLDER = "src"; //$NON-NLS-1$
 
-	private LuaWizardContants() {
+	private LuaContants() {
 	}
 }

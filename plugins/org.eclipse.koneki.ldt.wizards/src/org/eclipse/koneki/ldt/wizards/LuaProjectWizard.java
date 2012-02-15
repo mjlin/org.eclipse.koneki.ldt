@@ -38,7 +38,7 @@ public class LuaProjectWizard extends GenericDLTKProjectWizard {
 
 	@Override
 	public String getScriptNature() {
-		return LuaNature.LUA_NATURE;
+		return LuaNature.ID;
 	}
 
 	@Override

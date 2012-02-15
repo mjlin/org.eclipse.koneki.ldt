@@ -8,7 +8,7 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-package org.eclipse.koneki.ldt.debug.core.remote;
+package org.eclipse.koneki.ldt.debug.core.attach;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -17,9 +17,9 @@ import org.eclipse.dltk.launching.IInterpreterInstall;
 import org.eclipse.dltk.launching.RemoteDebuggingEngineRunner;
 import org.eclipse.koneki.ldt.core.LuaLanguageToolkit;
 
-public class LuaRemoteLaunchConfigurationDelegate extends AbstractRemoteLaunchConfigurationDelegate {
+public class LuaAttachLaunchConfigurationDelegate extends AbstractRemoteLaunchConfigurationDelegate {
 
-	public LuaRemoteLaunchConfigurationDelegate() {
+	public LuaAttachLaunchConfigurationDelegate() {
 	}
 
 	@Override
@@ -30,7 +30,7 @@ public class LuaRemoteLaunchConfigurationDelegate extends AbstractRemoteLaunchCo
 
 	@Override
 	protected RemoteDebuggingEngineRunner getDebuggingRunner(IInterpreterInstall install) {
-		return new LuaRemoteDebugingEngineRunner();
+		return new LuaAttachDebugingEngineRunner();
 	}
 
 	@Override
