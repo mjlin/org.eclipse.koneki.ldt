@@ -36,7 +36,7 @@ end
 function M.anchor( modelobject )
 	local tag = modelobject.tag
 	if tag == 'internaltyperef' then
-		return '#'..modelobject.typename
+		return '#('..modelobject.typename..')'
 	elseif tag == 'item' then
 		-- Handle items referencing globals
 		if not modelobject.parent then
@@ -45,7 +45,9 @@ function M.anchor( modelobject )
 			-- Prefix item name with parent anchor
 			return M.anchor(modelobject.parent)..'.'..modelobject.name
 		end
-	elseif tag == 'file' or tag == 'recordtypedef' then
+	elseif tag == 'recordtypedef' then
+		return '('..modelobject.name..')'
+	elseif tag == 'file' then
 		return modelobject.name
 	elseif not tag then
 		return nil, 'No anchor generation available as no tag has been provided.'
@@ -63,7 +65,7 @@ end
 function M.linkto( apiobject )
 	local tag = apiobject.tag
 	if tag == 'internaltyperef' then
-		return '#' .. apiobject.typename
+		return '#(' .. apiobject.typename..')'
 	elseif tag == 'externaltyperef' or tag == 'primitivetyperef'then
 		return nil, 'So far IDE does not provide links for `'..tag..'.'
 	elseif tag == 'item' then

@@ -36,7 +36,7 @@ end
 function M.anchor( modelobject )
 	local tag = modelobject.tag
 	if tag == 'internaltyperef' then
-		return '#'..modelobject.typename
+		return '#('..modelobject.typename..')'
 	elseif tag == 'item' then
 		-- Handle items referencing globals
 		if not modelobject.parent then
@@ -45,7 +45,9 @@ function M.anchor( modelobject )
 			-- Prefix item name with parent anchor
 			return M.anchor(modelobject.parent)..'.'..modelobject.name
 		end
-	elseif tag == 'file' or tag == 'recordtypedef' then
+	elseif tag == 'recordtypedef' then
+		return '('..modelobject.name..')'
+	elseif tag == 'file' then
 		return modelobject.name
 	elseif not tag then
 		return nil, 'No anchor generation available as no tag has been provided.'
@@ -63,11 +65,9 @@ end
 function M.linkto( apiobject )
 	local tag = apiobject.tag
 	if tag == 'internaltyperef' then
-		return '#' .. apiobject.typename
+		return '#(' .. apiobject.typename..')'
 	elseif tag == 'externaltyperef' then
-		return apiobject.modulename..'.html#'..apiobject.typename
-	elseif tag == 'primitivetyperef' then
-		return nil
+		return apiobject.modulename..'.html#'..'('..apiobject.typename..')'
 	elseif tag == 'item' then
 		if not apiobject.parent then
 			-- This item reference a global definition
@@ -93,8 +93,8 @@ end
 --	module:somefunction(secondparameter)
 -- @function [parent = #docutils]
 -- @param apiobject Object form API model
--- @result #string Human readable description of given element, ready to print
---	__may rise error__.
+-- @result #string Human readable description of given element.
+-- @result #nil, #string In case of error.
 function M.prettyname( apiobject )
 	local tag = apiobject.tag
 	-- Process references
