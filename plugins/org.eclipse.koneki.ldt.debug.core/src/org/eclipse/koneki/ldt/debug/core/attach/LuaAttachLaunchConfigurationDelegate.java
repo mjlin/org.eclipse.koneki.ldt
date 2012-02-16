@@ -30,7 +30,7 @@ public class LuaAttachLaunchConfigurationDelegate extends AbstractRemoteLaunchCo
 
 	@Override
 	protected RemoteDebuggingEngineRunner getDebuggingRunner(IInterpreterInstall install) {
-		return new LuaAttachDebugingEngineRunner();
+		return new LuaAttachDebuggingEngineRunner();
 	}
 
 	@Override

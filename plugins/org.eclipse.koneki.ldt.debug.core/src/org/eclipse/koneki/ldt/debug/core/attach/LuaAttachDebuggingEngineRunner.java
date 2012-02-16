@@ -24,7 +24,7 @@ import org.eclipse.koneki.ldt.debug.core.Activator;
 /**
  * Debugging Engine Runner for lua in attach mode
  */
-public class LuaAttachDebugingEngineRunner extends RemoteDebuggingEngineRunner {
+public class LuaAttachDebuggingEngineRunner extends RemoteDebuggingEngineRunner {
 
 	private String remoteFolder;
 
@@ -32,7 +32,7 @@ public class LuaAttachDebugingEngineRunner extends RemoteDebuggingEngineRunner {
 	 * @param process
 	 * @param install
 	 */
-	public LuaAttachDebugingEngineRunner() {
+	public LuaAttachDebuggingEngineRunner() {
 		super(null);
 	}
 
