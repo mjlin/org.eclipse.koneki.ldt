@@ -18,6 +18,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.dltk.core.DLTKCore;
@@ -27,10 +28,14 @@ import org.eclipse.dltk.ui.wizards.IProjectWizard;
 import org.eclipse.dltk.ui.wizards.ProjectCreator;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.koneki.ldt.core.LuaConstants;
+import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironment;
+import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironmentBuildpathUtil;
+import org.eclipse.koneki.ldt.wizards.pages.LuaProjectSettingsPage;
 
 public class LuaProjectCreator extends ProjectCreator {
 
-	private ILocationGroup locationGroup; // purpose of this field is simply to "gain" visibility on fLocationGroup private field (sigh...)
+	private LuaProjectSettingsPage luaProjectSettingPage; // purpose of this field is simply to "gain" visibility on fLocationGroup private field
+															// (sigh...)
 
 	/**
 	 * Adds a step for creating default file in default source folder.
@@ -40,9 +45,9 @@ public class LuaProjectCreator extends ProjectCreator {
 	 * @param locationGroup
 	 *            must be a IWizardPage from IProjectWizard described above
 	 */
-	public LuaProjectCreator(IProjectWizard owner, ILocationGroup locationGroup) {
+	public LuaProjectCreator(IProjectWizard owner, LuaProjectSettingsPage locationGroup) {
 		super(owner, locationGroup);
-		this.locationGroup = locationGroup;
+		this.luaProjectSettingPage = locationGroup;
 		ProjectCreateStep createSourceFolderStep = createSourceFolderStep();
 		if (createSourceFolderStep != null)
 			addStep(IProjectCreateStep.KIND_FINISH, 0, createSourceFolderStep, (IWizardPage) locationGroup);
@@ -58,11 +63,19 @@ public class LuaProjectCreator extends ProjectCreator {
 																													// when we will support
 																													// interpreters
 
-		if (!locationGroup.isExistingLocation()) {
+		if (!luaProjectSettingPage.isExistingLocation()) {
 			// Create a source folder and add it to build path
 			final IFolder sourcefolder = getProject().getFolder(LuaConstants.SOURCE_FOLDER);
 			final IBuildpathEntry newSourceEntry = DLTKCore.newSourceEntry(sourcefolder.getFullPath());
 			buildPath.add(newSourceEntry);
+
+			// TODO get selected environment add corresponding build Path
+			LuaExecutionEnvironment luaExecutionEnvironment = luaProjectSettingPage.getExecutionEnvironment();
+			if (luaExecutionEnvironment != null) {// use LuaExecutionEnvironmentBuildpathUtil to create buildpathEntry
+				IPath path = LuaExecutionEnvironmentBuildpathUtil.getLuaExecutionEnvironmentContainerPath(luaExecutionEnvironment);
+				IBuildpathEntry newContainerEntry = DLTKCore.newContainerEntry(path);
+				buildPath.add(newContainerEntry);
+			}
 		}
 
 		return buildPath;
@@ -89,7 +102,7 @@ public class LuaProjectCreator extends ProjectCreator {
 		public void execute(IProject project, IProgressMonitor monitor) throws CoreException, InterruptedException {
 			monitor.beginTask(Messages.LuaProjectCreatorInitializingSourceFolder, 1);
 			final IFolder sourcefolder = project.getFolder(LuaConstants.SOURCE_FOLDER);
-			if (sourcefolder.exists() && !locationGroup.isExistingLocation()) {
+			if (sourcefolder.exists() && !luaProjectSettingPage.isExistingLocation()) {
 				// Create main file for application project
 				final byte[] bytes = LuaConstants.MAIN_FILE_CONTENT.getBytes();
 				final IFile mainFile = sourcefolder.getFile(LuaConstants.DEFAULT_MAIN_FILE);
@@ -103,7 +116,7 @@ public class LuaProjectCreator extends ProjectCreator {
 	 * @return the locationGroup
 	 */
 	public ILocationGroup getLocationGroup() {
-		return locationGroup;
+		return luaProjectSettingPage;
 	}
 
 	protected ProjectCreateStep createSourceFolderStep() {

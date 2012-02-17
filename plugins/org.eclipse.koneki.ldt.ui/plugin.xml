@@ -31,6 +31,12 @@
             id="org.eclipse.koneki.ldt.ui.userlibrarypath"
             name="%preference.page.name.userlib">
       </page>
+      <page
+            category="org.eclipse.koneki.ldt.ui.globalpreferencepage"
+            class="org.eclipse.koneki.ldt.ui.preferences.LuaExecutionEnvironmentPreferencePage"
+            id="org.eclipse.koneki.ldt.ui.executionenvironmentpreferencepage"
+            name="%preference.page.name.executionenvironment">
+      </page>
    </extension>
       <extension
          point="org.eclipse.ui.ide.projectNatureImages">
@@ -84,6 +90,12 @@
               class="org.eclipse.dltk.internal.ui.wizards.buildpath.UserLibraryWizardPage"
               id="org.eclipse.koneki.ldt.ui.luauserlibrariespage"
               name="Lua User Libraries"
+              nature="org.eclipse.koneki.ldt.nature">
+        </buildpathContainerPage>
+        <buildpathContainerPage
+              class="org.eclipse.koneki.ldt.ui.buildpath.LuaExecutionEnvironmentWizardPage"
+              id="org.eclipse.koneki.ldt.ui.luaexecutionenvironmentpage"
+              name="Lua Execution Environment"
               nature="org.eclipse.koneki.ldt.nature">
         </buildpathContainerPage>
         </extension>

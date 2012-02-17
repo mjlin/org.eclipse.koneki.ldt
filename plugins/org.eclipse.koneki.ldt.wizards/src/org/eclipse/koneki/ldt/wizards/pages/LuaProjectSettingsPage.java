@@ -11,6 +11,7 @@
 package org.eclipse.koneki.ldt.wizards.pages;
 
 import org.eclipse.dltk.ui.wizards.ProjectWizardFirstPage;
+import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironment;
 import org.eclipse.swt.widgets.Composite;
 
 /**
@@ -21,6 +22,8 @@ import org.eclipse.swt.widgets.Composite;
  * </ul>
  */
 public class LuaProjectSettingsPage extends ProjectWizardFirstPage {
+
+	private LuaExecutionEnvironmentGroup luaExecutionEnvironmentGroup;
 
 	public LuaProjectSettingsPage() {
 		setTitle(Messages.LuaProjecSettingsPageLabel);
@@ -47,6 +50,14 @@ public class LuaProjectSettingsPage extends ProjectWizardFirstPage {
 		return new LuaLocationGroup();
 	}
 
+	protected void createCustomGroups(Composite composite) {
+		luaExecutionEnvironmentGroup = createExecutionEnvironmentGroup(composite);
+	}
+
+	protected LuaExecutionEnvironmentGroup createExecutionEnvironmentGroup(Composite composite) {
+		return new LuaExecutionEnvironmentGroup(composite);
+	}
+
 	/**
 	 * Just disable <i>Host</i> section defined in {@link LuaLocationGroup#fEnvironment}
 	 * 
@@ -56,5 +67,11 @@ public class LuaProjectSettingsPage extends ProjectWizardFirstPage {
 		@Override
 		protected void createEnvironmentControls(final Composite group, final int numColumns) {
 		}
+	}
+
+	public LuaExecutionEnvironment getExecutionEnvironment() {
+		if (luaExecutionEnvironmentGroup != null)
+			return luaExecutionEnvironmentGroup.getLuaExecutionEnvironment();
+		return null;
 	}
 }
