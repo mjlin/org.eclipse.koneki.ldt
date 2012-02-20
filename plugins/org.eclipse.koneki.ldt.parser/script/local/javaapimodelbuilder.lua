@@ -20,8 +20,8 @@ local externaltyperefclass	= java.require("org.eclipse.koneki.ldt.parser.api.ext
 local internaltyperefclass	= java.require("org.eclipse.koneki.ldt.parser.api.external.InternalTypeRef")
 local primitivetyperefclass	= java.require("org.eclipse.koneki.ldt.parser.api.external.PrimitiveTypeRef")
 local luafileapiclass				= java.require("org.eclipse.koneki.ldt.parser.api.external.LuaFileAPI")
-local moduletyperefclass		= java.require ("org.eclipse.koneki.ldt.parser.api.external.ModuleTypeRef")
-local exprtyperefclass			= java.require ("org.eclipse.koneki.ldt.parser.api.external.ExprTypeRef")
+local moduletyperefclass		= java.require("org.eclipse.koneki.ldt.parser.api.external.ModuleTypeRef")
+local exprtyperefclass			= java.require("org.eclipse.koneki.ldt.parser.api.external.ExprTypeRef")
 
 local print = function (string) print(string) io.flush() end
 
@@ -37,6 +37,9 @@ templateengineenv.anchortypes['externaltyperef'] = nil
 templateengineenv.linktypes['externaltyperef'] = nil
 -- Handle only local item references
 templateengineenv.linktypes['item'] = function(item)
+	if item.parent and item.parent.tag == 'recordtypedef' then
+		return '#'..templateengineenv.anchor( item.parent ) ..'.'.. item.name
+	end
 	return '#'..templateengineenv.anchor( item )
 end
 

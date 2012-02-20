@@ -218,7 +218,7 @@ end
 ---
 -- Transform a string like `module#(type).field` in an API Model item
 local field = function( str )
-	for mod, typename, fieldname in str:gmatch('([%a%.%d_]*)#%(([%a%.%d_]+)%)%.([%a%%d_]+)') do
+	for mod, typename, fieldname in str:gmatch('([%a%.%d_]*)#%(?([%a%.%d_]+)%)?%.([%a%%d_]+)') do
 		local modulefield = apimodel._item( fieldname )
 		local moduletype = apimodel._recordtypedef(typename)
 		moduletype:addfield( modulefield )
