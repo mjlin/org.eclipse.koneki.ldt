@@ -33,8 +33,12 @@ local templateengine = require 'templateengine'
 local templateengineenv = require 'template.utils'
 
 -- Remove default implementation not supported form IDE
-templateengineenv.linktypes['externaltyperef'] = nil
 templateengineenv.anchortypes['externaltyperef'] = nil
+templateengineenv.linktypes['externaltyperef'] = nil
+-- Handle only local item references
+templateengineenv.linktypes['item'] = function(item)
+	return '#'..templateengineenv.anchor( item )
+end
 
 -- Perform actual environment update
 for functionname, body in pairs( templateengineenv ) do
@@ -76,28 +80,28 @@ function M._typedef(_typedef)
 	local jtypedef
 	-- Dealing with records
 	if _typedef.tag == "recordtypedef" then
-		
+
 		jtypedef = recordtypedefclass:new()
 		jtypedef:setName(_typedef.name)
 		jtypedef:setStart(_typedef.sourcerange.min)
 		jtypedef:setEnd(_typedef.sourcerange.max)
 		jtypedef:setDocumentation(templateengine.applytemplate(_typedef))
-		
+
 		-- Appending fields
 		for _, _item in pairs(_typedef.fields) do
 			local jitem =  M._item(_item)
 			jtypedef:addField(_item.name, jitem)
 		end
-		
+
 	elseif _typedef.tag == "functiontypedef" then
 		-- Dealing with function
 		jtypedef = functiontypedefclass:new()
-		
+
 		-- Appending parameters
 		for _, _param in ipairs(_typedef.params) do
 			jtypedef:addParameter( parameterclass:new(_param.name, M._typeref(_param.type), _param.description) )
 		end
-		
+
 		-- Appending returned types
 		for _, _return in ipairs(_typedef.returns) do
 			local jreturn = returnclass:new()
@@ -115,13 +119,13 @@ function M._file(_file)
 	-- Fill file object
 	local jfile = luafileapiclass:new()
 	jfile:setDocumentation(templateengine.applytemplate(_file))
-	
+
 	-- Adding gloval variables
 	for _, _item in pairs(_file.globalvars) do
 		-- Fill Java item
 		jfile:addGlobalVar(_item.name, M._item(_item))
 	end
-	
+
 	-- Adding returned types
 	for _, _return in ipairs(_file.returns) do
 		local jreturn = returnclass:new()
