@@ -12,7 +12,7 @@
 local M = {}
 
 local itemclass							= java.require("org.eclipse.koneki.ldt.parser.api.external.Item")
-local returnclass			= java.require("org.eclipse.koneki.ldt.parser.api.external.Return")
+local returnclass						= java.require("org.eclipse.koneki.ldt.parser.api.external.Return")
 local recordtypedefclass		= java.require("org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef")
 local functiontypedefclass	= java.require("org.eclipse.koneki.ldt.parser.api.external.FunctionTypeDef")
 local parameterclass				= java.require("org.eclipse.koneki.ldt.parser.api.external.Parameter")
@@ -27,8 +27,16 @@ local print = function (string) print(string) io.flush() end
 
 local templateengine = require 'templateengine'
 
+--
 -- Update documentation templateengine environment
+--
 local templateengineenv = require 'template.utils'
+
+-- Remove default implementation not supported form IDE
+templateengineenv.linktypes['externaltyperef'] = nil
+templateengineenv.anchortypes['externaltyperef'] = nil
+
+-- Perform actual environment update
 for functionname, body in pairs( templateengineenv ) do
 	templateengine.env[ functionname ] = body
 end

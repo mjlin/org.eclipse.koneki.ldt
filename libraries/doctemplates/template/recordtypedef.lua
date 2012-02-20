@@ -15,10 +15,10 @@ return [[#
 # -- Descriptions
 # --
 #if _recordtypedef.shortdescription then
-	<p>$( markdown( _recordtypedef.shortdescription ) )</p>
+	<p>$( format( _recordtypedef.shortdescription ) )</p>
 #end
 #if _recordtypedef.description then
-	<p>$( markdown( _recordtypedef.description ) )</p>
+	<p>$( format( _recordtypedef.description ) )</p>
 #end
 #--
 #-- Describe usage

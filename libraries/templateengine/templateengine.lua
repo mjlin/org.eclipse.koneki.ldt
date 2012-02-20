@@ -17,11 +17,7 @@ local M = {}
 local pltemplate = require 'pl.template'
 
 -- Markdown handling
-local markdown = function (string)
-	local m = require 'markdown'
-	local result = m( string )
-	return result:gsub('^%s*<p>(.+)</p>%s*$','%1')
-end
+local markdown = require 'markdown'
 
 -- apply template to the given element
 function M.applytemplate(elem,templatetype)
@@ -69,13 +65,52 @@ function M.gettemplate(elem,templatetype)
 	end
 end
 
--- define default template environnement
+
+---
+-- Allow user to format text in descriptions.
+-- Default implementation replaces @{---} tags with links and apply markdown.
+-- @return #string 
+local function format(string)
+	-- Allow to replace encountered tags with valid links
+	local replace = function(found)
+		local apiref = M.env.getelement(found)
+		if apiref then
+			local href = M.env.linkto( apiref )
+			if href then
+				return [[<a href="]]..href..[[">]]..M.env.prettyname(apiref)..[[</a>]]
+			end
+		end
+		return found
+	end
+	string = string:gsub('@{%s*(.-)%s*}', replace)
+	-- Trim markdown results from auto generated <p></p>
+	return M.env.markdown( string ):gsub('^%s*<p>(.+)</p>%s*$','%1')
+end
+---
+-- Provide a full link to an element using `prettyname` and `linkto`.
+-- Default implementation is for HTML.
+local function fulllinkto(o)
+	local ref		= M.env.linkto(o)
+	local name	= M.env.prettyname(o)
+	if not ref then
+		return name
+	end
+	return [[<a href="]]..ref..[[">]]..name..[[</a>]]
+end
+--
+-- Define default template environnement
+--
 local defaultenv = {
-	table			= table,
-	ipairs			= ipairs,
-	pairs			= pairs,
-	markdown		= markdown,
+	table					= table,
+	ipairs				= ipairs,
+	pairs					= pairs,
+	markdown			= markdown,
 	applytemplate	= M.applytemplate,
+	format				= format,
+	linkto				= function(str) return str end,
+	fulllinkto		= fulllinkto,
+	prettyname		= function(s) return s end,
+	getelement		= function(s)	return nil end
 }
 
 -- this is the global env accessible in the templates

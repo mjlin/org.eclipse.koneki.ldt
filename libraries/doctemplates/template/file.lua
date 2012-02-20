@@ -21,10 +21,10 @@ return[[#
 # -- Descriptions
 # --
 # if _file.shortdescription then
-   $( markdown(_file.shortdescription) )
+   $( format(_file.shortdescription) )
 # end
 # if _file.description then
-   <br/>$( markdown(_file.description) )
+   <br/>$( format(_file.description) )
 # end
 # --
 # -- Handle "@usage" special tag
@@ -45,8 +45,8 @@ return[[#
 	<table class="function_list">
 #	for _, item in pairs(_file.globalvars) do
 		<tr>
-		<td class="name" nowrap="nowrap"><a href="#$(linkto(item))">$( prettyname(item) )</a></td>
-		<td class="summary">$( markdown(item.shortdescription) )</td>
+		<td class="name" nowrap="nowrap">$( fulllinkto(item) )</a></td>
+		<td class="summary">$( format(item.shortdescription) )</td>
 		</tr>
 # 	end
 	</table>

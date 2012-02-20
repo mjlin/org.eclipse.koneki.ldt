@@ -30,9 +30,9 @@ return
 # --
 #if _item.type and (not typedef or typedef.tag ~= 'functiontypedef') then
 #	--Show link only when available 
-#	local link = linkto(_item.type)
+#	local link = fulllinkto(_item.type)
 #	if link then
-		<em><a href="$( linkto(_item.type) )">$(prettyname(_item.type))</a></em>
+		<em>$( link )</em>
 #	else
 		<em>$(prettyname(_item.type))</em>
 #	end
@@ -41,10 +41,10 @@ return
 </dt>
 <dd>
 # if _item.shortdescription then
-	$( markdown(_item.shortdescription) )
+	$( format(_item.shortdescription) )
 # end
-# if markdown(_item.description) then
-	<br/>$( markdown(_item.description) )
+# if _item.description then
+	<br/>$( format(_item.description) )
 # end
 #
 # --
@@ -75,7 +75,7 @@ return
 				$(param.name) $(param.optional and 'optional') $(param.hidden and 'hidden')
 				</em></code>:
 #				if param.description then
-					$( markdown(param.description) )
+					$( format(param.description) )
 #				end
 				</li>
 #			end
@@ -110,7 +110,7 @@ return
 #				if #ret.types > 0 then
 					<em>$( niceparmlist(ret.types) )</em>
 #				end
-				$(ret.description and markdown(ret.description))
+				$(ret.description and format(ret.description))
 				</li>
 #			end
 			</ol>
@@ -121,7 +121,7 @@ return
 				<em>$( niceparmlist(fdef.returns[1].types) )</em>
 #			end
 #			if fdef.returns[1].description then
-				$( markdown(fdef.returns[1].description) )
+				$( format(fdef.returns[1].description) )
 #			end
 			</p>
 #		end

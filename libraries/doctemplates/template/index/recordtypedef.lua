@@ -14,8 +14,8 @@ return [[#
 	<table class="function_list">
 #	for _, item in pairs( _recordtypedef.fields ) do
 		<tr>
-		<td class="name" nowrap="nowrap"><a href="#$(linkto(item))">$( prettyname(item) )</a></td>
-		<td class="summary">$( markdown(item.shortdescription) )</td>
+		<td class="name" nowrap="nowrap">$( fulllinkto(item) )</td>
+		<td class="summary">$( format(item.shortdescription) )</td>
 		</tr>
 # 	end
 	</table>

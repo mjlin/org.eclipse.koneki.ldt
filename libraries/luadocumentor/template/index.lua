@@ -18,8 +18,8 @@ return
 #	for _, module in ipairs( _index.modules ) do
 #		if module.tag ~= 'index' then
 			<tr>
-			<td class="name" nowrap="nowrap"><a href="$( linkto(module) )">$( prettyname(module) )</a></td>
-			<td class="summary">$( module.description and markdown(module.shortdescription) )</td>
+			<td class="name" nowrap="nowrap">$( fulllinkto(module) )</td>
+			<td class="summary">$( module.description and format(module.shortdescription) )</td>
 			</tr>
 #		end
 #	end
