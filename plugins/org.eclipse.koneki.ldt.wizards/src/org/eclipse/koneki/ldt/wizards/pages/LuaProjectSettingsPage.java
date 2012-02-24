@@ -71,7 +71,7 @@ public class LuaProjectSettingsPage extends ProjectWizardFirstPage {
 
 	public LuaExecutionEnvironment getExecutionEnvironment() {
 		if (luaExecutionEnvironmentGroup != null)
-			return luaExecutionEnvironmentGroup.getLuaExecutionEnvironment();
+			return luaExecutionEnvironmentGroup.getSelectedLuaExecutionEnvironment();
 		return null;
 	}
 }

@@ -233,7 +233,7 @@ public final class LuaExecutionEnvironmentManager {
 		return new LuaExecutionEnvironment(eeid, version);
 	}
 
-	private static LuaExecutionEnvironment getExecutionEnvironment(final String eeidAndVersion) {
+	public static LuaExecutionEnvironment getExecutionEnvironment(final String eeidAndVersion) {
 
 		// Detect hyphen as version and name are around it
 		final int hyphenPosition = eeidAndVersion.lastIndexOf('-');
