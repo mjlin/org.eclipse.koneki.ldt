@@ -284,7 +284,7 @@ public final class LuaASTUtils {
 					List<LocalVar> localVars = ((Block) node).getLocalVars();
 					for (LocalVar localVar : localVars) {
 						Item item = localVar.getVar();
-						if (!collectedLocalVars.containsKey(item.getName()) && (start == null || item.getName().toLowerCase().startsWith(start))) {
+						if (!collectedLocalVars.containsKey(item.getName()) && (start == null || item.getName().startsWith(start))) {
 							collectedLocalVars.put(item.getName(), item);
 						}
 					}
@@ -394,7 +394,7 @@ public final class LuaASTUtils {
 		// get a global var with this name
 		final List<Definition> definitions = new ArrayList<Definition>();
 		for (Item globalvar : luaSourceRoot.getFileapi().getGlobalvars().values()) {
-			if (start == null || start.isEmpty() || globalvar.getName().toLowerCase().startsWith(start))
+			if (start == null || start.isEmpty() || globalvar.getName().startsWith(start))
 				definitions.add(new Definition(preloadedSourceModule, globalvar));
 		}
 
