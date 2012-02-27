@@ -54,7 +54,7 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 		ISourceModule sourceModule = (ISourceModule) modelElement;
 
 		// Retrieve start position of word current user is typing
-		String start = getWordStarting(module.getSourceContents(), position).toLowerCase();
+		String start = getWordStarting(module.getSourceContents(), position);
 
 		this.requestor.beginReporting();
 		if (start.contains(".") || start.contains(":")) { //$NON-NLS-1$//$NON-NLS-2$
