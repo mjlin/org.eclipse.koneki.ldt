@@ -15,6 +15,9 @@ import org.eclipse.osgi.util.NLS;
 public final class Messages extends NLS {
 	// CHECKSTYLE NLS: OFF
 	private static final String BUNDLE_NAME = "org.eclipse.koneki.ldt.core.buildpath.messages"; //$NON-NLS-1$
+
+	public static String LuaExecutionEnvironmentManagerInstallEEDirectoryNotClean;
+	public static String LuaExecutionEnvironmentManagerUnableToCleanInstallDirectory;
 	public static String LuaExecutionEnvironmentManagerAlreadyInstalled;
 	public static String LuaExecutionEnvironmentManagerUnableToExtract;
 	public static String LuaExecutionEnvironmentManagerFileNotValid;

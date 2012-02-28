@@ -23,7 +23,7 @@ public class LuaExecutionEnvironmentBuildpathContainerInitializer extends Buildp
 			// use LuaExecutionEnvironmentBuildpathUtil
 			String eeVersion = null;
 
-			LuaExecutionEnvironment executionEnvironment = LuaExecutionEnvironmentManager.getExecutionEnvironment(eeID, eeVersion);
+			// LuaExecutionEnvironment executionEnvironment = LuaExecutionEnvironmentManager.getInstalledExecutionEnvironment(eeID, eeVersion);
 
 			LuaExecutionEnvironmentBuildpathContainer container = new LuaExecutionEnvironmentBuildpathContainer(eeID, eeVersion, containerPath);
 			DLTKCore.setBuildpathContainer(containerPath, new IScriptProject[] { project }, new IBuildpathContainer[] { container }, null);

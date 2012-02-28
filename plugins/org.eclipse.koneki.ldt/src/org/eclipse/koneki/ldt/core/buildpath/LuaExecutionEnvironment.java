@@ -32,6 +32,10 @@ public class LuaExecutionEnvironment {
 		return version;
 	}
 
+	public IPath getPath() {
+		return path;
+	}
+
 	public IPath[] getSourcepath() {
 		if (path != null && path.toFile().exists()) {
 			final IPath sourcePath = path.append(LuaExecutionEnvironmentConstants.EE_FILE_API_ARCHIVE);
@@ -67,11 +71,12 @@ public class LuaExecutionEnvironment {
 		if (!(o instanceof LuaExecutionEnvironment))
 			return false;
 		final LuaExecutionEnvironment ee = (LuaExecutionEnvironment) o;
-		return getEEIdentifier().equals(ee.getEEIdentifier()) && getVersion().equals(ee.getVersion());
+		return getID().equals(ee.getID()) && getVersion().equals(ee.getVersion());
 	}
 
 	@Override
 	public int hashCode() {
+		// TODO not sure is a good way to define the hashcode
 		return getID().hashCode() + getVersion().hashCode();
 	}
 }

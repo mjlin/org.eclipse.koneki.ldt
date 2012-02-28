@@ -47,11 +47,5 @@
             id="org.eclipse.koneki.ldt.ExecutionEnvironmentContainer">
       </buildpathContainerInitializer>
    </extension>
-   <extension
-         point="org.eclipse.core.runtime.preferences">
-      <initializer
-            class="org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironmentPreferenceInitializer">
-      </initializer>
-   </extension>
 
 </plugin>

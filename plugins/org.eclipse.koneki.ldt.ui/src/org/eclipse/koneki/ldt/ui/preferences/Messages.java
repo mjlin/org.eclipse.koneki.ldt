@@ -16,6 +16,8 @@ import org.eclipse.osgi.util.NLS;
 public class Messages extends NLS {
 	private static final String BUNDLE_NAME = "org.eclipse.koneki.ldt.ui.preferences.messages"; //$NON-NLS-1$
 	public static String GlobalLuaPreferencePage_description;
+	public static String LuaExecutionEnvironmentPreferencePage_addbutton;
+	public static String LuaExecutionEnvironmentPreferencePage_removeButton;
 	public static String LuaExecutionEnvironmentPreferencePageInstallationAborted;
 	public static String LuaExecutionEnvironmentPreferencePageInvalidFile;
 	public static String LuaExecutionEnvironmentPreferencePageIOProblemTitle;

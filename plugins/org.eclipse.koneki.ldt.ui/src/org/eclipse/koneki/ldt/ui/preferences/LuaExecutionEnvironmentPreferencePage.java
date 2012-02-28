@@ -12,133 +12,130 @@ package org.eclipse.koneki.ldt.ui.preferences;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.List;
 
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.layout.GridDataFactory;
-import org.eclipse.jface.preference.FieldEditorPreferencePage;
-import org.eclipse.jface.preference.ListEditor;
+import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.layout.RowDataFactory;
+import org.eclipse.jface.layout.RowLayoutFactory;
+import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironment;
 import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironmentConstants;
 import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironmentManager;
 import org.eclipse.koneki.ldt.core.buildpath.exceptions.LuaExecutionEnvironmentException;
 import org.eclipse.koneki.ldt.ui.Activator;
+import org.eclipse.koneki.ldt.ui.SWTUtil;
+import org.eclipse.koneki.ldt.ui.buildpath.LuaExecutionEnvironmentContentProvider;
+import org.eclipse.koneki.ldt.ui.buildpath.LuaExecutionEnvironmentLabelProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
-public class LuaExecutionEnvironmentPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
-	private class ExecutionEnvironmentListEditor extends ListEditor {
-		protected ExecutionEnvironmentListEditor(final Composite parent) {
-			super(LuaExecutionEnvironmentConstants.PREF_EXECUTION_ENVIRONMENTS_LIST, Messages.LuaExecutionEnvironmentPreferencePageTitle, parent);
-		}
+public class LuaExecutionEnvironmentPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
 
-		@Override
-		public void doFillIntoGrid(Composite parent, int numColumns) {
-			super.doFillIntoGrid(parent, numColumns);
-			// Allow list to fill all parent height
-			GridDataFactory.fillDefaults().grab(true, true).span(numColumns - 1, SWT.DEFAULT).applyTo(getListControl(parent));
-		}
-
-		/**
-		 * Convert list separated with {@value LuaExecutionEnvironmentConstants#EXECUTION_ENVIRONMENTS_LIST_SEPARATOR} to array of installed execution
-		 * environment names. <b>Doubles will be ignored</b>.
-		 * 
-		 */
-		@Override
-		protected String[] parseString(String stringList) {
-			if (stringList.isEmpty()) {
-				return new String[0];
-			}
-			// Avoid doubles
-			HashSet<String> hash = new HashSet<String>();
-			for (final String lib : stringList.split(LuaExecutionEnvironmentConstants.EXECUTION_ENVIRONMENTS_LIST_SEPARATOR)) {
-				hash.add(lib);
-			}
-			return hash.toArray(new String[hash.size()]);
-		}
-
-		/**
-		 * Deploy selected {@link LuaExecutionEnvironment} in installation directory. It will be truly installed when user will apply changes, which
-		 * will update preference representing installed {@link LuaExecutionEnvironment}
-		 */
-		@Override
-		protected String getNewInputObject() {
-			/*
-			 * Ask user for a file
-			 */
-			FileDialog filedialog = new FileDialog(Display.getDefault().getActiveShell());
-			filedialog.setFilterExtensions(new String[] { LuaExecutionEnvironmentConstants.FILE_EXTENSION });
-			final String selectedFilePath = filedialog.open();
-			if (selectedFilePath == null) {
-				return null;
-			}
-
-			/*
-			 * Deploy
-			 */
-			try {
-				return LuaExecutionEnvironmentManager.installLuaExecutionEnvironment(selectedFilePath).getEEIdentifier();
-			} catch (final FileNotFoundException e) {
-				final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage(), e);
-				ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageIOProblemTitle,
-						Messages.LuaExecutionEnvironmentPreferencePageProblemWithFile, status);
-				Activator.logError(Messages.LuaExecutionEnvironmentPreferencePageProblemWithFile, e);
-			} catch (final LuaExecutionEnvironmentException e) {
-				final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage(), e);
-				ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageUnableToInstallTitle,
-						Messages.LuaExecutionEnvironmentPreferencePageInvalidFile, status);
-				Activator.logWarning(Messages.LuaExecutionEnvironmentPreferencePageInvalidFile, e);
-			} catch (final IOException e) {
-				final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e);
-				ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageUnableToInstallTitle,
-						Messages.LuaExecutionEnvironmentPreferencePageInstallationAborted, status);
-				Activator.logError(Messages.LuaExecutionEnvironmentPreferencePageInstallationAborted, e);
-			}
-			return null;
-		}
-
-		/**
-		 * Converts valid {@link LuaExecutionEnvironment} name to a {@link String} which can be stored as a preference string
-		 * 
-		 * @param items
-		 *            {@link LuaExecutionEnvironment} full names
-		 * @return String to be stored in preferences
-		 */
-		@Override
-		protected String createList(String[] items) {
-			final StringBuffer sb = new StringBuffer(items.length * 2);
-			for (final String item : items) {
-				sb.append(item);
-				sb.append(LuaExecutionEnvironmentConstants.EXECUTION_ENVIRONMENTS_LIST_SEPARATOR);
-			}
-			return sb.toString();
-		}
-	};
+	private TreeViewer eeTreeViewer;
 
 	public LuaExecutionEnvironmentPreferencePage() {
-		super(GRID);
+		setDescription(Messages.LuaExecutionEnvironmentPreferencePageTitle);
+		noDefaultAndApplyButton();
 	}
 
-	/**
-	 * Sets a PreferenceStrore related to core plug-in, in order to use same preferences as {@link LuaExecutionEnvironmentManager}
-	 * 
-	 * @see LuaExecutionEnvironmentManager
-	 */
 	@Override
 	public void init(IWorkbench workbench) {
-		setPreferenceStore(new ScopedPreferenceStore(new InstanceScope(), org.eclipse.koneki.ldt.Activator.PLUGIN_ID));
+
 	}
 
 	@Override
-	protected void createFieldEditors() {
-		final ListEditor listEditor = new ExecutionEnvironmentListEditor(getFieldEditorParent());
-		addField(listEditor);
+	protected Control createContents(Composite parent) {
+		// ----------------
+		// CREATE CONTROL
+		// create container composite
+		Composite containerComposite = new Composite(parent, SWT.NONE);
+		GridLayoutFactory.swtDefaults().margins(0, 0).numColumns(2).applyTo(containerComposite);
+
+		eeTreeViewer = new TreeViewer(containerComposite);
+		eeTreeViewer.setContentProvider(new LuaExecutionEnvironmentContentProvider());
+		eeTreeViewer.setLabelProvider(new LuaExecutionEnvironmentLabelProvider());
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(eeTreeViewer.getControl());
+
+		// create buttons
+		Composite buttonsComposite = new Composite(containerComposite, SWT.NONE);
+		GridDataFactory.fillDefaults().applyTo(buttonsComposite);
+		RowLayoutFactory.fillDefaults().type(SWT.VERTICAL).fill(true).applyTo(buttonsComposite);
+		// Add
+		Button addButton = new Button(buttonsComposite, SWT.None);
+		RowDataFactory.swtDefaults().hint(SWTUtil.getButtonWidthHint(addButton), -1).applyTo(addButton);
+		addButton.setText(Messages.LuaExecutionEnvironmentPreferencePage_addbutton);
+		// Remove
+		Button removeButton = new Button(buttonsComposite, SWT.None);
+		RowDataFactory.swtDefaults().hint(SWTUtil.getButtonWidthHint(removeButton), -1).applyTo(removeButton);
+		removeButton.setText(Messages.LuaExecutionEnvironmentPreferencePage_removeButton);
+
+		// ----------------
+		// ADD LISTENER
+		addButton.addSelectionListener(new SelectionListener() {
+
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				doAddButtonSelection(e);
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				widgetSelected(e);
+			}
+		});
+
+		// ----------------
+		// SET INPUT
+		List<LuaExecutionEnvironment> installedExecutionEnvironments = LuaExecutionEnvironmentManager.getInstalledExecutionEnvironments();
+		eeTreeViewer.setInput(installedExecutionEnvironments);
+
+		return containerComposite;
+	}
+
+	private void doAddButtonSelection(SelectionEvent se) {
+		/*
+		 * Ask user for a file
+		 */
+		FileDialog filedialog = new FileDialog(Display.getDefault().getActiveShell());
+		filedialog.setFilterExtensions(new String[] { LuaExecutionEnvironmentConstants.FILE_EXTENSION });
+		final String selectedFilePath = filedialog.open();
+		if (selectedFilePath == null) {
+			return;
+		}
+
+		/*
+		 * Deploy
+		 */
+		try {
+			LuaExecutionEnvironmentManager.installLuaExecutionEnvironment(selectedFilePath).getEEIdentifier();
+
+			// refresh the treeviewer
+			List<LuaExecutionEnvironment> installedExecutionEnvironments = LuaExecutionEnvironmentManager.getInstalledExecutionEnvironments();
+			eeTreeViewer.setInput(installedExecutionEnvironments);
+		} catch (FileNotFoundException e) {
+			final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage());
+			ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageIOProblemTitle,
+					Messages.LuaExecutionEnvironmentPreferencePageProblemWithFile, status);
+		} catch (LuaExecutionEnvironmentException e) {
+			final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage());
+			ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageUnableToInstallTitle,
+					Messages.LuaExecutionEnvironmentPreferencePageInvalidFile, status);
+		} catch (IOException e) {
+			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage());
+			ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageUnableToInstallTitle,
+					Messages.LuaExecutionEnvironmentPreferencePageInstallationAborted, status);
+		}
 	}
 }
