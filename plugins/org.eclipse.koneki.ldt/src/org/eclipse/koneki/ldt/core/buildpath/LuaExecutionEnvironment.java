@@ -16,10 +16,12 @@ public class LuaExecutionEnvironment {
 
 	private final String id;
 	private final String version;
+	private final IPath path;
 
-	public LuaExecutionEnvironment(final String identifier, final String eeversion) {
+	public LuaExecutionEnvironment(final String identifier, final String eeversion, final IPath pathToEE) {
 		id = identifier;
 		version = eeversion;
+		path = pathToEE;
 	}
 
 	public String getID() {
@@ -30,16 +32,25 @@ public class LuaExecutionEnvironment {
 		return version;
 	}
 
-	/**
-	 * Path is accessible form {@link LuaExecutionEnvironmentManager#getPath(LuaExecutionEnvironment)}
-	 * 
-	 * @see LuaExecutionEnvironmentManager#getPath(LuaExecutionEnvironment)
-	 */
-	@Deprecated
 	public IPath[] getSourcepath() {
-		// return absolute path
-		// perhaps should return a String or an URI, the most useful.
-		return null;
+		if (path != null && path.toFile().exists()) {
+			final IPath sourcePath = path.append(LuaExecutionEnvironmentConstants.EE_FILE_API_ARCHIVE);
+			if (sourcePath.toFile().exists()) {
+				return new IPath[] { path };
+			}
+		}
+		return new IPath[0];
+	}
+
+	// TODO: Try implementation
+	public IPath[] getDocumentatioPpath() {
+		if (path != null && path.toFile().exists()) {
+			final IPath sourcePath = path.append(LuaExecutionEnvironmentConstants.EE_FILE_DOCS_FOLDER);
+			if (sourcePath.toFile().exists()) {
+				return new IPath[] { path };
+			}
+		}
+		return new IPath[0];
 	}
 
 	public String getEEIdentifier() {

@@ -47,8 +47,8 @@ public class LuaExecutionEnvironmentPreferencePage extends FieldEditorPreference
 		}
 
 		/**
-		 * Convert list separated with {@value LuaExecutionEnvironmentConstants#PREF_EXECUTION_ENVIRONMENTS_LIST_SEPARATOR} to array of installed
-		 * execution environment names. <b>Doubles will be ignored</b>.
+		 * Convert list separated with {@value LuaExecutionEnvironmentConstants#EXECUTION_ENVIRONMENTS_LIST_SEPARATOR} to array of installed execution
+		 * environment names. <b>Doubles will be ignored</b>.
 		 * 
 		 */
 		@Override
@@ -58,7 +58,7 @@ public class LuaExecutionEnvironmentPreferencePage extends FieldEditorPreference
 			}
 			// Avoid doubles
 			HashSet<String> hash = new HashSet<String>();
-			for (final String lib : stringList.split(LuaExecutionEnvironmentConstants.PREF_EXECUTION_ENVIRONMENTS_LIST_SEPARATOR)) {
+			for (final String lib : stringList.split(LuaExecutionEnvironmentConstants.EXECUTION_ENVIRONMENTS_LIST_SEPARATOR)) {
 				hash.add(lib);
 			}
 			return hash.toArray(new String[hash.size()]);
@@ -85,18 +85,21 @@ public class LuaExecutionEnvironmentPreferencePage extends FieldEditorPreference
 			 */
 			try {
 				return LuaExecutionEnvironmentManager.installLuaExecutionEnvironment(selectedFilePath).getEEIdentifier();
-			} catch (FileNotFoundException e) {
-				final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage());
+			} catch (final FileNotFoundException e) {
+				final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage(), e);
 				ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageIOProblemTitle,
 						Messages.LuaExecutionEnvironmentPreferencePageProblemWithFile, status);
-			} catch (LuaExecutionEnvironmentException e) {
-				final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage());
+				Activator.logError(Messages.LuaExecutionEnvironmentPreferencePageProblemWithFile, e);
+			} catch (final LuaExecutionEnvironmentException e) {
+				final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage(), e);
 				ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageUnableToInstallTitle,
 						Messages.LuaExecutionEnvironmentPreferencePageInvalidFile, status);
-			} catch (IOException e) {
-				final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage());
+				Activator.logWarning(Messages.LuaExecutionEnvironmentPreferencePageInvalidFile, e);
+			} catch (final IOException e) {
+				final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e);
 				ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageUnableToInstallTitle,
 						Messages.LuaExecutionEnvironmentPreferencePageInstallationAborted, status);
+				Activator.logError(Messages.LuaExecutionEnvironmentPreferencePageInstallationAborted, e);
 			}
 			return null;
 		}
@@ -113,7 +116,7 @@ public class LuaExecutionEnvironmentPreferencePage extends FieldEditorPreference
 			final StringBuffer sb = new StringBuffer(items.length * 2);
 			for (final String item : items) {
 				sb.append(item);
-				sb.append(LuaExecutionEnvironmentConstants.PREF_EXECUTION_ENVIRONMENTS_LIST_SEPARATOR);
+				sb.append(LuaExecutionEnvironmentConstants.EXECUTION_ENVIRONMENTS_LIST_SEPARATOR);
 			}
 			return sb.toString();
 		}

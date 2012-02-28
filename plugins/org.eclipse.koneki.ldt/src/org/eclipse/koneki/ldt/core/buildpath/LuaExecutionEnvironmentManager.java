@@ -36,9 +36,6 @@ import org.eclipse.koneki.ldt.core.buildpath.exceptions.LuaExecutionEnvironmentM
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public final class LuaExecutionEnvironmentManager {
-
-	private static final String EE_FILE_API_ARCHIVE = "api.zip"; //$NON-NLS-1$
-	private static final String EE_FILE_DOCS_FOLDER = "docs/"; //$NON-NLS-1$
 	private static final String INSTALLATION_FOLDER = "ee"; //$NON-NLS-1$
 
 	private LuaExecutionEnvironmentManager() {
@@ -88,7 +85,7 @@ public final class LuaExecutionEnvironmentManager {
 		if (name == null || version == null) {
 			throw new LuaExecutionEnvironmentManifestException(Messages.LuaExecutionEnvironmentManagerNoPackageNameOrVersion);
 		}
-		return new LuaExecutionEnvironment(name, version);
+		return getExecutionEnvironment(name, version);
 	}
 
 	/**
@@ -123,23 +120,28 @@ public final class LuaExecutionEnvironmentManager {
 				throw new IOException(Messages.LuaExecutionEnvironmentManagerUnableToCreateInstallationDirectory, e);
 			}
 		}
-		// Open given file
-		final FileInputStream input = new FileInputStream(path);
-		final ZipInputStream zipStream = new ZipInputStream(new BufferedInputStream(input));
-
-		// Check if file is valid
-		if (!isExecutionEnvironmentFile(path)) {
-			final File file = new File(path);
-			final String notValidMessage = Messages.bind(Messages.LuaExecutionEnvironmentManagerFileNotValid, file.getName());
-			throw new FileNotFoundException(notValidMessage);
-		}
-
-		// Create temporary directory
-		final File installationDirectory = getInstallDirectory().append(ee.getEEIdentifier()).toFile();
-		installationDirectory.mkdir();
 
 		// Loop over content
+		ZipInputStream zipStream = null;
+		FileInputStream input = null;
+		FileOutputStream fileOutputStream = null;
 		try {
+			// Open given file
+			input = new FileInputStream(path);
+			zipStream = new ZipInputStream(new BufferedInputStream(input));
+
+			// Check if file is valid
+			if (!isExecutionEnvironmentFile(path)) {
+				final File file = new File(path);
+				final String notValidMessage = Messages.bind(Messages.LuaExecutionEnvironmentManagerFileNotValid, file.getName());
+				throw new FileNotFoundException(notValidMessage);
+			}
+
+			// Create temporary directory
+			final File installationDirectory = getInstallDirectory().append(ee.getEEIdentifier()).toFile();
+			if (!installationDirectory.mkdir()) {
+				throw new IOException(Messages.LuaExecutionEnvironmentManagerUnableToCreateInstallationDirectory);
+			}
 			for (ZipEntry entry = zipStream.getNextEntry(); entry != null; entry = zipStream.getNextEntry()) {
 				/*
 				 * Flush current file on disk
@@ -147,7 +149,7 @@ public final class LuaExecutionEnvironmentManager {
 				final File outputFile = new File(installationDirectory, entry.getName());
 
 				// Define output file
-				final FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
+				fileOutputStream = new FileOutputStream(outputFile);
 				if (entry.isDirectory()) {
 					// Create sub directory if needed
 					if (!outputFile.delete() || !outputFile.mkdir()) {
@@ -160,12 +162,23 @@ public final class LuaExecutionEnvironmentManager {
 				}
 				// Flush on disk
 				fileOutputStream.flush();
-				fileOutputStream.close();
 			}
 		} catch (IOException e) {
 			throw new IOException(Messages.LuaExecutionEnvironmentManagerUnableToReadInFile, e);
+		} finally {
+			/*
+			 * Make sure all streams are closed
+			 */
+			if (fileOutputStream != null) {
+				fileOutputStream.close();
+			}
+			if (input != null) {
+				input.close();
+			}
+			if (zipStream != null) {
+				zipStream.close();
+			}
 		}
-		zipStream.close();
 		return ee;
 	}
 
@@ -195,9 +208,9 @@ public final class LuaExecutionEnvironmentManager {
 			final String name = zipEntry.getName();
 
 			// Check for "docs" folder
-			if (EE_FILE_DOCS_FOLDER.equals(name)) {
+			if (LuaExecutionEnvironmentConstants.EE_FILE_DOCS_FOLDER.equals(name)) {
 				hasDocs = zipEntry.isDirectory();
-			} else if (EE_FILE_API_ARCHIVE.equals(name)) {
+			} else if (LuaExecutionEnvironmentConstants.EE_FILE_API_ARCHIVE.equals(name)) {
 				// Check for "api.zip"
 				hasApi = !zipEntry.isDirectory();
 			} else if (name.endsWith(LuaExecutionEnvironmentConstants.MANIFEST_EXTENSION)) {
@@ -229,8 +242,12 @@ public final class LuaExecutionEnvironmentManager {
 		return null;
 	}
 
-	protected static LuaExecutionEnvironment getExecutionEnvironment(final String eeid, final String version) {
-		return new LuaExecutionEnvironment(eeid, version);
+	public static LuaExecutionEnvironment getExecutionEnvironment(final String eeid, final String version) {
+		final IPath pathToEE = getInstallDirectory().append(eeid + '-' + version);
+		if (!pathToEE.toFile().exists()) {
+			return null;
+		}
+		return new LuaExecutionEnvironment(eeid, version, pathToEE);
 	}
 
 	public static LuaExecutionEnvironment getExecutionEnvironment(final String eeidAndVersion) {
@@ -256,7 +273,7 @@ public final class LuaExecutionEnvironmentManager {
 			return list;
 		}
 
-		for (final String id : preferenceString.split(LuaExecutionEnvironmentConstants.PREF_EXECUTION_ENVIRONMENTS_LIST_SEPARATOR)) {
+		for (final String id : preferenceString.split(LuaExecutionEnvironmentConstants.EXECUTION_ENVIRONMENTS_LIST_SEPARATOR)) {
 			list.add(getExecutionEnvironment(id));
 		}
 		return list;
