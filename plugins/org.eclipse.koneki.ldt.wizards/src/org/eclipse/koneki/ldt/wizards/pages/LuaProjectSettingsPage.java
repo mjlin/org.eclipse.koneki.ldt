@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Sierra Wireless and others.
+ * Copyright (c) 2012 Sierra Wireless and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,7 @@ import org.eclipse.swt.widgets.Composite;
  * <li>hosts</li>
  * </ul>
  */
-public class LuaProjectSettingsPage extends ProjectWizardFirstPage {
+public class LuaProjectSettingsPage extends ProjectWizardFirstPage /* implements Observer */{
 
 	private LuaExecutionEnvironmentGroup luaExecutionEnvironmentGroup;
 
@@ -50,12 +50,15 @@ public class LuaProjectSettingsPage extends ProjectWizardFirstPage {
 		return new LuaLocationGroup();
 	}
 
-	protected void createCustomGroups(Composite composite) {
+	protected void createCustomGroups(final Composite composite) {
 		luaExecutionEnvironmentGroup = createExecutionEnvironmentGroup(composite);
 	}
 
-	protected LuaExecutionEnvironmentGroup createExecutionEnvironmentGroup(Composite composite) {
-		return new LuaExecutionEnvironmentGroup(composite);
+	protected LuaExecutionEnvironmentGroup createExecutionEnvironmentGroup(final Composite composite) {
+		final LuaExecutionEnvironmentGroup eeGroup = new LuaExecutionEnvironmentGroup(composite);
+		// Listen to Execution Environment list changes
+		// eeGroup.addObserver(this);
+		return eeGroup;
 	}
 
 	/**
@@ -74,4 +77,14 @@ public class LuaProjectSettingsPage extends ProjectWizardFirstPage {
 			return luaExecutionEnvironmentGroup.getSelectedLuaExecutionEnvironment();
 		return null;
 	}
+
+	// @Override
+	// public boolean isPageComplete() {
+	// return super.isPageComplete() && getExecutionEnvironment() != null;
+	// }
+	//
+	// @Override
+	// public void update(Observable o, Object arg) {
+	// validateProject();
+	// }
 }

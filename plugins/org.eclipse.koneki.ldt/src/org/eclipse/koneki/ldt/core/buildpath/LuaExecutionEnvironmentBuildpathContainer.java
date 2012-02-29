@@ -10,18 +10,24 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.core.buildpath;
 
+import java.io.IOException;
+import java.util.ArrayList;
+
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.dltk.core.DLTKCore;
 import org.eclipse.dltk.core.IAccessRule;
 import org.eclipse.dltk.core.IBuildpathAttribute;
 import org.eclipse.dltk.core.IBuildpathContainer;
 import org.eclipse.dltk.core.IBuildpathEntry;
 import org.eclipse.dltk.internal.core.BuildpathEntry;
+import org.eclipse.koneki.ldt.Activator;
+import org.eclipse.koneki.ldt.core.buildpath.exceptions.LuaExecutionEnvironmentManifestException;
 
+@SuppressWarnings("restriction")
 public class LuaExecutionEnvironmentBuildpathContainer implements IBuildpathContainer {
 
-	private IPath path;
+	private final IPath path;
 
 	public LuaExecutionEnvironmentBuildpathContainer(String eeID, String eeVersion, IPath path) {
 		this.path = path;
@@ -29,44 +35,61 @@ public class LuaExecutionEnvironmentBuildpathContainer implements IBuildpathCont
 
 	@Override
 	public IBuildpathEntry[] getBuildpathEntries() {
-		// get LuaExecutionEnvironment
-		// get sourcepath
-		// LuaExecutionEnvironmentBuildpathUtil to build corresponding IbuildpathEntry
-
-		// TO ADD A ZIP
-		// IBuildpathEntry newBuiltinEntry = DLTKCore.newLibraryEntry(new Path("org.eclipse.dltk.core.environment.localEnvironment/C:",
-		// "Users/sbernard/Documents/tmp/konekiproduct/luadocumentator32/docs"), IAccessRule.EMPTY_RULES, new IBuildpathAttribute[0],
-		// BuildpathEntry.INCLUDE_ALL, BuildpathEntry.EXCLUDE_NONE, false, true);
-
-		// TO ADD A ZIP
-		// IBuildpathEntry newBuiltinEntry = DLTKCore.newBuiltinEntry(
-		// IBuildpathEntry.BUILTIN_EXTERNAL_ENTRY.append("c:/Users/sbernard/Documents/tmp/sdk.zip"), IAccessRule.EMPTY_RULES,
-		// new IBuildpathAttribute[0], BuildpathEntry.INCLUDE_ALL, BuildpathEntry.EXCLUDE_NONE, false, true);
-		//
-		// IBuildpathEntry newBuiltinEntry3 = DLTKCore.newBuiltinEntry(new Path("org.eclipse.dltk.core.environment.localEnvironment/C:",
-		// "/Users/sbernard/Documents/tmp/sdk.zip"), IAccessRule.EMPTY_RULES, new IBuildpathAttribute[0], BuildpathEntry.INCLUDE_ALL,
-		// BuildpathEntry.EXCLUDE_NONE, false, true);
-		//
-		// // TO ADD A EXT LIB
-		// IBuildpathEntry newBuiltinEntry1 = DLTKCore.newLibraryEntry(new Path("org.eclipse.dltk.core.environment.localEnvironment/C:",
-		// "/Users/sbernard/Documents/tmp/konekiproduct/luadocumentator32/docs"), IAccessRule.EMPTY_RULES, new IBuildpathAttribute[0],
-		// BuildpathEntry.INCLUDE_ALL, BuildpathEntry.EXCLUDE_NONE, false, true);
-
-		IBuildpathEntry newBuiltinEntry2 = DLTKCore.newLibraryEntry(new Path("org.eclipse.dltk.core.environment.localEnvironment/C:",
-				"/Users/sbernard/Documents/tmp/sdk.zip"), IAccessRule.EMPTY_RULES, new IBuildpathAttribute[0], BuildpathEntry.INCLUDE_ALL,
-				BuildpathEntry.EXCLUDE_NONE, false, true);
-
-		return new IBuildpathEntry[] { newBuiltinEntry2 };
+		try {
+			final IPath[] eeBuildPathes = LuaExecutionEnvironmentBuildpathUtil.getExecutionEnvironmentBuildPath(path);
+			final ArrayList<IBuildpathEntry> arrayList = new ArrayList<IBuildpathEntry>(eeBuildPathes.length);
+			if (eeBuildPathes.length > 0) {
+				for (final IPath buildPath : eeBuildPathes) {
+					final IBuildpathEntry libEntry = DLTKCore.newLibraryEntry(buildPath, IAccessRule.EMPTY_RULES, new IBuildpathAttribute[0],
+							BuildpathEntry.INCLUDE_ALL, BuildpathEntry.EXCLUDE_NONE, false, true);
+					arrayList.add(libEntry);
+				}
+				return arrayList.toArray(new IBuildpathEntry[arrayList.size()]);
+			}
+		} catch (final LuaExecutionEnvironmentManifestException e) {
+			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.LuaExecutionEnvironmentBuildpathContainerInvalidEEManifest,
+					e);
+			Activator.log(status);
+		} catch (final IOException e) {
+			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.LuaExecutionEnvironmentBuildpathContainerIOProblem, e);
+			Activator.log(status);
+		}
+		return new IBuildpathEntry[0];
 	}
 
 	@Override
 	public String getDescription() {
-		return "Lua 5.1 Execution Environment";
+		try {
+			final LuaExecutionEnvironment ee = LuaExecutionEnvironmentBuildpathUtil.getExecutionEnvironment(path);
+			if (ee != null && (ee.getID() != null)) {
+				final StringBuffer sb = new StringBuffer();
+				final String id = ee.getID();
+				// Appending ID with capital first letter
+				if (id.length() > 0) {
+					sb.append(id.substring(0, 1).toUpperCase());
+					if (id.length() > 1) {
+						sb.append(id.substring(1));
+					}
+					sb.append(' ');
+				}
+				sb.append(ee.getVersion());
+				return sb.toString();
+			}
+		} catch (final LuaExecutionEnvironmentManifestException e) {
+			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.LuaExecutionEnvironmentBuildpathContainerInvalidEEManifest,
+					e);
+			Activator.log(status);
+		} catch (final IOException e) {
+			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.LuaExecutionEnvironmentBuildpathContainerIOProblem, e);
+			Activator.log(status);
+		}
+		return Messages.LuaExecutionEnvironmentBuildpathContainerNoDescriptionAvailable;
 	}
 
 	@Override
 	public int getKind() {
-		// not sure we must use this "kind"
+		// Not called at project creation nor project load.
+		// Defined just in case ...
 		return IBuildpathContainer.K_DEFAULT_SYSTEM;
 	}
 

@@ -11,31 +11,24 @@ public class LuaExecutionEnvironmentBuildpathContainerInitializer extends Buildp
 
 	@Override
 	public void initialize(IPath containerPath, IScriptProject project) throws CoreException {
-		// TODO see org.eclipse.dltk.internal.core.UserLibraryBuildpathContainerInitializer.initialize(IPath, IScriptProject)
 
-		// check if this is a execution environnement path
-		// not sure this test is necessary ...
-		if (LuaExecutionEnvironmentBuildpathUtil.isLuaExecutionEnvironmentContainer(containerPath)) {
-			// extract EE ID from path
-			// use LuaExecutionEnvironmentBuildpathUtil
-			String eeID = null;
-			// extract EE version from path
-			// use LuaExecutionEnvironmentBuildpathUtil
-			String eeVersion = null;
+		// Extract name from path
+		final String eeID = LuaExecutionEnvironmentBuildpathUtil.getEEID(containerPath);
 
-			// LuaExecutionEnvironment executionEnvironment = LuaExecutionEnvironmentManager.getInstalledExecutionEnvironment(eeID, eeVersion);
+		// Extract version from path
+		final String eeVersion = LuaExecutionEnvironmentBuildpathUtil.getEEVersion(containerPath);
 
-			LuaExecutionEnvironmentBuildpathContainer container = new LuaExecutionEnvironmentBuildpathContainer(eeID, eeVersion, containerPath);
-			DLTKCore.setBuildpathContainer(containerPath, new IScriptProject[] { project }, new IBuildpathContainer[] { container }, null);
-		}
+		// Set actual build path container
+		final LuaExecutionEnvironmentBuildpathContainer container = new LuaExecutionEnvironmentBuildpathContainer(eeID, eeVersion, containerPath);
+		DLTKCore.setBuildpathContainer(containerPath, new IScriptProject[] { project }, new IBuildpathContainer[] { container }, null);
 	}
 
 	@Override
 	public boolean canUpdateBuildpathContainer(IPath containerPath, IScriptProject project) {
-		// TODO verify the utility..
 		return LuaExecutionEnvironmentBuildpathUtil.isLuaExecutionEnvironmentContainer(containerPath);
 	}
 
+	@Override
 	public Object getComparisonID(IPath containerPath, IScriptProject project) {
 		return containerPath;
 	}

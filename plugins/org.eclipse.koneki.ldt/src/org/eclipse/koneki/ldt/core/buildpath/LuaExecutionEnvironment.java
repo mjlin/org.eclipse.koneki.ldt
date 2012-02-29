@@ -40,7 +40,7 @@ public class LuaExecutionEnvironment {
 		if (path != null && path.toFile().exists()) {
 			final IPath sourcePath = path.append(LuaExecutionEnvironmentConstants.EE_FILE_API_ARCHIVE);
 			if (sourcePath.toFile().exists()) {
-				return new IPath[] { path };
+				return new IPath[] { sourcePath };
 			}
 		}
 		return new IPath[0];
@@ -58,7 +58,7 @@ public class LuaExecutionEnvironment {
 	}
 
 	public String getEEIdentifier() {
-		return getID() + "-" + getVersion(); //$NON-NLS-1$
+		return getID() + '-' + getVersion();
 	}
 
 	@Override
@@ -67,16 +67,33 @@ public class LuaExecutionEnvironment {
 	}
 
 	@Override
-	public boolean equals(final Object o) {
-		if (!(o instanceof LuaExecutionEnvironment))
-			return false;
-		final LuaExecutionEnvironment ee = (LuaExecutionEnvironment) o;
-		return getID().equals(ee.getID()) && getVersion().equals(ee.getVersion());
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((version == null) ? 0 : version.hashCode());
+		return result;
 	}
 
 	@Override
-	public int hashCode() {
-		// TODO not sure is a good way to define the hashcode
-		return getID().hashCode() + getVersion().hashCode();
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		final LuaExecutionEnvironment other = (LuaExecutionEnvironment) obj;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		if (version == null) {
+			if (other.version != null)
+				return false;
+		} else if (!version.equals(other.version))
+			return false;
+		return true;
 	}
 }
