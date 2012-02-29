@@ -11,11 +11,10 @@
 
 package org.eclipse.koneki.ldt.parser;
 
-
 public final class LuaConstants {
 	public static final String COMMENT_STRING = "--"; //$NON-NLS-1$
 	public static final String LUA_PARTITIONING = "__lua_partitioning"; //$NON-NLS-1$
-	public static final String REQUIRE = "require"; //$NON-NLS-1$
+	public static final String SELF_PARAMETER = "self"; //$NON-NLS-1$
 
 	private LuaConstants() {
 	}

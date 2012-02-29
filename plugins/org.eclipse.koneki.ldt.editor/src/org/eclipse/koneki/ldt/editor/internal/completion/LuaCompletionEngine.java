@@ -32,6 +32,7 @@ import org.eclipse.koneki.ldt.parser.LuaASTModelUtils;
 import org.eclipse.koneki.ldt.parser.LuaASTUtils;
 import org.eclipse.koneki.ldt.parser.LuaASTUtils.Definition;
 import org.eclipse.koneki.ldt.parser.LuaASTUtils.TypeResolution;
+import org.eclipse.koneki.ldt.parser.LuaConstants;
 import org.eclipse.koneki.ldt.parser.api.external.Item;
 import org.eclipse.koneki.ldt.parser.api.external.RecordTypeDef;
 import org.eclipse.koneki.ldt.parser.ast.LuaSourceRoot;
@@ -54,7 +55,7 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 		ISourceModule sourceModule = (ISourceModule) modelElement;
 
 		// Retrieve start position of word current user is typing
-		String start = getWordStarting(module.getSourceContents(), position).toLowerCase();
+		String start = getWordStarting(module.getSourceContents(), position);
 
 		this.requestor.beginReporting();
 		if (start.contains(".") || start.contains(":")) { //$NON-NLS-1$//$NON-NLS-2$
@@ -276,10 +277,14 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 
 				if (operator == ':') {
 					// manage the invoke case
-					if (method.getParameterNames().length == 0)
+					String[] parameterNames = method.getParameterNames();
+					
+					if (parameterNames.length == 0)
 						return;
 
-					String[] parameterNames = method.getParameterNames();
+					if (!parameterNames[0].equals(LuaConstants.SELF_PARAMETER))
+						return;
+
 					String[] parameterNamesWithoutFirstOne = Arrays.copyOfRange(parameterNames, 1, parameterNames.length);
 					proposal.setParameterNames(parameterNamesWithoutFirstOne);
 				} else {
