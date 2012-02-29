@@ -12,9 +12,14 @@ package org.eclipse.koneki.ldt.core.buildpath;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.dltk.core.environment.EnvironmentManager;
+import org.eclipse.dltk.core.environment.EnvironmentPathUtils;
+import org.eclipse.dltk.core.environment.IEnvironment;
+import org.eclipse.koneki.ldt.Activator;
 import org.eclipse.koneki.ldt.core.buildpath.exceptions.LuaExecutionEnvironmentManifestException;
 
 public final class LuaExecutionEnvironmentBuildpathUtil {
@@ -28,9 +33,11 @@ public final class LuaExecutionEnvironmentBuildpathUtil {
 			final String eeVersion = getEEVersion(containerPath);
 			try {
 				return LuaExecutionEnvironmentManager.getInstalledExecutionEnvironment(eeid, eeVersion) != null;
-			} catch (LuaExecutionEnvironmentManifestException e) {
+			} catch (final LuaExecutionEnvironmentManifestException e) {
+				Activator.logError(Messages.LuaExecutionEnvironmentBuildpathUtilUnableToReadManifest, e);
 				return false;
-			} catch (IOException e) {
+			} catch (final IOException e) {
+				Activator.logError(Messages.LuaExecutionEnvironmentBuildpathUtilCannotGetEE, e);
 				return false;
 			}
 		}
@@ -64,29 +71,25 @@ public final class LuaExecutionEnvironmentBuildpathUtil {
 		return null;
 	}
 
-	public static IPath[] getExecutionEnvironmentBuildPath(final IPath path) throws LuaExecutionEnvironmentManifestException, IOException {
+	public static List<IPath> getExecutionEnvironmentBuildPath(final IPath path) throws LuaExecutionEnvironmentManifestException, IOException {
+
+		// Retrieve Execution Environment's source paths
+		final ArrayList<IPath> arrayList = new ArrayList<IPath>();
 		if (isValidEEPath(path)) {
 			final LuaExecutionEnvironment ee = getExecutionEnvironment(path);
 			if (ee != null) {
-				final IPath eepath = ee.getPath();
-				if (eepath != null) {
-					// Determine windows device
-					String root = eepath.getDevice();
-					if (root == null) {
-						// If not available, switch to Unix device
-						root = "/"; //$NON-NLS-1$
-					}
-					final IPath[] pathes = ee.getSourcepath();
-					final ArrayList<IPath> arrayList = new ArrayList<IPath>(pathes.length);
-					for (final IPath sourcePath : pathes) {
-						final Path buildPath = new Path(LuaExecutionEnvironmentConstants.BUILD_PATH_DEVICE_PREFIX + root, sourcePath.toOSString());
-						arrayList.add(buildPath);
-					}
-					return arrayList.toArray(new IPath[pathes.length]);
+
+				// Loop over them
+				for (final IPath sourcePath : ee.getSourcepath()) {
+
+					// Define a local environment path for current one
+					final IEnvironment env = EnvironmentManager.getLocalEnvironment();
+					final IPath buildPath = EnvironmentPathUtils.getFullPath(env, sourcePath);
+					arrayList.add(buildPath);
 				}
 			}
 		}
-		return new IPath[0];
+		return arrayList;
 	}
 
 	private static boolean isValidEEPath(final IPath eePath) {

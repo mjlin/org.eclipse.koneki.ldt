@@ -12,9 +12,9 @@ package org.eclipse.koneki.ldt.core.buildpath;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.dltk.core.DLTKCore;
 import org.eclipse.dltk.core.IAccessRule;
 import org.eclipse.dltk.core.IBuildpathAttribute;
@@ -28,6 +28,7 @@ import org.eclipse.koneki.ldt.core.buildpath.exceptions.LuaExecutionEnvironmentM
 public class LuaExecutionEnvironmentBuildpathContainer implements IBuildpathContainer {
 
 	private final IPath path;
+	private String description;
 
 	public LuaExecutionEnvironmentBuildpathContainer(String eeID, String eeVersion, IPath path) {
 		this.path = path;
@@ -36,9 +37,9 @@ public class LuaExecutionEnvironmentBuildpathContainer implements IBuildpathCont
 	@Override
 	public IBuildpathEntry[] getBuildpathEntries() {
 		try {
-			final IPath[] eeBuildPathes = LuaExecutionEnvironmentBuildpathUtil.getExecutionEnvironmentBuildPath(path);
-			final ArrayList<IBuildpathEntry> arrayList = new ArrayList<IBuildpathEntry>(eeBuildPathes.length);
-			if (eeBuildPathes.length > 0) {
+			final List<IPath> eeBuildPathes = LuaExecutionEnvironmentBuildpathUtil.getExecutionEnvironmentBuildPath(path);
+			final ArrayList<IBuildpathEntry> arrayList = new ArrayList<IBuildpathEntry>(eeBuildPathes.size());
+			if (!eeBuildPathes.isEmpty()) {
 				for (final IPath buildPath : eeBuildPathes) {
 					final IBuildpathEntry libEntry = DLTKCore.newLibraryEntry(buildPath, IAccessRule.EMPTY_RULES, new IBuildpathAttribute[0],
 							BuildpathEntry.INCLUDE_ALL, BuildpathEntry.EXCLUDE_NONE, false, true);
@@ -47,41 +48,42 @@ public class LuaExecutionEnvironmentBuildpathContainer implements IBuildpathCont
 				return arrayList.toArray(new IBuildpathEntry[arrayList.size()]);
 			}
 		} catch (final LuaExecutionEnvironmentManifestException e) {
-			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.LuaExecutionEnvironmentBuildpathContainerInvalidEEManifest,
-					e);
-			Activator.log(status);
+			Activator.logError(Messages.LuaExecutionEnvironmentBuildpathContainerInvalidEEManifest, e);
 		} catch (final IOException e) {
-			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.LuaExecutionEnvironmentBuildpathContainerIOProblem, e);
-			Activator.log(status);
+			Activator.logError(Messages.LuaExecutionEnvironmentBuildpathContainerIOProblem, e);
 		}
 		return new IBuildpathEntry[0];
 	}
 
 	@Override
 	public String getDescription() {
-		try {
-			final LuaExecutionEnvironment ee = LuaExecutionEnvironmentBuildpathUtil.getExecutionEnvironment(path);
-			if (ee != null && (ee.getID() != null)) {
-				final StringBuffer sb = new StringBuffer();
-				final String id = ee.getID();
-				// Appending ID with capital first letter
-				if (id.length() > 0) {
-					sb.append(id.substring(0, 1).toUpperCase());
-					if (id.length() > 1) {
-						sb.append(id.substring(1));
+		// Provide available description
+		if (description != null) {
+			return description;
+		} else {
+			// Compute description
+			try {
+				final LuaExecutionEnvironment ee = LuaExecutionEnvironmentBuildpathUtil.getExecutionEnvironment(path);
+				if ((ee != null) && (ee.getID() != null)) {
+					final StringBuffer sb = new StringBuffer();
+					final String id = ee.getID();
+					// Appending ID with capital first letter
+					if (id.length() > 0) {
+						sb.append(id.substring(0, 1).toUpperCase());
+						if (id.length() > 1) {
+							sb.append(id.substring(1));
+						}
+						sb.append(' ');
 					}
-					sb.append(' ');
+					sb.append(ee.getVersion());
+					description = sb.toString();
+					return description;
 				}
-				sb.append(ee.getVersion());
-				return sb.toString();
+			} catch (final LuaExecutionEnvironmentManifestException e) {
+				Activator.logError(Messages.LuaExecutionEnvironmentBuildpathContainerInvalidEEManifest, e);
+			} catch (final IOException e) {
+				Activator.logError(Messages.LuaExecutionEnvironmentBuildpathContainerIOProblem, e);
 			}
-		} catch (final LuaExecutionEnvironmentManifestException e) {
-			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.LuaExecutionEnvironmentBuildpathContainerInvalidEEManifest,
-					e);
-			Activator.log(status);
-		} catch (final IOException e) {
-			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.LuaExecutionEnvironmentBuildpathContainerIOProblem, e);
-			Activator.log(status);
 		}
 		return Messages.LuaExecutionEnvironmentBuildpathContainerNoDescriptionAvailable;
 	}

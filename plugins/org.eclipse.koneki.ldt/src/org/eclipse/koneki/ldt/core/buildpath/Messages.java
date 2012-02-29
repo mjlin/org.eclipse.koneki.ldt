@@ -22,6 +22,10 @@ public final class Messages extends NLS {
 
 	public static String LuaExecutionEnvironmentBuildpathContainerNoDescriptionAvailable;
 
+	public static String LuaExecutionEnvironmentBuildpathUtilCannotGetEE;
+
+	public static String LuaExecutionEnvironmentBuildpathUtilUnableToReadManifest;
+
 	public static String LuaExecutionEnvironmentManagerInstallEEDirectoryNotClean;
 	public static String LuaExecutionEnvironmentManagerUnableToCleanInstallDirectory;
 	public static String LuaExecutionEnvironmentManagerAlreadyInstalled;
