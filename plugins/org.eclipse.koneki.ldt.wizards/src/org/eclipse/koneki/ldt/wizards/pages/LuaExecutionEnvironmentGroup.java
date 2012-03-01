@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Sierra Wireless and others.
+ * Copyright (c) 2012 Sierra Wireless and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,6 +26,7 @@ import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironmentManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
@@ -34,29 +35,63 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 
 public class LuaExecutionEnvironmentGroup extends Observable {
 
-	private ComboViewer installedEEsComboViewer;
+	private final ComboViewer installedEEsComboViewer;
+	private boolean isListAvailable = false;
 	private ISelection selection;
+	private final Button eeButton;
+	private final Button noEEButton;
+	/**
+	 * Will make {@link #installedEEsComboViewer} available only when {@link #eeButton} is checked
+	 * 
+	 * @see Button#getSelection()
+	 */
+	private final SelectionListener eeChoiceListener = new SelectionListener() {
+
+		@Override
+		public void widgetSelected(SelectionEvent e) {
+			widgetDefaultSelected(e);
+		}
+
+		@Override
+		public void widgetDefaultSelected(SelectionEvent e) {
+			if (eeButton.getSelection()) {
+				isListAvailable = true;
+
+			} else if (noEEButton.getSelection()) {
+				isListAvailable = false;
+			}
+			installedEEsComboViewer.getCombo().setEnabled(isListAvailable);
+		}
+	};
 
 	public LuaExecutionEnvironmentGroup(final Composite parent) {
 		// Create group
-		Group group = new Group(parent, SWT.NONE);
+		final Group group = new Group(parent, SWT.NONE);
 		group.setText(Messages.LuaExecutionEnvironmentGroupTitle);
 		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.CENTER).applyTo(group);
-		GridLayoutFactory.swtDefaults().applyTo(group);
+		GridLayoutFactory.swtDefaults().numColumns(3).applyTo(group);
 
-		// Create composite for Execution Environment list and link to preference page
-		final Composite composite = new Composite(group, SWT.NONE);
-		GridLayoutFactory.swtDefaults().numColumns(2).applyTo(composite);
-		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).applyTo(composite);
+		// Button for no Execution Environment at project creation
+		noEEButton = new Button(group, SWT.RADIO);
+		noEEButton.setText(Messages.LuaExecutionEnvironmentGroupNoEEForProjectCreation);
+		noEEButton.setSelection(true);
+		noEEButton.addSelectionListener(eeChoiceListener);
+		GridDataFactory.swtDefaults().span(3, 1).applyTo(noEEButton);
+
+		// Button for no Execution Environment at project creation
+		eeButton = new Button(group, SWT.RADIO);
+		eeButton.setText(Messages.LuaExecutionEnvironmentGroupSelectEE);
+		eeButton.addSelectionListener(eeChoiceListener);
 
 		// Execution Environment actual list
-		installedEEsComboViewer = new ComboViewer(composite, SWT.READ_ONLY | SWT.BORDER);
+		installedEEsComboViewer = new ComboViewer(group, SWT.READ_ONLY | SWT.BORDER);
 		installedEEsComboViewer.setContentProvider(new ArrayContentProvider());
 		updateExecutionEnvironmentList();
+		installedEEsComboViewer.getCombo().setEnabled(isListAvailable);
 		GridDataFactory.swtDefaults().align(SWT.FILL, SWT.BEGINNING).grab(true, false).applyTo(installedEEsComboViewer.getControl());
 
 		// Set link to define a new execution environment
-		final Link link = new Link(composite, SWT.NONE);
+		final Link link = new Link(group, SWT.NONE);
 		link.setFont(group.getFont());
 		link.setText("<a>" + Messages.LuaExecutionEnvironmentGroupManageExecutionEnvironment + "</a>"); //$NON-NLS-1$  //$NON-NLS-2$
 		GridDataFactory.swtDefaults().align(SWT.END, SWT.CENTER).applyTo(link);
@@ -76,18 +111,31 @@ public class LuaExecutionEnvironmentGroup extends Observable {
 				updateExecutionEnvironmentList();
 			}
 		});
+
 	}
 
+	/**
+	 * @return {@link LuaExecutionEnvironmentConstants} when one is selected in enabled list
+	 */
 	public LuaExecutionEnvironment getSelectedLuaExecutionEnvironment() {
-		// Secure selection retrieval
-		Display.getDefault().syncExec(new Runnable() {
-			public void run() {
-				selection = installedEEsComboViewer.getSelection();
+
+		// No Execution Environment will be provided when list is not available
+		if (isListAvailable) {
+			// Secure selection and Execution Environment list status retrieval
+			Display.getDefault().syncExec(new Runnable() {
+				public void run() {
+					if (installedEEsComboViewer != null) {
+						selection = installedEEsComboViewer.getSelection();
+					} else {
+						selection = null;
+					}
+				}
+			});
+
+			// Extract Execution Environment from selection
+			if ((selection != null) && !selection.isEmpty() && (selection instanceof IStructuredSelection)) {
+				return (LuaExecutionEnvironment) ((IStructuredSelection) selection).getFirstElement();
 			}
-		});
-		// Extract Execution Environment from selection
-		if (selection != null && !selection.isEmpty() && selection instanceof IStructuredSelection) {
-			return (LuaExecutionEnvironment) ((IStructuredSelection) selection).getFirstElement();
 		}
 		return null;
 	}

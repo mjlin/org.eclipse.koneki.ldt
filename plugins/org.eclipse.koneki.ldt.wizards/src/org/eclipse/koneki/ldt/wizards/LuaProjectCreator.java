@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Sierra Wireless and others.
+ * Copyright (c) 2012 Sierra Wireless and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -69,9 +69,9 @@ public class LuaProjectCreator extends ProjectCreator {
 			final IBuildpathEntry newSourceEntry = DLTKCore.newSourceEntry(sourcefolder.getFullPath());
 			buildPath.add(newSourceEntry);
 
-			// TODO get selected environment add corresponding build Path
+			// Selected environment add corresponding build Path
 			LuaExecutionEnvironment luaExecutionEnvironment = luaProjectSettingPage.getExecutionEnvironment();
-			if (luaExecutionEnvironment != null) {// use LuaExecutionEnvironmentBuildpathUtil to create buildpathEntry
+			if (luaExecutionEnvironment != null) {
 				IPath path = LuaExecutionEnvironmentBuildpathUtil.getLuaExecutionEnvironmentContainerPath(luaExecutionEnvironment);
 				IBuildpathEntry newContainerEntry = DLTKCore.newContainerEntry(path);
 				buildPath.add(newContainerEntry);

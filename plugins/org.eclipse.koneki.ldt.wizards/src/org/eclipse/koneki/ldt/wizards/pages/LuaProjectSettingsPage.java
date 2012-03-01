@@ -21,7 +21,9 @@ import org.eclipse.swt.widgets.Composite;
  * <li>hosts</li>
  * </ul>
  */
-public class LuaProjectSettingsPage extends ProjectWizardFirstPage /* implements Observer */{
+public class LuaProjectSettingsPage extends ProjectWizardFirstPage
+// implements Observer
+{
 
 	private LuaExecutionEnvironmentGroup luaExecutionEnvironmentGroup;
 
@@ -85,6 +87,7 @@ public class LuaProjectSettingsPage extends ProjectWizardFirstPage /* implements
 	//
 	// @Override
 	// public void update(Observable o, Object arg) {
+	// getContainer().updateButtons();
 	// validateProject();
 	// }
 }
