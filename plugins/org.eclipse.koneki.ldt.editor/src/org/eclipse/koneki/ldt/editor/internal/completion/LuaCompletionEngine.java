@@ -62,7 +62,7 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 			// Select between module fields if completion is asked after a module reference
 			final List<String> ids = new ArrayList<String>();
 			Character lastOperator = getExpressionIdentifiers(start, ids);
-			addFields(sourceModule, ids, position, lastOperator);
+			addFields(sourceModule, ids, position, lastOperator, start);
 		} else {
 			// Search local declaration in AST
 			addLocalDeclarations(sourceModule, start, position);
@@ -109,7 +109,7 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 			return;
 
 		// find all local vars and create corresponding proposal
-		Collection<Item> localVars = LuaASTUtils.getLocalVars(luaSourceRoot, cursorPosition, start);
+		Collection<Item> localVars = LuaASTUtils.getLocalVars(luaSourceRoot, cursorPosition - start.length(), start);
 		for (Item var : localVars) {
 			IMember member = LuaASTModelUtils.getIMember(sourceModule, var);
 			if (member != null)
@@ -118,7 +118,7 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 
 	}
 
-	private void addFields(final ISourceModule initialSourceModule, final List<String> ids, int position, Character lastOperator) {
+	private void addFields(final ISourceModule initialSourceModule, final List<String> ids, int position, Character lastOperator, String start) {
 		if (ids.size() < 2)
 			return;
 
@@ -126,7 +126,7 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 		// we support only Identifier root for now.
 		final String rootIdentifierName = ids.get(0);
 		final LuaSourceRoot luaSourceRoot = LuaASTModelUtils.getLuaSourceRoot(initialSourceModule);
-		Item rootItem = LuaASTUtils.getClosestLocalVar(luaSourceRoot, rootIdentifierName, position);
+		Item rootItem = LuaASTUtils.getClosestLocalVar(luaSourceRoot, rootIdentifierName, position - start.length());
 		ISourceModule itemSourceModule = initialSourceModule;
 		if (rootItem == null) {
 			// try to find a global
@@ -278,7 +278,7 @@ public class LuaCompletionEngine extends ScriptCompletionEngine {
 				if (operator == ':') {
 					// manage the invoke case
 					String[] parameterNames = method.getParameterNames();
-					
+
 					if (parameterNames.length == 0)
 						return;
 
