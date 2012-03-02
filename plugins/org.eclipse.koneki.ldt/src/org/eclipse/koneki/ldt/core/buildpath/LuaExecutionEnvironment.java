@@ -47,11 +47,11 @@ public class LuaExecutionEnvironment {
 	}
 
 	// TODO: Try implementation
-	public IPath[] getDocumentatioPpath() {
+	public IPath[] getDocumentationPath() {
 		if (path != null && path.toFile().exists()) {
 			final IPath sourcePath = path.append(LuaExecutionEnvironmentConstants.EE_FILE_DOCS_FOLDER);
 			if (sourcePath.toFile().exists()) {
-				return new IPath[] { path };
+				return new IPath[] { sourcePath };
 			}
 		}
 		return new IPath[0];

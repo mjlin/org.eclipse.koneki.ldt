@@ -19,4 +19,5 @@ public interface LuaExecutionEnvironmentConstants {
 	public final String CONTAINER_PATH_START = "org.eclipse.koneki.ldt.ExecutionEnvironmentContainer"; //$NON-NLS-1$
 	public final String EE_FILE_API_ARCHIVE = "api.zip"; //$NON-NLS-1$
 	public final String EE_FILE_DOCS_FOLDER = "docs/"; //$NON-NLS-1$
+	public final String EE_FILE_DOCS_INDEX = "index.html"; //$NON-NLS-1$
 }
