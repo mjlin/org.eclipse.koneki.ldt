@@ -163,7 +163,7 @@ public final class LuaExecutionEnvironmentManager {
 
 		final File installDirectory = eePath.toFile();
 		if (!installDirectory.exists()) {
-			if (!installDirectory.mkdir())
+			if (!installDirectory.mkdirs())
 				throw new IOException(Messages.LuaExecutionEnvironmentManagerUnableToCreateInstallationDirectory);
 		} else {
 			if (installDirectory.isFile()) {
@@ -294,6 +294,7 @@ public final class LuaExecutionEnvironmentManager {
 		final ArrayList<LuaExecutionEnvironment> result = new ArrayList<LuaExecutionEnvironment>();
 
 		// search in the install directory
+
 		IPath installDirectoryPath = getInstallDirectory();
 		File installDirectory = installDirectoryPath.toFile();
 		if (installDirectory.exists() && installDirectory.isDirectory()) {
@@ -310,7 +311,6 @@ public final class LuaExecutionEnvironmentManager {
 					} catch (IOException e) {
 						Activator.logWarning(Messages.LuaExecutionEnvironmentManagerInstallEEDirectoryNotClean, e);
 					}
-
 				}
 			}
 		}
