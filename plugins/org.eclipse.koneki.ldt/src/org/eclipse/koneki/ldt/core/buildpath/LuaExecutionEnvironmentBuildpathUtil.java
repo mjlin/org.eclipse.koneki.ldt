@@ -72,22 +72,23 @@ public final class LuaExecutionEnvironmentBuildpathUtil {
 	}
 
 	public static List<IPath> getExecutionEnvironmentBuildPath(final IPath path) throws LuaExecutionEnvironmentManifestException, IOException {
+		if (isValidEEPath(path)) {
+			return getExecutionEnvironmentBuildPath(getExecutionEnvironment(path));
+		}
+		return new ArrayList<IPath>();
+	}
 
+	public static List<IPath> getExecutionEnvironmentBuildPath(final LuaExecutionEnvironment ee) throws LuaExecutionEnvironmentManifestException,
+			IOException {
 		// Retrieve Execution Environment's source paths
 		final ArrayList<IPath> arrayList = new ArrayList<IPath>();
-		if (isValidEEPath(path)) {
-			final LuaExecutionEnvironment ee = getExecutionEnvironment(path);
-			if (ee != null) {
+		// Loop over them
+		for (final IPath sourcePath : ee.getSourcepath()) {
 
-				// Loop over them
-				for (final IPath sourcePath : ee.getSourcepath()) {
-
-					// Define a local environment path for current one
-					final IEnvironment env = EnvironmentManager.getLocalEnvironment();
-					final IPath buildPath = EnvironmentPathUtils.getFullPath(env, sourcePath);
-					arrayList.add(buildPath);
-				}
-			}
+			// Define a local environment path for current one
+			final IEnvironment env = EnvironmentManager.getLocalEnvironment();
+			final IPath buildPath = EnvironmentPathUtils.getFullPath(env, sourcePath);
+			arrayList.add(buildPath);
 		}
 		return arrayList;
 	}
