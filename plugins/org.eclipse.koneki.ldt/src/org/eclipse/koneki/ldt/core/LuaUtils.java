@@ -12,6 +12,7 @@ package org.eclipse.koneki.ldt.core;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 import org.eclipse.core.runtime.URIUtil;
 import org.eclipse.dltk.compiler.env.IModuleSource;
@@ -227,6 +228,14 @@ public final class LuaUtils {
 			if (module.getResource() != null)
 				return module.getResource().getLocationURI();
 		}
+		return null;
+	}
+
+	/**
+	 * @return the list of direct project dependencies
+	 */
+	public static List<IScriptProject> getDependencies(IScriptProject project) {
+		// TODO implement it
 		return null;
 	}
 }
