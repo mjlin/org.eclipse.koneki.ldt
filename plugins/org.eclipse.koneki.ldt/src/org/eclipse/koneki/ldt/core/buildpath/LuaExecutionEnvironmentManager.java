@@ -136,6 +136,24 @@ public final class LuaExecutionEnvironmentManager {
 		return new LuaExecutionEnvironment(name, version, pathToEE);
 	}
 
+	public static void removeLuaExecutionEnvironment(final LuaExecutionEnvironment ee) throws LuaExecutionEnvironmentException {
+		if (ee == null)
+			throw new LuaExecutionEnvironmentException(Messages.LuaExecutionEnvironmentManagerNoEEProvided);
+		final IPath pathToEE = getLuaExecutionEnvironmentPath(ee.getID(), ee.getVersion());
+		if (pathToEE == null)
+			throw new LuaExecutionEnvironmentException(Messages.LuaExecutionEnvironmentBuildpathUtilCannotGetEE);
+		final File eeInstallationDir = pathToEE.toFile();
+
+		if (!eeInstallationDir.exists())
+			throw new LuaExecutionEnvironmentException(Messages.LuaExecutionEnvironmentManagerUnableToLocateEE);
+		try {
+			FileUtils.deleteDirectory(eeInstallationDir);
+		} catch (final IOException e) {
+			throw new LuaExecutionEnvironmentException(Messages.LuaExecutionEnvironmentManagerUnableToCleanInstallDirectory, e);
+
+		}
+	}
+
 	/**
 	 * Will deploy files from a valid Execution Environment file in installation directory. File will be considered as installed when its name will be
 	 * appended in {@link LuaExecutionEnvironmentConstants#PREF_EXECUTION_ENVIRONMENTS_LIST}

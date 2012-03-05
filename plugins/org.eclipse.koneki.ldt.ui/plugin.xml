@@ -144,7 +144,7 @@
        <extension
              point="org.eclipse.ui.menus">
           <menuContribution
-                locationURI="popup:org.eclipse.ui.popup.any?after=org.eclipse.dltk.ui.source.menu">
+                locationURI="popup:org.eclipse.ui.popup.any?before=org.eclipse.dltk.ui.source.menu">
              <command
                    commandId="org.eclipse.koneki.ldt.ui.buildpathcontainer.documentation"
                    label="%handler.documentation.label"

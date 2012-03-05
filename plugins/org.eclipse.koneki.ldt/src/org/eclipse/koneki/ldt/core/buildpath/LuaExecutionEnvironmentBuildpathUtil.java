@@ -73,7 +73,9 @@ public final class LuaExecutionEnvironmentBuildpathUtil {
 
 	public static List<IPath> getExecutionEnvironmentBuildPath(final IPath path) throws LuaExecutionEnvironmentManifestException, IOException {
 		if (isValidEEPath(path)) {
-			return getExecutionEnvironmentBuildPath(getExecutionEnvironment(path));
+			final LuaExecutionEnvironment ee = getExecutionEnvironment(path);
+			if (ee != null)
+				return getExecutionEnvironmentBuildPath(ee);
 		}
 		return new ArrayList<IPath>();
 	}

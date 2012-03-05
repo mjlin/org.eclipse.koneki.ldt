@@ -16,4 +16,8 @@ public class LuaExecutionEnvironmentException extends Exception {
 	public LuaExecutionEnvironmentException(final String message) {
 		super(message);
 	}
+
+	public LuaExecutionEnvironmentException(final String message, final Throwable e) {
+		super(message, e);
+	}
 }

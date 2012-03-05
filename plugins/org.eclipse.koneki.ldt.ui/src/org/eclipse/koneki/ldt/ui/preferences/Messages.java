@@ -21,8 +21,13 @@ public class Messages extends NLS {
 	public static String LuaExecutionEnvironmentPreferencePageInstallationAborted;
 	public static String LuaExecutionEnvironmentPreferencePageInvalidFile;
 	public static String LuaExecutionEnvironmentPreferencePageIOProblemTitle;
+	public static String LuaExecutionEnvironmentPreferencePageNoCurrentSelection;
+	public static String LuaExecutionEnvironmentPreferencePageNoEESelectted;
 	public static String LuaExecutionEnvironmentPreferencePageProblemWithFile;
+	public static String LuaExecutionEnvironmentPreferencePageRemoveDialogTitle;
 	public static String LuaExecutionEnvironmentPreferencePageTitle;
+	public static String LuaExecutionEnvironmentPreferencePageUnableToDelete;
+	public static String LuaExecutionEnvironmentPreferencePageUnableToDeleteEE;
 	public static String LuaExecutionEnvironmentPreferencePageUnableToInstallTitle;
 	static {
 		// initialize resource bundle

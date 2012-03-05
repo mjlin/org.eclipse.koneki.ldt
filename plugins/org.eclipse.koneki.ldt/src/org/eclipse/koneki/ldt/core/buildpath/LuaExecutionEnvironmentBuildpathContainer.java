@@ -60,31 +60,61 @@ public class LuaExecutionEnvironmentBuildpathContainer implements IBuildpathCont
 		// Provide available description
 		if (description != null) {
 			return description;
-		} else {
-			// Compute description
-			try {
-				final LuaExecutionEnvironment ee = LuaExecutionEnvironmentBuildpathUtil.getExecutionEnvironment(path);
-				if ((ee != null) && (ee.getID() != null)) {
-					final StringBuffer sb = new StringBuffer();
-					final String id = ee.getID();
-					// Appending ID with capital first letter
-					if (id.length() > 0) {
-						sb.append(id.substring(0, 1).toUpperCase());
-						if (id.length() > 1) {
-							sb.append(id.substring(1));
-						}
-						sb.append(' ');
-					}
-					sb.append(ee.getVersion());
-					description = sb.toString();
-					return description;
-				}
-			} catch (final LuaExecutionEnvironmentManifestException e) {
-				Activator.logError(Messages.LuaExecutionEnvironmentBuildpathContainerInvalidEEManifest, e);
-			} catch (final IOException e) {
-				Activator.logError(Messages.LuaExecutionEnvironmentBuildpathContainerIOProblem, e);
-			}
 		}
+		/*
+		 * Retrieve name and version from Execution Environment
+		 */
+		String id = null;
+		String version = null;
+		boolean isFromManifest = false;
+		try {
+			final LuaExecutionEnvironment ee = LuaExecutionEnvironmentBuildpathUtil.getExecutionEnvironment(path);
+			if ((ee != null) && (ee.getID() != null)) {
+				id = ee.getID();
+				version = ee.getVersion();
+				isFromManifest = true;
+			}
+		} catch (final LuaExecutionEnvironmentManifestException e) {
+			Activator.logError(Messages.LuaExecutionEnvironmentBuildpathContainerInvalidEEManifest, e);
+		} catch (final IOException e) {
+			Activator.logError(Messages.LuaExecutionEnvironmentBuildpathContainerIOProblem, e);
+		}
+
+		/*
+		 * In case of failure we can still extract name and version from given path
+		 */
+		if (id == null && version == null && path != null && (path.segmentCount() > 2)) {
+			final int length = path.segmentCount();
+			id = path.segment(length - 2);
+			version = path.segment(length - 1);
+		}
+
+		/*
+		 * Compute description
+		 */
+		if (id != null && version != null) {
+			final StringBuffer sb = new StringBuffer();
+			// Appending ID with capital first letter
+			if (id.length() > 0) {
+				sb.append(id.substring(0, 1).toUpperCase());
+				if (id.length() > 1) {
+					sb.append(id.substring(1));
+				}
+				sb.append(' ');
+			}
+			sb.append(version);
+			String result = sb.toString();
+			if (isFromManifest) {
+				// Execution Environment is valid and description stored for future calls
+				description = result;
+			} else {
+				// A problem occurred while seeking for Execution Environment,
+				// description may need to be refreshed at next call.
+				result = Messages.bind(Messages.LuaExecutionEnvironmentBuildpathContainerEENotFound, result);
+			}
+			return result;
+		}
+		// No data to compute description is available
 		return Messages.LuaExecutionEnvironmentBuildpathContainerNoDescriptionAvailable;
 	}
 

@@ -16,6 +16,8 @@ public final class Messages extends NLS {
 	// CHECKSTYLE NLS: OFF
 	private static final String BUNDLE_NAME = "org.eclipse.koneki.ldt.core.buildpath.messages"; //$NON-NLS-1$
 
+	public static String LuaExecutionEnvironmentBuildpathContainerEENotFound;
+
 	public static String LuaExecutionEnvironmentBuildpathContainerInvalidEEManifest;
 
 	public static String LuaExecutionEnvironmentBuildpathContainerIOProblem;
@@ -31,10 +33,14 @@ public final class Messages extends NLS {
 	public static String LuaExecutionEnvironmentManagerAlreadyInstalled;
 	public static String LuaExecutionEnvironmentManagerUnableToExtract;
 	public static String LuaExecutionEnvironmentManagerFileNotValid;
+	public static String LuaExecutionEnvironmentManagerNoEEProvided;
+
 	public static String LuaExecutionEnvironmentManagerNoManifestProvided;
 	public static String LuaExecutionEnvironmentManagerNoPackageNameOrVersion;
 	public static String LuaExecutionEnvironmentManagerUnableToCreateInstallationDirectory;
 	public static String LuaExecutionEnvironmentManagerUnableToCreateTempDirectory;
+
+	public static String LuaExecutionEnvironmentManagerUnableToLocateEE;
 	public static String LuaExecutionEnvironmentManagerUnableToReadInFile;
 	static {
 		// initialize resource bundle
