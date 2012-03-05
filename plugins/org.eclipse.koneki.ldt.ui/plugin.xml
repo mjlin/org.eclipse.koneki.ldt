@@ -156,13 +156,24 @@
                             value="1">
                       </count>
                       <iterate>
-                         <instanceof
-                               value="org.eclipse.dltk.internal.ui.scriptview.BuildPathContainer">
-                         </instanceof>
+                         <test
+                               property="org.eclipse.koneki.ldt.ui.namespace.containsLuaExecutionEnvironmentContainer"
+                               value="TRUE">
+                         </test>
                       </iterate>
                    </with>
                 </visibleWhen>
              </command>
           </menuContribution>
+       </extension>
+       <extension
+             point="org.eclipse.core.expressions.propertyTesters">
+          <propertyTester
+                class="org.eclipse.koneki.ldt.ui.propertytesters.LuaExecutionEnvironmentContainerPropertyTester"
+                id="org.eclipse.koneki.ldt.ui.documentation.propertytestter"
+                namespace="org.eclipse.koneki.ldt.ui.namespace"
+                properties="containsLuaExecutionEnvironmentContainer"
+                type="org.eclipse.dltk.internal.ui.scriptview.BuildPathContainer">
+          </propertyTester>
        </extension>
 </plugin>
