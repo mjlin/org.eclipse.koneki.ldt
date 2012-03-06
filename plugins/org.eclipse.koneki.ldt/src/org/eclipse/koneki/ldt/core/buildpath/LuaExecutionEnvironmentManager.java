@@ -28,7 +28,13 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.dltk.core.DLTKCore;
+import org.eclipse.dltk.core.IBuildpathContainer;
+import org.eclipse.dltk.core.IBuildpathEntry;
+import org.eclipse.dltk.core.IScriptProject;
+import org.eclipse.dltk.core.ModelException;
 import org.eclipse.koneki.ldt.Activator;
 import org.eclipse.koneki.ldt.core.buildpath.exceptions.LuaExecutionEnvironmentException;
 import org.eclipse.koneki.ldt.core.buildpath.exceptions.LuaExecutionEnvironmentManifestException;
@@ -148,6 +154,7 @@ public final class LuaExecutionEnvironmentManager {
 			throw new LuaExecutionEnvironmentException(Messages.LuaExecutionEnvironmentManagerUnableToLocateEE);
 		try {
 			FileUtils.deleteDirectory(eeInstallationDir);
+			refreshDLTKModel(ee);
 		} catch (final IOException e) {
 			throw new LuaExecutionEnvironmentException(Messages.LuaExecutionEnvironmentManagerUnableToCleanInstallDirectory, e);
 
@@ -202,7 +209,6 @@ public final class LuaExecutionEnvironmentManager {
 		// Loop over content
 		ZipInputStream zipStream = null;
 		FileInputStream input = null;
-		FileOutputStream fileOutputStream = null;
 		try {
 			// Open given file
 			input = new FileInputStream(zipPath);
@@ -219,7 +225,6 @@ public final class LuaExecutionEnvironmentManager {
 				 * Flush current file on disk
 				 */
 				final File outputFile = new File(installDirectory, entry.getName());
-
 				// Define output file
 				if (entry.isDirectory()) {
 					// Create sub directory if needed
@@ -228,11 +233,20 @@ public final class LuaExecutionEnvironmentManager {
 						throw new IOException(message);
 					}
 				} else {
-					fileOutputStream = new FileOutputStream(outputFile);
-					// Inflate file
-					IOUtils.copy(zipStream, fileOutputStream);
-					// Flush on disk
-					fileOutputStream.flush();
+					// copy file
+					FileOutputStream fileOutputStream = null;
+					try {
+						fileOutputStream = new FileOutputStream(outputFile);
+						// Inflate file
+						IOUtils.copy(zipStream, fileOutputStream);
+
+						// Flush on disk
+						fileOutputStream.flush();
+					} finally {
+						if (fileOutputStream != null) {
+							fileOutputStream.close();
+						}
+					}
 				}
 			}
 		} catch (IOException e) {
@@ -241,9 +255,6 @@ public final class LuaExecutionEnvironmentManager {
 			/*
 			 * Make sure all streams are closed
 			 */
-			if (fileOutputStream != null) {
-				fileOutputStream.close();
-			}
 			if (input != null) {
 				input.close();
 			}
@@ -251,6 +262,7 @@ public final class LuaExecutionEnvironmentManager {
 				zipStream.close();
 			}
 		}
+		refreshDLTKModel(ee);
 		return ee;
 	}
 
@@ -344,5 +356,47 @@ public final class LuaExecutionEnvironmentManager {
 			throws LuaExecutionEnvironmentManifestException, IOException {
 		IPath luaExecutionEnvironmentPath = getLuaExecutionEnvironmentPath(name, version);
 		return getInstalledExecutionEnvironmentFromDir(luaExecutionEnvironmentPath.toFile());
+	}
+
+	private static void refreshDLTKModel(LuaExecutionEnvironment ee) {
+		try {
+			// get path for this execution environment
+			IPath containerPath = LuaExecutionEnvironmentBuildpathUtil.getLuaExecutionEnvironmentContainerPath(ee);
+
+			// find all project which references it
+			IScriptProject[] scriptProjects = DLTKCore.create(ResourcesPlugin.getWorkspace().getRoot()).getScriptProjects();
+			ArrayList<IScriptProject> affectedProjects = new ArrayList<IScriptProject>();
+			for (int i = 0; i < scriptProjects.length; i++) {
+				IScriptProject scriptProject = scriptProjects[i];
+				IBuildpathEntry[] entries = scriptProject.getRawBuildpath();
+				for (int j = 0; j < entries.length; j++) {
+					IBuildpathEntry entry = entries[j];
+					if (entry.getEntryKind() == IBuildpathEntry.BPE_CONTAINER) {
+						if (containerPath.equals(entry.getPath())) {
+							affectedProjects.add(scriptProject);
+							break;
+						}
+					}
+				}
+			}
+
+			// update affected projects
+			int length = affectedProjects.size();
+			if (length == 0)
+				return;
+			IScriptProject[] projects = new IScriptProject[length];
+			affectedProjects.toArray(projects);
+			IBuildpathContainer[] containers = new IBuildpathContainer[length];
+			if (ee != null) {
+				LuaExecutionEnvironmentBuildpathContainer container = new LuaExecutionEnvironmentBuildpathContainer(ee.getID(), ee.getVersion(),
+						containerPath);
+				for (int i = 0; i < length; i++) {
+					containers[i] = container;
+				}
+			}
+			DLTKCore.setBuildpathContainer(containerPath, projects, containers, null);
+		} catch (ModelException e) {
+			Activator.logError("Unable to refresh Model after execution environment change", e); //$NON-NLS-1$
+		}
 	}
 }
