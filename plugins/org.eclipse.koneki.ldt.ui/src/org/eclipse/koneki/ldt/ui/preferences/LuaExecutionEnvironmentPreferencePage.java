@@ -12,7 +12,6 @@ package org.eclipse.koneki.ldt.ui.preferences;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -69,16 +68,16 @@ public class LuaExecutionEnvironmentPreferencePage extends PreferencePage implem
 		Composite containerComposite = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.swtDefaults().margins(0, 0).numColumns(2).applyTo(containerComposite);
 
-		eeTreeViewer = new TreeViewer(containerComposite);
+		eeTreeViewer = new TreeViewer(containerComposite, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
 		eeTreeViewer.setContentProvider(new LuaExecutionEnvironmentContentProvider());
 		eeTreeViewer.setLabelProvider(new LuaExecutionEnvironmentLabelProvider());
 		eeTreeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
-				if (removeButton == null)
-					return;
-				removeButton.setEnabled(true);
+				if (removeButton != null)
+					// Enabling to remove selected Execution Environment
+					removeButton.setEnabled(true);
 			}
 		});
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(eeTreeViewer.getControl());
@@ -87,13 +86,14 @@ public class LuaExecutionEnvironmentPreferencePage extends PreferencePage implem
 		Composite buttonsComposite = new Composite(containerComposite, SWT.NONE);
 		GridDataFactory.fillDefaults().applyTo(buttonsComposite);
 		RowLayoutFactory.fillDefaults().type(SWT.VERTICAL).fill(true).applyTo(buttonsComposite);
+
 		// Add
 		Button addButton = new Button(buttonsComposite, SWT.None);
 		RowDataFactory.swtDefaults().hint(SWTUtil.getButtonWidthHint(addButton), -1).applyTo(addButton);
 		addButton.setText(Messages.LuaExecutionEnvironmentPreferencePage_addbutton);
+
 		// Remove
 		removeButton = new Button(buttonsComposite, SWT.None);
-		removeButton.setEnabled(false);
 		RowDataFactory.swtDefaults().hint(SWTUtil.getButtonWidthHint(removeButton), -1).applyTo(removeButton);
 		removeButton.setText(Messages.LuaExecutionEnvironmentPreferencePage_removeButton);
 
@@ -125,10 +125,8 @@ public class LuaExecutionEnvironmentPreferencePage extends PreferencePage implem
 		});
 
 		// ----------------
-		// SET INPUT
-		List<LuaExecutionEnvironment> installedExecutionEnvironments = LuaExecutionEnvironmentManager.getInstalledExecutionEnvironments();
-		eeTreeViewer.setInput(installedExecutionEnvironments);
-
+		// Initialize UI
+		initializePage();
 		return containerComposite;
 	}
 
@@ -150,17 +148,17 @@ public class LuaExecutionEnvironmentPreferencePage extends PreferencePage implem
 			LuaExecutionEnvironmentManager.installLuaExecutionEnvironment(selectedFilePath).getEEIdentifier();
 
 			// Refresh the treeviewer
-			refreshExecutionEnvironmentList();
+			initializePage();
 		} catch (FileNotFoundException e) {
-			final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage());
+			final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage(), e);
 			ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageIOProblemTitle,
 					Messages.LuaExecutionEnvironmentPreferencePageProblemWithFile, status);
 		} catch (LuaExecutionEnvironmentException e) {
-			final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage());
+			final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage(), e);
 			ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageUnableToInstallTitle,
 					Messages.LuaExecutionEnvironmentPreferencePageInvalidFile, status);
 		} catch (IOException e) {
-			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage());
+			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e);
 			ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageUnableToInstallTitle,
 					Messages.LuaExecutionEnvironmentPreferencePageInstallationAborted, status);
 		}
@@ -173,11 +171,7 @@ public class LuaExecutionEnvironmentPreferencePage extends PreferencePage implem
 		if (eeTreeViewer == null)
 			return;
 		final ISelection selection = eeTreeViewer.getSelection();
-		if (selection == null) {
-			final IStatus status = new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.LuaExecutionEnvironmentPreferencePageNoCurrentSelection);
-			ErrorDialog.openError(getShell(), Messages.LuaExecutionEnvironmentPreferencePageRemoveDialogTitle,
-					Messages.LuaExecutionEnvironmentPreferencePageNoEESelectted, status);
-			Activator.log(status);
+		if (selection.isEmpty()) {
 			return;
 		}
 		LuaExecutionEnvironment ee = null;
@@ -187,12 +181,17 @@ public class LuaExecutionEnvironmentPreferencePage extends PreferencePage implem
 			if (currentSelection instanceof LuaExecutionEnvironment)
 				ee = (LuaExecutionEnvironment) currentSelection;
 		}
+
+		// Nothing to delete
 		if (ee == null)
 			return;
+
 		try {
 			// Remove selected Execution Environment
 			LuaExecutionEnvironmentManager.removeLuaExecutionEnvironment(ee);
-			refreshExecutionEnvironmentList();
+
+			// Recompute page content
+			initializePage();
 		} catch (final LuaExecutionEnvironmentException e) {
 			final IStatus status = new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.LuaExecutionEnvironmentPreferencePageUnableToDelete, e);
 			ErrorDialog.openError(getShell(), Messages.LuaExecutionEnvironmentPreferencePageRemoveDialogTitle,
@@ -201,10 +200,14 @@ public class LuaExecutionEnvironmentPreferencePage extends PreferencePage implem
 		}
 	}
 
-	private void refreshExecutionEnvironmentList() {
+	private void initializePage() {
 		if (eeTreeViewer == null)
 			return;
-		final List<LuaExecutionEnvironment> installedExecutionEnvironments = LuaExecutionEnvironmentManager.getInstalledExecutionEnvironments();
-		eeTreeViewer.setInput(installedExecutionEnvironments);
+
+		// Refresh list
+		eeTreeViewer.setInput(LuaExecutionEnvironmentManager.getInstalledExecutionEnvironments());
+
+		// As list is refreshed, they is no selection
+		removeButton.setEnabled(false);
 	}
 }
