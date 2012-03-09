@@ -45,7 +45,7 @@ public class LuaExecutionEnvironmentBuildpathContainerDocumentationCommandHandle
 			if (ee != null && ee.getDocumentationPath().length > 0) {
 				final IPath docPath = ee.getDocumentationPath()[0].append(LuaExecutionEnvironmentConstants.EE_FILE_DOCS_INDEX);
 				final URL firstUrl = docPath.toFile().toURI().toURL();
-				PlatformUI.getWorkbench().getBrowserSupport().createBrowser(ee.toString()).openURL(firstUrl);
+				PlatformUI.getWorkbench().getBrowserSupport().getExternalBrowser().openURL(firstUrl);
 				return null;
 			}
 		} catch (final MalformedURLException e) {
