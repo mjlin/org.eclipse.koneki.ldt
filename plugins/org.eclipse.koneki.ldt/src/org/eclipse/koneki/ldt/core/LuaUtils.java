@@ -13,6 +13,7 @@ package org.eclipse.koneki.ldt.core;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
@@ -243,8 +244,24 @@ public final class LuaUtils {
 	 * @return the list of direct project dependencies
 	 */
 	public static List<IScriptProject> getDependencies(IScriptProject project) {
-		// TODO implement it
-		return null;
+		ArrayList<IScriptProject> result = new ArrayList<IScriptProject>();
+		try {
+			// check in all project fragments
+			IProjectFragment[] projectFragments = project.getAllProjectFragments();
+			for (int i = 0; i < projectFragments.length; i++) {
+				IProjectFragment projectFragment = projectFragments[i];
+
+				IScriptProject currentScriptProject = projectFragment.getScriptProject();
+				if (currentScriptProject != null && currentScriptProject != project) {
+					if (!projectFragment.isArchive() && !projectFragment.isBinary() && !projectFragment.isExternal()) {
+						result.add(currentScriptProject);
+					}
+				}
+			}
+		} catch (ModelException e) {
+			Activator.logWarning("Unable to get file dependencies for project: " + project.getElementName(), e); //$NON-NLS-1$
+		}
+		return result;
 	}
 
 	public static void visitSourceFiles(final IParent parent, final IProjectSourceVisitor visitor, final IProgressMonitor monitor)
