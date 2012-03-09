@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Sierra Wireless and others.
+ * Copyright (c) 2011-2012 Sierra Wireless and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,8 +12,16 @@ package org.eclipse.koneki.ldt.core;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.List;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.URIUtil;
 import org.eclipse.dltk.compiler.env.IModuleSource;
 import org.eclipse.dltk.core.IExternalSourceModule;
@@ -237,5 +245,54 @@ public final class LuaUtils {
 	public static List<IScriptProject> getDependencies(IScriptProject project) {
 		// TODO implement it
 		return null;
+	}
+
+	public static void visitSourceFiles(final IParent parent, final IProjectSourceVisitor visitor, final IProgressMonitor monitor)
+			throws CoreException {
+		final IModelElement[] children = parent.getChildren();
+		final SubMonitor subMonitor = SubMonitor.convert(monitor, children.length);
+		for (int i = 0; i < children.length && !subMonitor.isCanceled(); i++) {
+			final IModelElement modelElement = children[i];
+			if (modelElement instanceof IExternalSourceModule) {
+
+				/*
+				 * Support external module
+				 */
+				final IExternalSourceModule sourceFile = ((IExternalSourceModule) modelElement);
+				final IPath filePath = new Path(sourceFile.getResource().getLocationURI().getPath());
+				final String charset = Charset.defaultCharset().toString();
+				subMonitor.worked(1);
+				visitor.processFile(filePath, sourceFile.getFullPath(), charset, subMonitor);
+			} else if (modelElement instanceof ISourceModule) {
+
+				/*
+				 * Support local module
+				 */
+				final IResource resource = modelElement.getResource();
+				if (resource instanceof IFile) {
+					final IFile file = (IFile) resource;
+					final Path path = new Path(resource.getLocationURI().getPath());
+					subMonitor.worked(1);
+					visitor.processFile(path, resource.getFullPath(), file.getCharset(), subMonitor);
+				}
+			} else if (modelElement instanceof IScriptFolder) {
+
+				/*
+				 * Support source folder
+				 */
+				final IScriptFolder innerSourceFolder = (IScriptFolder) modelElement;
+
+				// Do not notify interface for Source folders
+				if (!innerSourceFolder.isRootFolder()) {
+					subMonitor.worked(1);
+					final IPath folderPath = new Path(innerSourceFolder.getResource().getLocationURI().getPath());
+					visitor.processDirectory(folderPath, innerSourceFolder.getPath(), subMonitor);
+					visitSourceFiles(innerSourceFolder, visitor, subMonitor);
+				} else {
+					subMonitor.worked(1);
+					visitSourceFiles(innerSourceFolder, visitor, subMonitor);
+				}
+			}
+		}
 	}
 }
