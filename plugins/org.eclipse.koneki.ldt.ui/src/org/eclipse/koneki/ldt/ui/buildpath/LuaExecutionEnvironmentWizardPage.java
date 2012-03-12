@@ -31,16 +31,17 @@ public class LuaExecutionEnvironmentWizardPage extends NewElementWizardPage impl
 
 	private TreeViewer eeTreeViewer;
 	private IBuildpathEntry currentSelection;
+	private Button configureEE;
 
 	public LuaExecutionEnvironmentWizardPage() {
 		super("LuaExecutionEnvironmentWizardPage"); //$NON-NLS-1$
+		setTitle(Messages.LuaExecutionEnvironmentWizardPageTitle);
+		setDescription(Messages.LuaExecutionEnvironmentWizardPageDescription);
 	}
 
 	@Override
 	public void createControl(final Composite parent) {
-		// Define header text
-		setTitle(Messages.LuaExecutionEnvironmentWizardPageTitle);
-		setDescription(Messages.LuaExecutionEnvironmentWizardPageDescription);
+		initializeDialogUnits(parent);
 
 		// Define a composite for list and label
 		final Composite composite = new Composite(parent, SWT.NONE);
@@ -49,19 +50,32 @@ public class LuaExecutionEnvironmentWizardPage extends NewElementWizardPage impl
 
 		// Define Execution Environment list
 		eeTreeViewer = new TreeViewer(composite, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
-		eeTreeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+		eeTreeViewer.setContentProvider(new LuaExecutionEnvironmentContentProvider());
+		eeTreeViewer.setLabelProvider(new LuaExecutionEnvironmentLabelProvider());
 
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				getContainer().updateButtons();
-			}
-		});
 		updateExecutionEnvironmentList();
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(eeTreeViewer.getControl());
 
-		// Allow user to manage Execution Environments
-		final Button configureEE = new Button(composite, SWT.PUSH);
+		configureEE = new Button(composite, SWT.PUSH);
 		configureEE.setText(Messages.LuaExecutionEnvironmentWizardPageConfigureButtonLabel);
+
+		GridDataFactory.fillDefaults().align(SWT.CENTER, SWT.BEGINNING).applyTo(configureEE);
+
+		// init page
+		init();
+
+		// add listener
+		addListeners();
+
+		setControl(composite);
+	}
+
+	private void init() {
+		updateExecutionEnvironmentList();
+		updateSelection();
+	}
+
+	private void addListeners() {
 		configureEE.addSelectionListener(new SelectionListener() {
 
 			@Override
@@ -72,13 +86,19 @@ public class LuaExecutionEnvironmentWizardPage extends NewElementWizardPage impl
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				final String pageId = LuaExecutionEnvironmentConstants.PREFERENCE_PAGE_ID;
-				PreferencesUtil.createPreferenceDialogOn(parent.getShell(), pageId, new String[] { pageId }, null).open();
+				PreferencesUtil.createPreferenceDialogOn(getShell(), pageId, new String[] { pageId }, null).open();
 				updateExecutionEnvironmentList();
 				updateSelection();
 			}
 		});
-		GridDataFactory.fillDefaults().align(SWT.CENTER, SWT.BEGINNING).applyTo(configureEE);
-		setControl(composite);
+
+		eeTreeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
+
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				getContainer().updateButtons();
+			}
+		});
 	}
 
 	@Override
@@ -111,8 +131,6 @@ public class LuaExecutionEnvironmentWizardPage extends NewElementWizardPage impl
 		if (eeTreeViewer == null) {
 			return;
 		}
-		eeTreeViewer.setContentProvider(new LuaExecutionEnvironmentContentProvider());
-		eeTreeViewer.setLabelProvider(new LuaExecutionEnvironmentLabelProvider());
 		final List<LuaExecutionEnvironment> installedExecutionEnvironments = LuaExecutionEnvironmentManager.getInstalledExecutionEnvironments();
 		eeTreeViewer.setInput(installedExecutionEnvironments);
 	}
