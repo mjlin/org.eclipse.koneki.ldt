@@ -10,13 +10,13 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.ui.handlers;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.dltk.core.IBuildpathEntry;
 import org.eclipse.dltk.internal.ui.scriptview.BuildPathContainer;
@@ -25,7 +25,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironment;
 import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironmentBuildpathUtil;
 import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironmentConstants;
-import org.eclipse.koneki.ldt.core.buildpath.exceptions.LuaExecutionEnvironmentManifestException;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
@@ -52,9 +51,7 @@ public class LuaExecutionEnvironmentBuildpathContainerDocumentationCommandHandle
 			throw new ExecutionException(Messages.LuaExecutionEnvironmentBuildpathContainerDocumentationCommandHandlerUnableToDisplay, e);
 		} catch (final PartInitException e) {
 			throw new ExecutionException(Messages.LuaExecutionEnvironmentBuildpathContainerDocumentationCommandHandlerUnableToDisplay, e);
-		} catch (final LuaExecutionEnvironmentManifestException e) {
-			throw new ExecutionException(Messages.LuaExecutionEnvironmentBuildpathContainerDocumentationCommandHandlerUnableToDisplay, e);
-		} catch (final IOException e) {
+		} catch (final CoreException e) {
 			throw new ExecutionException(Messages.LuaExecutionEnvironmentBuildpathContainerDocumentationCommandHandlerUnableToDisplay, e);
 		}
 		throw new ExecutionException(Messages.LuaExecutionEnvironmentBuildpathContainerDocumentationCommandHandlerUnableToFindExecutionEnvironment);

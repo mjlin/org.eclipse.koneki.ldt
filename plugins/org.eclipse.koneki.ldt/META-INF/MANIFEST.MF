@@ -13,6 +13,5 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.eclipse.koneki.ldt,
  org.eclipse.koneki.ldt.core,
- org.eclipse.koneki.ldt.core.buildpath,
- org.eclipse.koneki.ldt.core.buildpath.exceptions
+ org.eclipse.koneki.ldt.core.buildpath
 Import-Package: org.apache.commons.io;version="1.4.0"

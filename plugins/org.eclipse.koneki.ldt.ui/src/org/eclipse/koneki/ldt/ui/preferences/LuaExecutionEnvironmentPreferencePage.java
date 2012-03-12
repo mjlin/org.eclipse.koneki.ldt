@@ -10,11 +10,7 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.ui.preferences;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
@@ -29,7 +25,6 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironment;
 import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironmentConstants;
 import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironmentManager;
-import org.eclipse.koneki.ldt.core.buildpath.exceptions.LuaExecutionEnvironmentException;
 import org.eclipse.koneki.ldt.ui.Activator;
 import org.eclipse.koneki.ldt.ui.SWTUtil;
 import org.eclipse.koneki.ldt.ui.buildpath.LuaExecutionEnvironmentContentProvider;
@@ -149,18 +144,9 @@ public class LuaExecutionEnvironmentPreferencePage extends PreferencePage implem
 
 			// Refresh the treeviewer
 			initializePage();
-		} catch (FileNotFoundException e) {
-			final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage(), e);
-			ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageIOProblemTitle,
-					Messages.LuaExecutionEnvironmentPreferencePageProblemWithFile, status);
-		} catch (LuaExecutionEnvironmentException e) {
-			final Status status = new Status(Status.INFO, Activator.PLUGIN_ID, e.getMessage(), e);
-			ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageUnableToInstallTitle,
-					Messages.LuaExecutionEnvironmentPreferencePageInvalidFile, status);
-		} catch (IOException e) {
-			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e);
-			ErrorDialog.openError(filedialog.getParent(), Messages.LuaExecutionEnvironmentPreferencePageUnableToInstallTitle,
-					Messages.LuaExecutionEnvironmentPreferencePageInstallationAborted, status);
+		} catch (CoreException e) {
+			ErrorDialog.openError(filedialog.getParent(), null, null, e.getStatus());
+			Activator.log(e.getStatus());
 		}
 	}
 
@@ -192,11 +178,9 @@ public class LuaExecutionEnvironmentPreferencePage extends PreferencePage implem
 
 			// Recompute page content
 			initializePage();
-		} catch (final LuaExecutionEnvironmentException e) {
-			final IStatus status = new Status(Status.ERROR, Activator.PLUGIN_ID, Messages.LuaExecutionEnvironmentPreferencePageUnableToDelete, e);
-			ErrorDialog.openError(getShell(), Messages.LuaExecutionEnvironmentPreferencePageRemoveDialogTitle,
-					Messages.LuaExecutionEnvironmentPreferencePageUnableToDelete, status);
-			Activator.log(status);
+		} catch (final CoreException e) {
+			ErrorDialog.openError(getShell(), null, null, e.getStatus());
+			Activator.log(e.getStatus());
 		}
 	}
 

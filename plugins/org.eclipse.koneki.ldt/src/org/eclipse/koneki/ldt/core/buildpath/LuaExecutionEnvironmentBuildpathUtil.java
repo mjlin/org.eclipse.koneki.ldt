@@ -10,17 +10,16 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.core.buildpath;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.dltk.core.environment.EnvironmentManager;
 import org.eclipse.dltk.core.environment.EnvironmentPathUtils;
 import org.eclipse.dltk.core.environment.IEnvironment;
 import org.eclipse.koneki.ldt.Activator;
-import org.eclipse.koneki.ldt.core.buildpath.exceptions.LuaExecutionEnvironmentManifestException;
 
 public final class LuaExecutionEnvironmentBuildpathUtil {
 
@@ -33,11 +32,8 @@ public final class LuaExecutionEnvironmentBuildpathUtil {
 			final String eeVersion = getEEVersion(containerPath);
 			try {
 				return LuaExecutionEnvironmentManager.getInstalledExecutionEnvironment(eeid, eeVersion) != null;
-			} catch (final LuaExecutionEnvironmentManifestException e) {
-				Activator.logError(Messages.LuaExecutionEnvironmentBuildpathUtilUnableToReadManifest, e);
-				return false;
-			} catch (final IOException e) {
-				Activator.logError(Messages.LuaExecutionEnvironmentBuildpathUtilCannotGetEE, e);
+			} catch (final CoreException e) {
+				Activator.log(e.getStatus());
 				return false;
 			}
 		}
@@ -62,7 +58,7 @@ public final class LuaExecutionEnvironmentBuildpathUtil {
 		return null;
 	}
 
-	public static LuaExecutionEnvironment getExecutionEnvironment(final IPath path) throws LuaExecutionEnvironmentManifestException, IOException {
+	public static LuaExecutionEnvironment getExecutionEnvironment(final IPath path) throws CoreException {
 		if (isValidEEPath(path)) {
 			final String id = getEEID(path);
 			final String version = getEEVersion(path);
@@ -71,7 +67,7 @@ public final class LuaExecutionEnvironmentBuildpathUtil {
 		return null;
 	}
 
-	public static List<IPath> getExecutionEnvironmentBuildPath(final IPath path) throws LuaExecutionEnvironmentManifestException, IOException {
+	public static List<IPath> getExecutionEnvironmentBuildPath(final IPath path) throws CoreException {
 		if (isValidEEPath(path)) {
 			final LuaExecutionEnvironment ee = getExecutionEnvironment(path);
 			if (ee != null)
@@ -80,8 +76,7 @@ public final class LuaExecutionEnvironmentBuildpathUtil {
 		return new ArrayList<IPath>();
 	}
 
-	public static List<IPath> getExecutionEnvironmentBuildPath(final LuaExecutionEnvironment ee) throws LuaExecutionEnvironmentManifestException,
-			IOException {
+	public static List<IPath> getExecutionEnvironmentBuildPath(final LuaExecutionEnvironment ee) {
 		// Retrieve Execution Environment's source paths
 		final ArrayList<IPath> arrayList = new ArrayList<IPath>();
 		// Loop over them

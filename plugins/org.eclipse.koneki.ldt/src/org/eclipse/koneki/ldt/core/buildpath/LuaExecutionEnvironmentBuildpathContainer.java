@@ -10,10 +10,10 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.core.buildpath;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.dltk.core.DLTKCore;
 import org.eclipse.dltk.core.IAccessRule;
@@ -22,7 +22,6 @@ import org.eclipse.dltk.core.IBuildpathContainer;
 import org.eclipse.dltk.core.IBuildpathEntry;
 import org.eclipse.dltk.internal.core.BuildpathEntry;
 import org.eclipse.koneki.ldt.Activator;
-import org.eclipse.koneki.ldt.core.buildpath.exceptions.LuaExecutionEnvironmentManifestException;
 
 @SuppressWarnings("restriction")
 public class LuaExecutionEnvironmentBuildpathContainer implements IBuildpathContainer {
@@ -47,10 +46,8 @@ public class LuaExecutionEnvironmentBuildpathContainer implements IBuildpathCont
 				}
 				return arrayList.toArray(new IBuildpathEntry[arrayList.size()]);
 			}
-		} catch (final LuaExecutionEnvironmentManifestException e) {
-			Activator.logError(Messages.LuaExecutionEnvironmentBuildpathContainerInvalidEEManifest, e);
-		} catch (final IOException e) {
-			Activator.logError(Messages.LuaExecutionEnvironmentBuildpathContainerIOProblem, e);
+		} catch (final CoreException e) {
+			Activator.log(e.getStatus());
 		}
 		return new IBuildpathEntry[0];
 	}
@@ -74,10 +71,8 @@ public class LuaExecutionEnvironmentBuildpathContainer implements IBuildpathCont
 				version = ee.getVersion();
 				isFromManifest = true;
 			}
-		} catch (final LuaExecutionEnvironmentManifestException e) {
-			Activator.logError(Messages.LuaExecutionEnvironmentBuildpathContainerInvalidEEManifest, e);
-		} catch (final IOException e) {
-			Activator.logError(Messages.LuaExecutionEnvironmentBuildpathContainerIOProblem, e);
+		} catch (final CoreException e) {
+			Activator.log(e.getStatus());
 		}
 
 		/*

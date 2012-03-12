@@ -18,30 +18,8 @@ public final class Messages extends NLS {
 
 	public static String LuaExecutionEnvironmentBuildpathContainerEENotFound;
 
-	public static String LuaExecutionEnvironmentBuildpathContainerInvalidEEManifest;
-
-	public static String LuaExecutionEnvironmentBuildpathContainerIOProblem;
-
 	public static String LuaExecutionEnvironmentBuildpathContainerNoDescriptionAvailable;
 
-	public static String LuaExecutionEnvironmentBuildpathUtilCannotGetEE;
-
-	public static String LuaExecutionEnvironmentBuildpathUtilUnableToReadManifest;
-
-	public static String LuaExecutionEnvironmentManagerInstallEEDirectoryNotClean;
-	public static String LuaExecutionEnvironmentManagerUnableToCleanInstallDirectory;
-	public static String LuaExecutionEnvironmentManagerAlreadyInstalled;
-	public static String LuaExecutionEnvironmentManagerUnableToExtract;
-	public static String LuaExecutionEnvironmentManagerFileNotValid;
-	public static String LuaExecutionEnvironmentManagerNoEEProvided;
-
-	public static String LuaExecutionEnvironmentManagerNoManifestProvided;
-	public static String LuaExecutionEnvironmentManagerNoPackageNameOrVersion;
-	public static String LuaExecutionEnvironmentManagerUnableToCreateInstallationDirectory;
-	public static String LuaExecutionEnvironmentManagerUnableToCreateTempDirectory;
-
-	public static String LuaExecutionEnvironmentManagerUnableToLocateEE;
-	public static String LuaExecutionEnvironmentManagerUnableToReadInFile;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

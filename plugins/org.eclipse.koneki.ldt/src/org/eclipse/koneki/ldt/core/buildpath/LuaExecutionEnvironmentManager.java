@@ -17,6 +17,7 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -29,15 +30,16 @@ import java.util.zip.ZipInputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.dltk.core.DLTKCore;
 import org.eclipse.dltk.core.IBuildpathContainer;
 import org.eclipse.dltk.core.IBuildpathEntry;
 import org.eclipse.dltk.core.IScriptProject;
 import org.eclipse.dltk.core.ModelException;
 import org.eclipse.koneki.ldt.Activator;
-import org.eclipse.koneki.ldt.core.buildpath.exceptions.LuaExecutionEnvironmentException;
-import org.eclipse.koneki.ldt.core.buildpath.exceptions.LuaExecutionEnvironmentManifestException;
 
 public final class LuaExecutionEnvironmentManager {
 	private static final String INSTALLATION_FOLDER = "ee"; //$NON-NLS-1$
@@ -46,10 +48,9 @@ public final class LuaExecutionEnvironmentManager {
 
 	}
 
-	private static LuaExecutionEnvironment getExecutionEnvironmentFromCompressedFile(final String filePath)
-			throws LuaExecutionEnvironmentManifestException, IOException {
+	private static LuaExecutionEnvironment getExecutionEnvironmentFromCompressedFile(final String filePath) throws CoreException {
 		/*
-		 * Search for manifest
+		 * Extract manifest file
 		 */
 		ZipFile zipFile = null;
 		String manifestString = null;
@@ -61,26 +62,35 @@ public final class LuaExecutionEnvironmentManager {
 				if (zipEntry.getName().endsWith(LuaExecutionEnvironmentConstants.MANIFEST_EXTENSION)) {
 					final InputStream input = zipFile.getInputStream(zipEntry);
 					manifestString = IOUtils.toString(input);
+					break;
 				}
 			}
+		} catch (IOException e) {
+			throwException(MessageFormat.format("Unable to extract manifest from zip file {0}", filePath), null, IStatus.ERROR); //$NON-NLS-1$
 		} finally {
 			if (zipFile != null)
-				zipFile.close();
-		}
-		if (manifestString == null) {
-			final String message = Messages.bind(Messages.LuaExecutionEnvironmentManagerNoManifestProvided,
-					LuaExecutionEnvironmentConstants.MANIFEST_EXTENSION);
-			throw new LuaExecutionEnvironmentManifestException(message);
+				try {
+					zipFile.close();
+				} catch (IOException e) {
+					Activator.logWarning(MessageFormat.format("Unable to close zip file {0}", filePath), e); //$NON-NLS-1$
+				}
 		}
 
-		return getLuaExceptionEnvironmentFromManifest(manifestString);
+		// if no manifest extract
+		if (manifestString == null) {
+			throwException(MessageFormat.format("No manifest '{0}' file found", //$NON-NLS-1$
+					LuaExecutionEnvironmentConstants.MANIFEST_EXTENSION), null, IStatus.ERROR);
+		}
+
+		return getLuaExecutionEnvironmentFromManifest(manifestString);
 	}
 
-	private static LuaExecutionEnvironment getInstalledExecutionEnvironmentFromDir(final File executionEnvironmentDirectory)
-			throws LuaExecutionEnvironmentManifestException, IOException {
+	private static LuaExecutionEnvironment getInstalledExecutionEnvironmentFromDir(final File executionEnvironmentDirectory) throws CoreException {
+		// check if the directory exist
 		if (!executionEnvironmentDirectory.exists() || !executionEnvironmentDirectory.isDirectory())
 			return null;
 
+		// list manifest files
 		String manifestString = null;
 		File[] manifests = executionEnvironmentDirectory.listFiles(new FilenameFilter() {
 
@@ -89,28 +99,36 @@ public final class LuaExecutionEnvironmentManager {
 				return name.endsWith(LuaExecutionEnvironmentConstants.MANIFEST_EXTENSION);
 			}
 		});
-		if (manifests != null && manifests.length == 1) {
-			InputStream manifestInputStream = null;
-			try {
-				manifestInputStream = new FileInputStream(manifests[0]);
-				manifestString = IOUtils.toString(manifestInputStream);
-			} finally {
-				if (manifestInputStream != null)
-					manifestInputStream.close();
-			}
-		}
 
-		if (manifestString == null) {
-			final String message = Messages.bind(Messages.LuaExecutionEnvironmentManagerNoManifestProvided,
+		// check number of manifest file
+		if (manifests == null || manifests.length > 1) {
+			final String message = MessageFormat.format("0 or more than 1 \"{0}\" file in given file.", //$NON-NLS-1$
 					LuaExecutionEnvironmentConstants.MANIFEST_EXTENSION);
-			throw new LuaExecutionEnvironmentManifestException(message);
+			throwException(message, null, IStatus.ERROR);
 		}
 
-		return getLuaExceptionEnvironmentFromManifest(manifestString);
+		// try to read it
+		InputStream manifestInputStream = null;
+		try {
+			manifestInputStream = new FileInputStream(manifests[0]);
+			manifestString = IOUtils.toString(manifestInputStream);
+		} catch (IOException e) {
+			throwException("Unable to read manifest file.", e, IStatus.ERROR); //$NON-NLS-1$
+		} finally {
+			if (manifestInputStream != null)
+				try {
+					manifestInputStream.close();
+				} catch (IOException e) {
+					Activator.logWarning(MessageFormat.format("Unable to close file {0}", manifests[0]), e); //$NON-NLS-1$
+				}
+
+		}
+
+		// extract execution environment from manifest
+		return getLuaExecutionEnvironmentFromManifest(manifestString);
 	}
 
-	private static LuaExecutionEnvironment getLuaExceptionEnvironmentFromManifest(String manifestString)
-			throws LuaExecutionEnvironmentManifestException {
+	private static LuaExecutionEnvironment getLuaExecutionEnvironmentFromManifest(String manifestString) throws CoreException {
 		/*
 		 * Match available package name
 		 */
@@ -133,7 +151,7 @@ public final class LuaExecutionEnvironmentManager {
 
 		// Create object representing a valid Execution Environment
 		if (name == null || version == null) {
-			throw new LuaExecutionEnvironmentManifestException(Messages.LuaExecutionEnvironmentManagerNoPackageNameOrVersion);
+			throwException("Manifest from given file has no package name or version.", null, IStatus.ERROR); //$NON-NLS-1$
 		}
 
 		// get install path
@@ -142,22 +160,21 @@ public final class LuaExecutionEnvironmentManager {
 		return new LuaExecutionEnvironment(name, version, pathToEE);
 	}
 
-	public static void removeLuaExecutionEnvironment(final LuaExecutionEnvironment ee) throws LuaExecutionEnvironmentException {
+	public static void removeLuaExecutionEnvironment(final LuaExecutionEnvironment ee) throws CoreException {
 		if (ee == null)
-			throw new LuaExecutionEnvironmentException(Messages.LuaExecutionEnvironmentManagerNoEEProvided);
-		final IPath pathToEE = getLuaExecutionEnvironmentPath(ee.getID(), ee.getVersion());
+			throwException("No Execution Environment provided.", null, IStatus.ERROR); //$NON-NLS-1$
+		final IPath pathToEE = ee.getPath();
 		if (pathToEE == null)
-			throw new LuaExecutionEnvironmentException(Messages.LuaExecutionEnvironmentBuildpathUtilCannotGetEE);
+			throwException("The install path should not be null", null, IStatus.ERROR); //$NON-NLS-1$
 		final File eeInstallationDir = pathToEE.toFile();
 
-		if (!eeInstallationDir.exists())
-			throw new LuaExecutionEnvironmentException(Messages.LuaExecutionEnvironmentManagerUnableToLocateEE);
-		try {
-			FileUtils.deleteDirectory(eeInstallationDir);
-			refreshDLTKModel(ee);
-		} catch (final IOException e) {
-			throw new LuaExecutionEnvironmentException(Messages.LuaExecutionEnvironmentManagerUnableToCleanInstallDirectory, e);
-
+		if (eeInstallationDir.exists()) {
+			try {
+				FileUtils.deleteDirectory(eeInstallationDir);
+				refreshDLTKModel(ee);
+			} catch (final IOException e) {
+				throwException(MessageFormat.format("Unable to delete install directory : {0}", pathToEE.toOSString()), e, IStatus.ERROR); //$NON-NLS-1$
+			}
 		}
 	}
 
@@ -168,44 +185,48 @@ public final class LuaExecutionEnvironmentManager {
 	 * @param zipPath
 	 *            Path to file to deploy
 	 * @return {@link LuaExecutionEnvironmentException} when deployment succeeded.
-	 * @throws IOException
-	 * @throws LuaExecutionEnvironmentException
-	 *             for problem due to deployment.
+	 * @throws CoreException
 	 */
-	public static LuaExecutionEnvironment installLuaExecutionEnvironment(final String zipPath) throws IOException, LuaExecutionEnvironmentException {
+	public static LuaExecutionEnvironment installLuaExecutionEnvironment(final String zipPath) throws CoreException {
 		/*
 		 * Ensure there are no folder named like the one we are about to create
 		 */
-		final LuaExecutionEnvironment ee = getExecutionEnvironmentFromCompressedFile(zipPath);
+		LuaExecutionEnvironment ee = null;
+		ee = getExecutionEnvironmentFromCompressedFile(zipPath);
+
+		if (ee == null)
+			throwException(MessageFormat.format("Unable to extract execution environment information from {0}.", zipPath), null, IStatus.ERROR); //$NON-NLS-1$
+
+		// check if it is already installed
 		if (getInstalledExecutionEnvironments().contains(ee)) {
-			throw new LuaExecutionEnvironmentException(Messages.LuaExecutionEnvironmentManagerAlreadyInstalled);
+			throwException("Execution environment is already installed.", null, IStatus.ERROR); //$NON-NLS-1$
 		}
 
-		// prepare the directory where the Execution environment will be installed
+		// prepare/clean the directory where the Execution environment will be installed
 		final IPath eePath = ee.getPath();
 		if (eePath == null)
-			throw new IOException(Messages.LuaExecutionEnvironmentManagerUnableToCreateInstallationDirectory);
+			throwException("The install path should not be null", null, IStatus.ERROR); //$NON-NLS-1$
 
 		final File installDirectory = eePath.toFile();
 		if (!installDirectory.exists()) {
 			if (!installDirectory.mkdirs())
-				throw new IOException(Messages.LuaExecutionEnvironmentManagerUnableToCreateInstallationDirectory);
+				throwException(MessageFormat.format("Unable to create installation directory : {0}", eePath.toOSString()), null, IStatus.ERROR); //$NON-NLS-1$
 		} else {
 			if (installDirectory.isFile()) {
 				if (!installDirectory.delete())
-					throw new IOException(Messages.LuaExecutionEnvironmentManagerUnableToCleanInstallDirectory);
+					throwException(MessageFormat.format("Unable to clean installation directory : {0}", eePath.toOSString()), null, IStatus.ERROR); //$NON-NLS-1$
 			} else {
 				try {
-
 					FileUtils.deleteDirectory(installDirectory);
 					if (!installDirectory.mkdir())
-						throw new IOException(Messages.LuaExecutionEnvironmentManagerUnableToCreateInstallationDirectory);
+						throwException(MessageFormat.format("Unable to clean installation directory : {0}", eePath.toOSString()), null, IStatus.ERROR); //$NON-NLS-1$
 				} catch (IOException e) {
-					throw new IOException(Messages.LuaExecutionEnvironmentManagerUnableToCleanInstallDirectory, e);
+					throwException(MessageFormat.format("Unable to clean installation directory : {0}", eePath.toOSString()), e, IStatus.ERROR); //$NON-NLS-1$
 				}
 			}
 		}
 
+		// Extract Execution environment from zip
 		// Loop over content
 		ZipInputStream zipStream = null;
 		FileInputStream input = null;
@@ -216,8 +237,7 @@ public final class LuaExecutionEnvironmentManager {
 
 			// Check if file is valid
 			if (!isExecutionEnvironmentFile(zipPath)) {
-				final String notValidMessage = Messages.bind(Messages.LuaExecutionEnvironmentManagerFileNotValid, zipPath);
-				throw new LuaExecutionEnvironmentException(notValidMessage);
+				throwException(MessageFormat.format("{0} is not a valid execution environment file.", zipPath), null, IStatus.ERROR); //$NON-NLS-1$
 			}
 
 			for (ZipEntry entry = zipStream.getNextEntry(); entry != null; entry = zipStream.getNextEntry()) {
@@ -229,8 +249,7 @@ public final class LuaExecutionEnvironmentManager {
 				if (entry.isDirectory()) {
 					// Create sub directory if needed
 					if (!outputFile.mkdir()) {
-						final String message = Messages.bind(Messages.LuaExecutionEnvironmentManagerUnableToExtract, entry.getName());
-						throw new IOException(message);
+						throwException(MessageFormat.format("Unable to create install directory {0}", outputFile.toString()), null, IStatus.ERROR); //$NON-NLS-1$
 					}
 				} else {
 					// copy file
@@ -244,22 +263,35 @@ public final class LuaExecutionEnvironmentManager {
 						fileOutputStream.flush();
 					} finally {
 						if (fileOutputStream != null) {
-							fileOutputStream.close();
+							try {
+								fileOutputStream.close();
+							} catch (IOException e) {
+								Activator.logWarning(MessageFormat.format("Unable to close file {0}", outputFile), e); //$NON-NLS-1$
+							}
+
 						}
 					}
 				}
 			}
 		} catch (IOException e) {
-			throw new IOException(Messages.LuaExecutionEnvironmentManagerUnableToReadInFile, e);
+			throwException(MessageFormat.format("Unable to extract zip file : {0}", zipPath), e, IStatus.ERROR); //$NON-NLS-1$
 		} finally {
 			/*
 			 * Make sure all streams are closed
 			 */
 			if (input != null) {
-				input.close();
+				try {
+					input.close();
+				} catch (IOException e) {
+					Activator.logWarning(MessageFormat.format("Unable to close file {0}", zipPath), e); //$NON-NLS-1$
+				}
 			}
 			if (zipStream != null) {
-				zipStream.close();
+				try {
+					zipStream.close();
+				} catch (IOException e) {
+					Activator.logWarning(MessageFormat.format("Unable to close file {0}", zipPath), e); //$NON-NLS-1$
+				}
 			}
 		}
 		refreshDLTKModel(ee);
@@ -336,10 +368,9 @@ public final class LuaExecutionEnvironmentManager {
 						executionEnvironment = getInstalledExecutionEnvironmentFromDir(executionEnvironmentDirectory);
 						if (executionEnvironment != null)
 							result.add(executionEnvironment);
-					} catch (LuaExecutionEnvironmentManifestException e) {
-						Activator.logWarning(Messages.LuaExecutionEnvironmentManagerInstallEEDirectoryNotClean, e);
-					} catch (IOException e) {
-						Activator.logWarning(Messages.LuaExecutionEnvironmentManagerInstallEEDirectoryNotClean, e);
+					} catch (CoreException e) {
+						Activator.logWarning(MessageFormat.format("Unable to extract execution environment from {0}", executionEnvironmentDirectory), //$NON-NLS-1$
+								e);
 					}
 				}
 			}
@@ -352,8 +383,7 @@ public final class LuaExecutionEnvironmentManager {
 		return getInstallDirectory().append(name + '-' + version);
 	}
 
-	public static LuaExecutionEnvironment getInstalledExecutionEnvironment(String name, String version)
-			throws LuaExecutionEnvironmentManifestException, IOException {
+	public static LuaExecutionEnvironment getInstalledExecutionEnvironment(String name, String version) throws CoreException {
 		IPath luaExecutionEnvironmentPath = getLuaExecutionEnvironmentPath(name, version);
 		return getInstalledExecutionEnvironmentFromDir(luaExecutionEnvironmentPath.toFile());
 	}
@@ -398,5 +428,9 @@ public final class LuaExecutionEnvironmentManager {
 		} catch (ModelException e) {
 			Activator.logError("Unable to refresh Model after execution environment change", e); //$NON-NLS-1$
 		}
+	}
+
+	private static void throwException(String message, Throwable t, int severity) throws CoreException {
+		throw new CoreException(new Status(severity, Activator.PLUGIN_ID, message, t));
 	}
 }
