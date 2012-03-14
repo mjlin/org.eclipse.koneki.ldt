@@ -22,7 +22,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.URIUtil;
 import org.eclipse.dltk.compiler.env.IModuleSource;
 import org.eclipse.dltk.core.IExternalSourceModule;
@@ -264,11 +264,17 @@ public final class LuaUtils {
 		return result;
 	}
 
+	/** Enable to perform operation in all files and directories in project fragments source directories */
 	public static void visitSourceFiles(final IParent parent, final IProjectSourceVisitor visitor, final IProgressMonitor monitor)
 			throws CoreException {
+		visitSourceFiles(parent, visitor, monitor, Path.EMPTY);
+	}
+
+	private static void visitSourceFiles(final IParent parent, final IProjectSourceVisitor visitor, final IProgressMonitor monitor,
+			final IPath currentPath) throws CoreException {
+
 		final IModelElement[] children = parent.getChildren();
-		final SubMonitor subMonitor = SubMonitor.convert(monitor, children.length);
-		for (int i = 0; i < children.length && !subMonitor.isCanceled(); i++) {
+		for (int i = 0; i < children.length && !monitor.isCanceled(); i++) {
 			final IModelElement modelElement = children[i];
 			if (modelElement instanceof IExternalSourceModule) {
 
@@ -276,21 +282,22 @@ public final class LuaUtils {
 				 * Support external module
 				 */
 				final IExternalSourceModule sourceFile = ((IExternalSourceModule) modelElement);
-				final IPath filePath = new Path(sourceFile.getResource().getLocationURI().getPath());
+				final IPath filePath = new Path(sourceFile.getFullPath().toOSString());
+				final IPath relativeFilePath = currentPath.append(sourceFile.getElementName());
 				final String charset = Charset.defaultCharset().toString();
-				subMonitor.worked(1);
-				visitor.processFile(filePath, sourceFile.getFullPath(), charset, subMonitor);
+				visitor.processFile(filePath, relativeFilePath, charset, monitor);
 			} else if (modelElement instanceof ISourceModule) {
 
 				/*
 				 * Support local module
 				 */
+				// TODO: What can we do if it's not an IFile, we may use EnvironmentPathUtils#getLocalPath() as below
 				final IResource resource = modelElement.getResource();
 				if (resource instanceof IFile) {
 					final IFile file = (IFile) resource;
 					final Path path = new Path(resource.getLocationURI().getPath());
-					subMonitor.worked(1);
-					visitor.processFile(path, resource.getFullPath(), file.getCharset(), subMonitor);
+					final IPath relativeFilePath = currentPath.append(path.lastSegment());
+					visitor.processFile(path, relativeFilePath, file.getCharset(), monitor);
 				}
 			} else if (modelElement instanceof IScriptFolder) {
 
@@ -298,16 +305,29 @@ public final class LuaUtils {
 				 * Support source folder
 				 */
 				final IScriptFolder innerSourceFolder = (IScriptFolder) modelElement;
-
 				// Do not notify interface for Source folders
 				if (!innerSourceFolder.isRootFolder()) {
-					subMonitor.worked(1);
-					final IPath folderPath = new Path(innerSourceFolder.getResource().getLocationURI().getPath());
-					visitor.processDirectory(folderPath, innerSourceFolder.getPath(), subMonitor);
-					visitSourceFiles(innerSourceFolder, visitor, subMonitor);
+					final IResource resource = innerSourceFolder.getResource();
+					IPath absolutePath;
+					if (resource != null) {
+						absolutePath = new Path(resource.getLocationURI().getPath());
+					} else {
+						final IPath folderPath = innerSourceFolder.getPath();
+						if (EnvironmentPathUtils.isFull(folderPath)) {
+							absolutePath = EnvironmentPathUtils.getLocalPath(folderPath);
+						} else {
+							final String message = "Unable to get absolute location for " + modelElement.getElementName(); //$NON-NLS-1$
+							final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, message);
+							throw new CoreException(status);
+						}
+					}
+
+					final IPath newPath = currentPath.append(innerSourceFolder.getElementName());
+					visitor.processDirectory(absolutePath, newPath, monitor);
+					visitSourceFiles(innerSourceFolder, visitor, monitor, newPath);
 				} else {
-					subMonitor.worked(1);
-					visitSourceFiles(innerSourceFolder, visitor, subMonitor);
+					// Deal with sub elements
+					visitSourceFiles(innerSourceFolder, visitor, monitor);
 				}
 			}
 		}
