@@ -13,6 +13,7 @@ package org.eclipse.koneki.ldt.core;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -125,7 +126,7 @@ public final class LuaUtils {
 					return moduleSource;
 			}
 		} catch (ModelException e) {
-			Activator.logError("unable to find module :" + name, e); //$NON-NLS-1$
+			Activator.logError(MessageFormat.format("Unable to find module: {0}.", name), e); //$NON-NLS-1$
 			return null;
 		}
 		return null;
@@ -193,7 +194,7 @@ public final class LuaUtils {
 					return moduleSource;
 			}
 		} catch (ModelException e) {
-			Activator.logError("unable to find module :" + absolutepath, e); //$NON-NLS-1$
+			Activator.logError(MessageFormat.format("Unable to find module: {0}.", absolutepath), e); //$NON-NLS-1$
 			return null;
 		}
 		return null;
@@ -231,7 +232,8 @@ public final class LuaUtils {
 			try {
 				return new URI("file", "", path, null); //$NON-NLS-1$ //$NON-NLS-2$
 			} catch (URISyntaxException e) {
-				Activator.logWarning("Unable to get file uri for external module : " + module.getPath(), e); //$NON-NLS-1$
+				final String message = MessageFormat.format("Unable to get file uri for external module : {0}.", module.getPath()); //$NON-NLS-1$
+				Activator.logWarning(message, e);
 			}
 		} else {
 			if (module.getResource() != null)
@@ -259,7 +261,8 @@ public final class LuaUtils {
 				}
 			}
 		} catch (ModelException e) {
-			Activator.logWarning("Unable to get file dependencies for project: " + project.getElementName(), e); //$NON-NLS-1$
+			final String message = MessageFormat.format("Unable to get file dependencies for project: {0}.", project.getElementName());//$NON-NLS-1$
+			Activator.logWarning(message, e);
 		}
 		return result;
 	}
@@ -291,14 +294,19 @@ public final class LuaUtils {
 				/*
 				 * Support local module
 				 */
-				// TODO: What can we do if it's not an IFile, we may use EnvironmentPathUtils#getLocalPath() as below
 				final IResource resource = modelElement.getResource();
+				IPath absolutePath;
+				String charset;
 				if (resource instanceof IFile) {
 					final IFile file = (IFile) resource;
-					final Path path = new Path(resource.getLocationURI().getPath());
-					final IPath relativeFilePath = currentPath.append(path.lastSegment());
-					visitor.processFile(path, relativeFilePath, file.getCharset(), monitor);
+					absolutePath = new Path(resource.getLocationURI().getPath());
+					charset = file.getCharset();
+				} else {
+					absolutePath = getAbsolutePathFromModelElement(modelElement);
+					charset = Charset.defaultCharset().toString();
 				}
+				final IPath relativeFilePath = currentPath.append(absolutePath.lastSegment());
+				visitor.processFile(absolutePath, relativeFilePath, charset, monitor);
 			} else if (modelElement instanceof IScriptFolder) {
 
 				/*
@@ -312,14 +320,7 @@ public final class LuaUtils {
 					if (resource != null) {
 						absolutePath = new Path(resource.getLocationURI().getPath());
 					} else {
-						final IPath folderPath = innerSourceFolder.getPath();
-						if (EnvironmentPathUtils.isFull(folderPath)) {
-							absolutePath = EnvironmentPathUtils.getLocalPath(folderPath);
-						} else {
-							final String message = "Unable to get absolute location for " + modelElement.getElementName(); //$NON-NLS-1$
-							final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, message);
-							throw new CoreException(status);
-						}
+						absolutePath = getAbsolutePathFromModelElement(modelElement);
 					}
 
 					final IPath newPath = currentPath.append(innerSourceFolder.getElementName());
@@ -330,6 +331,17 @@ public final class LuaUtils {
 					visitSourceFiles(innerSourceFolder, visitor, monitor);
 				}
 			}
+		}
+	}
+
+	private static IPath getAbsolutePathFromModelElement(final IModelElement modelElement) throws CoreException {
+		final IPath folderPath = modelElement.getPath();
+		if (EnvironmentPathUtils.isFull(folderPath)) {
+			return EnvironmentPathUtils.getLocalPath(folderPath);
+		} else {
+			final String message = MessageFormat.format("Unable to get absolute location for {0}.", modelElement.getElementName()); //$NON-NLS-1$
+			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, message);
+			throw new CoreException(status);
 		}
 	}
 }
