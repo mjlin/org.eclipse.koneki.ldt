@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.URIUtil;
 import org.eclipse.dltk.compiler.env.IModuleSource;
+import org.eclipse.dltk.core.IBuildpathEntry;
 import org.eclipse.dltk.core.IExternalSourceModule;
 import org.eclipse.dltk.core.IModelElement;
 import org.eclipse.dltk.core.IParent;
@@ -36,6 +37,7 @@ import org.eclipse.dltk.core.ISourceModule;
 import org.eclipse.dltk.core.ModelException;
 import org.eclipse.dltk.core.environment.EnvironmentPathUtils;
 import org.eclipse.koneki.ldt.Activator;
+import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironmentBuildpathUtil;
 
 /**
  * Utility class for Lua
@@ -244,27 +246,34 @@ public final class LuaUtils {
 
 	/**
 	 * @return the list of direct project dependencies
+	 * @throws ModelException
 	 */
-	public static List<IScriptProject> getDependencies(IScriptProject project) {
+	public static List<IScriptProject> getDependencies(IScriptProject project) throws ModelException {
 		ArrayList<IScriptProject> result = new ArrayList<IScriptProject>();
-		try {
-			// check in all project fragments
-			IProjectFragment[] projectFragments = project.getAllProjectFragments();
-			for (int i = 0; i < projectFragments.length; i++) {
-				IProjectFragment projectFragment = projectFragments[i];
-
+		// check in all project fragments
+		IProjectFragment[] projectFragments = project.getAllProjectFragments();
+		for (int i = 0; i < projectFragments.length; i++) {
+			IProjectFragment projectFragment = projectFragments[i];
+			if (isProjectDependencyFragment(project, projectFragment)) {
 				IScriptProject currentScriptProject = projectFragment.getScriptProject();
-				if (currentScriptProject != null && currentScriptProject != project) {
-					if (!projectFragment.isArchive() && !projectFragment.isBinary() && !projectFragment.isExternal()) {
-						result.add(currentScriptProject);
-					}
-				}
+				result.add(currentScriptProject);
 			}
-		} catch (ModelException e) {
-			final String message = MessageFormat.format("Unable to get file dependencies for project: {0}.", project.getElementName());//$NON-NLS-1$
-			Activator.logWarning(message, e);
 		}
 		return result;
+	}
+
+	public static boolean isProjectDependencyFragment(IScriptProject project, IProjectFragment projectFragment) throws ModelException {
+		IScriptProject fragmentProject = projectFragment.getScriptProject();
+		if (fragmentProject != null && fragmentProject != project) {
+			return (!projectFragment.isArchive() && !projectFragment.isBinary() && !projectFragment.isExternal());
+		} else {
+			return false;
+		}
+	}
+
+	public static boolean isExecutionEnvironmentFragment(IProjectFragment projectFragment) throws ModelException {
+		IBuildpathEntry rawBuildpathEntry = projectFragment.getRawBuildpathEntry();
+		return (rawBuildpathEntry != null && LuaExecutionEnvironmentBuildpathUtil.isValidExecutionEnvironmentBuildPath(rawBuildpathEntry.getPath()));
 	}
 
 	/** Enable to perform operation in all files and directories in project fragments source directories */

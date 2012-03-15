@@ -27,7 +27,7 @@ public final class LuaExecutionEnvironmentBuildpathUtil {
 	}
 
 	public static boolean isLuaExecutionEnvironmentContainer(final IPath containerPath) {
-		if (isValidEEPath(containerPath)) {
+		if (isValidExecutionEnvironmentBuildPath(containerPath)) {
 			final String eeid = getEEID(containerPath);
 			final String eeVersion = getEEVersion(containerPath);
 			try {
@@ -45,21 +45,21 @@ public final class LuaExecutionEnvironmentBuildpathUtil {
 	}
 
 	public static String getEEID(final IPath eePath) {
-		if (isValidEEPath(eePath)) {
+		if (isValidExecutionEnvironmentBuildPath(eePath)) {
 			return eePath.segment(1);
 		}
 		return null;
 	}
 
 	public static String getEEVersion(final IPath eePath) {
-		if (isValidEEPath(eePath)) {
+		if (isValidExecutionEnvironmentBuildPath(eePath)) {
 			return eePath.segment(2);
 		}
 		return null;
 	}
 
 	public static LuaExecutionEnvironment getExecutionEnvironment(final IPath path) throws CoreException {
-		if (isValidEEPath(path)) {
+		if (isValidExecutionEnvironmentBuildPath(path)) {
 			final String id = getEEID(path);
 			final String version = getEEVersion(path);
 			return LuaExecutionEnvironmentManager.getInstalledExecutionEnvironment(id, version);
@@ -68,7 +68,7 @@ public final class LuaExecutionEnvironmentBuildpathUtil {
 	}
 
 	public static List<IPath> getExecutionEnvironmentBuildPath(final IPath path) throws CoreException {
-		if (isValidEEPath(path)) {
+		if (isValidExecutionEnvironmentBuildPath(path)) {
 			final LuaExecutionEnvironment ee = getExecutionEnvironment(path);
 			if (ee != null)
 				return getExecutionEnvironmentBuildPath(ee);
@@ -90,7 +90,7 @@ public final class LuaExecutionEnvironmentBuildpathUtil {
 		return arrayList;
 	}
 
-	private static boolean isValidEEPath(final IPath eePath) {
+	public static boolean isValidExecutionEnvironmentBuildPath(final IPath eePath) {
 		final String[] segments = eePath.segments();
 		return (segments.length == 3) && LuaExecutionEnvironmentConstants.CONTAINER_PATH_START.equals(segments[0]);
 	}
