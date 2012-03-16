@@ -15,6 +15,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
@@ -22,8 +23,10 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.URIUtil;
 import org.eclipse.dltk.compiler.env.IModuleSource;
 import org.eclipse.dltk.core.IBuildpathEntry;
@@ -52,8 +55,8 @@ public final class LuaUtils {
 	 * 
 	 *         e.g. : socket.core
 	 */
-	public static String getModuleFullName(IModuleSource module) {
-		IModelElement modelElement = module.getModelElement();
+	public static String getModuleFullName(final IModuleSource module) {
+		final IModelElement modelElement = module.getModelElement();
 		if (modelElement instanceof ISourceModule) {
 			return getModuleFullName((ISourceModule) modelElement);
 		} else {
@@ -66,7 +69,7 @@ public final class LuaUtils {
 	 * 
 	 *         e.g. : socket.core
 	 */
-	public static String getModuleFullName(ISourceModule module) {
+	public static String getModuleFullName(final ISourceModule module) {
 		// get module name
 		String moduleName = module.getElementName();
 		if (moduleName.endsWith(".lua")) { //$NON-NLS-1$
@@ -91,13 +94,13 @@ public final class LuaUtils {
 	/*
 	 * @return the source folder full name with module dot syntax
 	 */
-	private static String getFolderFullName(IScriptFolder folder) {
+	private static String getFolderFullName(final IScriptFolder folder) {
 		if (!folder.isRootFolder()) {
 			// get folder name
-			String folderName = folder.getElementName().replace("/", "."); //$NON-NLS-1$//$NON-NLS-2$
+			final String folderName = folder.getElementName().replace("/", "."); //$NON-NLS-1$//$NON-NLS-2$
 
 			// get prefix
-			IModelElement parent = folder.getParent();
+			final IModelElement parent = folder.getParent();
 			String prefix = null;
 			if (parent instanceof IScriptFolder) {
 				prefix = getFolderFullName((IScriptFolder) parent) + "."; //$NON-NLS-1$
@@ -114,7 +117,7 @@ public final class LuaUtils {
 	/**
 	 * @return the {@link IModuleSource} from full name with module dot syntax
 	 */
-	public static IModuleSource getModuleSource(String name, IScriptProject project) {
+	public static IModuleSource getModuleSource(final String name, final IScriptProject project) {
 		if (project == null && name == null || name.isEmpty())
 			return null;
 
@@ -122,12 +125,12 @@ public final class LuaUtils {
 		IProjectFragment[] allProjectFragments;
 		try {
 			allProjectFragments = project.getAllProjectFragments();
-			for (IProjectFragment projectFragment : allProjectFragments) {
-				IModuleSource moduleSource = getModuleSource(name, projectFragment);
+			for (final IProjectFragment projectFragment : allProjectFragments) {
+				final IModuleSource moduleSource = getModuleSource(name, projectFragment);
 				if (moduleSource != null)
 					return moduleSource;
 			}
-		} catch (ModelException e) {
+		} catch (final ModelException e) {
 			Activator.logError(MessageFormat.format("Unable to find module: {0}.", name), e); //$NON-NLS-1$
 			return null;
 		}
@@ -137,15 +140,15 @@ public final class LuaUtils {
 	/*
 	 * @return the {@link IModuleSource} from full name with module dot syntax
 	 */
-	private static IModuleSource getModuleSource(String name, IParent parent) throws ModelException {
-		IModelElement[] children = parent.getChildren();
-		for (IModelElement child : children) {
+	private static IModuleSource getModuleSource(final String name, final IParent parent) throws ModelException {
+		final IModelElement[] children = parent.getChildren();
+		for (final IModelElement child : children) {
 			if (child instanceof IModuleSource) {
 				if (name.equals(getModuleFullName((IModuleSource) child))) {
 					return (IModuleSource) child;
 				}
 			} else if (child instanceof IParent) {
-				IModuleSource moduleSource = getModuleSource(name, (IParent) child);
+				final IModuleSource moduleSource = getModuleSource(name, (IParent) child);
 				if (moduleSource != null)
 					return moduleSource;
 			}
@@ -157,8 +160,8 @@ public final class LuaUtils {
 	/**
 	 * @return the {@link ISourceModule} from full name with module dot syntax
 	 */
-	public static ISourceModule getSourceModule(String name, IScriptProject project) {
-		IModuleSource moduleSource = getModuleSource(name, project);
+	public static ISourceModule getSourceModule(final String name, final IScriptProject project) {
+		final IModuleSource moduleSource = getModuleSource(name, project);
 		if (moduleSource instanceof ISourceModule) {
 			return (ISourceModule) moduleSource;
 		}
@@ -168,11 +171,11 @@ public final class LuaUtils {
 	/**
 	 * @return the {@link IModuleSource} from Absolute local file URI
 	 */
-	public static IModuleSource getModuleSourceFromAbsoluteURI(URI absolutepath, IScriptProject project) {
+	public static IModuleSource getModuleSourceFromAbsoluteURI(final URI absolutepath, final IScriptProject project) {
 		if (project == null || absolutepath == null)
 			return null;
 
-		ISourceModule sourceModule = getSourceModuleFromAbsoluteURI(absolutepath, project);
+		final ISourceModule sourceModule = getSourceModuleFromAbsoluteURI(absolutepath, project);
 		if (sourceModule instanceof IModuleSource) {
 			return (IModuleSource) sourceModule;
 		}
@@ -182,7 +185,7 @@ public final class LuaUtils {
 	/**
 	 * @return the {@link ISourceModule} from Absolute local file URI
 	 */
-	public static ISourceModule getSourceModuleFromAbsoluteURI(URI absolutepath, IScriptProject project) {
+	public static ISourceModule getSourceModuleFromAbsoluteURI(final URI absolutepath, final IScriptProject project) {
 		if (project == null || absolutepath == null)
 			return null;
 
@@ -190,12 +193,12 @@ public final class LuaUtils {
 		IProjectFragment[] allProjectFragments;
 		try {
 			allProjectFragments = project.getAllProjectFragments();
-			for (IProjectFragment projectFragment : allProjectFragments) {
-				ISourceModule moduleSource = getSourceModuleFromAbsolutePath(absolutepath, projectFragment);
+			for (final IProjectFragment projectFragment : allProjectFragments) {
+				final ISourceModule moduleSource = getSourceModuleFromAbsolutePath(absolutepath, projectFragment);
 				if (moduleSource != null)
 					return moduleSource;
 			}
-		} catch (ModelException e) {
+		} catch (final ModelException e) {
 			Activator.logError(MessageFormat.format("Unable to find module: {0}.", absolutepath), e); //$NON-NLS-1$
 			return null;
 		}
@@ -205,15 +208,15 @@ public final class LuaUtils {
 	/*
 	 * @return the {@link ISourceModule} from Absolute local file URI and a parent
 	 */
-	private static ISourceModule getSourceModuleFromAbsolutePath(URI absolutepath, IParent parent) throws ModelException {
-		IModelElement[] children = parent.getChildren();
-		for (IModelElement child : children) {
+	private static ISourceModule getSourceModuleFromAbsolutePath(final URI absolutepath, final IParent parent) throws ModelException {
+		final IModelElement[] children = parent.getChildren();
+		for (final IModelElement child : children) {
 			if (child instanceof ISourceModule) {
 				if (URIUtil.sameURI(absolutepath, getModuleAbsolutePath((ISourceModule) child))) {
 					return (ISourceModule) child;
 				}
 			} else if (child instanceof IParent) {
-				ISourceModule moduleSource = getSourceModuleFromAbsolutePath(absolutepath, (IParent) child);
+				final ISourceModule moduleSource = getSourceModuleFromAbsolutePath(absolutepath, (IParent) child);
 				if (moduleSource != null)
 					return moduleSource;
 			}
@@ -225,7 +228,7 @@ public final class LuaUtils {
 	/**
 	 * @return Absolute local file URI of a module source
 	 */
-	public static URI getModuleAbsolutePath(ISourceModule module) {
+	public static URI getModuleAbsolutePath(final ISourceModule module) {
 		if (module instanceof IExternalSourceModule) {
 			String path = EnvironmentPathUtils.getLocalPath(module.getPath()).toString();
 			if (path.length() != 0 && path.charAt(0) != '/') {
@@ -233,7 +236,7 @@ public final class LuaUtils {
 			}
 			try {
 				return new URI("file", "", path, null); //$NON-NLS-1$ //$NON-NLS-2$
-			} catch (URISyntaxException e) {
+			} catch (final URISyntaxException e) {
 				final String message = MessageFormat.format("Unable to get file uri for external module : {0}.", module.getPath()); //$NON-NLS-1$
 				Activator.logWarning(message, e);
 			}
@@ -248,22 +251,22 @@ public final class LuaUtils {
 	 * @return the list of direct project dependencies
 	 * @throws ModelException
 	 */
-	public static List<IScriptProject> getDependencies(IScriptProject project) throws ModelException {
-		ArrayList<IScriptProject> result = new ArrayList<IScriptProject>();
+	public static List<IScriptProject> getDependencies(final IScriptProject project) throws ModelException {
+		final ArrayList<IScriptProject> result = new ArrayList<IScriptProject>();
 		// check in all project fragments
-		IProjectFragment[] projectFragments = project.getAllProjectFragments();
+		final IProjectFragment[] projectFragments = project.getAllProjectFragments();
 		for (int i = 0; i < projectFragments.length; i++) {
-			IProjectFragment projectFragment = projectFragments[i];
+			final IProjectFragment projectFragment = projectFragments[i];
 			if (isProjectDependencyFragment(project, projectFragment)) {
-				IScriptProject currentScriptProject = projectFragment.getScriptProject();
+				final IScriptProject currentScriptProject = projectFragment.getScriptProject();
 				result.add(currentScriptProject);
 			}
 		}
 		return result;
 	}
 
-	public static boolean isProjectDependencyFragment(IScriptProject project, IProjectFragment projectFragment) throws ModelException {
-		IScriptProject fragmentProject = projectFragment.getScriptProject();
+	public static boolean isProjectDependencyFragment(final IScriptProject project, final IProjectFragment projectFragment) throws ModelException {
+		final IScriptProject fragmentProject = projectFragment.getScriptProject();
 		if (fragmentProject != null && fragmentProject != project) {
 			return (!projectFragment.isArchive() && !projectFragment.isBinary() && !projectFragment.isExternal());
 		} else {
@@ -271,12 +274,57 @@ public final class LuaUtils {
 		}
 	}
 
-	public static boolean isExecutionEnvironmentFragment(IProjectFragment projectFragment) throws ModelException {
-		IBuildpathEntry rawBuildpathEntry = projectFragment.getRawBuildpathEntry();
+	public static boolean isExecutionEnvironmentFragment(final IProjectFragment projectFragment) throws ModelException {
+		final IBuildpathEntry rawBuildpathEntry = projectFragment.getRawBuildpathEntry();
 		return (rawBuildpathEntry != null && LuaExecutionEnvironmentBuildpathUtil.isValidExecutionEnvironmentBuildPath(rawBuildpathEntry.getPath()));
 	}
 
+	public enum ProjectFragmentFilter {
+		EXECUTION_ENVIRONMENT, DEPENDENT_PROJECT, ARCHIVE
+	}
+
 	/** Enable to perform operation in all files and directories in project fragments source directories */
+	public static void visitSourceFiles(final IScriptProject project, EnumSet<ProjectFragmentFilter> filter, final IProjectSourceVisitor visitor,
+			final IProgressMonitor monitor) throws CoreException {
+
+		SubMonitor subMonitor = SubMonitor.convert(monitor, 10);
+
+		ArrayList<IProjectFragment> filteredProjecFragment = new ArrayList<IProjectFragment>();
+
+		// filter project fragment
+		final IProjectFragment[] projectFragments = project.getAllProjectFragments();
+		final SubMonitor filteredLoopMonitor = subMonitor.newChild(1).setWorkRemaining(projectFragments.length);
+
+		for (int i = 0; i < projectFragments.length && !monitor.isCanceled(); i++) {
+			final IProjectFragment projectFragment = projectFragments[i];
+
+			if (isProjectDependencyFragment(project, projectFragment)) {
+				if (filter.contains(ProjectFragmentFilter.DEPENDENT_PROJECT))
+					filteredProjecFragment.add(projectFragment);
+			} else if (isExecutionEnvironmentFragment(projectFragment)) {
+				if (filter.contains(ProjectFragmentFilter.EXECUTION_ENVIRONMENT))
+					filteredProjecFragment.add(projectFragment);
+			} else if (projectFragment.isArchive()) {
+				if (filter.contains(ProjectFragmentFilter.ARCHIVE))
+					filteredProjecFragment.add(projectFragment);
+			} else {
+				filteredProjecFragment.add(projectFragment);
+			}
+			filteredLoopMonitor.worked(1);
+		}
+
+		// visit fragment
+		final SubMonitor visitLoopMonitor = subMonitor.newChild(9).setWorkRemaining(filteredProjecFragment.size());
+		for (IProjectFragment projectFragment : filteredProjecFragment) {
+			if (monitor.isCanceled())
+				return;
+			visitSourceFiles(projectFragment, visitor, visitLoopMonitor.newChild(1));
+		}
+	}
+
+	/** Enable to perform operation in all files and directories in project fragments source directories */
+	// TODO make it private
+	@Deprecated
 	public static void visitSourceFiles(final IParent parent, final IProjectSourceVisitor visitor, final IProgressMonitor monitor)
 			throws CoreException {
 		visitSourceFiles(parent, visitor, monitor, Path.EMPTY);
@@ -286,19 +334,12 @@ public final class LuaUtils {
 			final IPath currentPath) throws CoreException {
 
 		final IModelElement[] children = parent.getChildren();
+
+		SubMonitor subMonitor = SubMonitor.convert(monitor, children.length);
+
 		for (int i = 0; i < children.length && !monitor.isCanceled(); i++) {
 			final IModelElement modelElement = children[i];
-			if (modelElement instanceof IExternalSourceModule) {
-
-				/*
-				 * Support external module
-				 */
-				final IExternalSourceModule sourceFile = ((IExternalSourceModule) modelElement);
-				final IPath filePath = new Path(sourceFile.getFullPath().toOSString());
-				final IPath relativeFilePath = currentPath.append(sourceFile.getElementName());
-				final String charset = Charset.defaultCharset().toString();
-				visitor.processFile(filePath, relativeFilePath, charset, monitor);
-			} else if (modelElement instanceof ISourceModule) {
+			if (modelElement instanceof ISourceModule) {
 
 				/*
 				 * Support local module
@@ -315,7 +356,7 @@ public final class LuaUtils {
 					charset = Charset.defaultCharset().toString();
 				}
 				final IPath relativeFilePath = currentPath.append(absolutePath.lastSegment());
-				visitor.processFile(absolutePath, relativeFilePath, charset, monitor);
+				visitor.processFile(absolutePath, relativeFilePath, charset, subMonitor.newChild(1));
 			} else if (modelElement instanceof IScriptFolder) {
 
 				/*
@@ -334,10 +375,10 @@ public final class LuaUtils {
 
 					final IPath newPath = currentPath.append(innerSourceFolder.getElementName());
 					visitor.processDirectory(absolutePath, newPath, monitor);
-					visitSourceFiles(innerSourceFolder, visitor, monitor, newPath);
+					visitSourceFiles(innerSourceFolder, visitor, subMonitor.newChild(1), newPath);
 				} else {
 					// Deal with sub elements
-					visitSourceFiles(innerSourceFolder, visitor, monitor);
+					visitSourceFiles(innerSourceFolder, visitor, subMonitor.newChild(1));
 				}
 			}
 		}
@@ -349,7 +390,7 @@ public final class LuaUtils {
 			return EnvironmentPathUtils.getLocalPath(folderPath);
 		} else {
 			final String message = MessageFormat.format("Unable to get absolute location for {0}.", modelElement.getElementName()); //$NON-NLS-1$
-			final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, message);
+			final Status status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, message);
 			throw new CoreException(status);
 		}
 	}
