@@ -14,3 +14,4 @@ Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Export-Package: org.eclipse.koneki.ldt.debug.core,
  org.eclipse.koneki.ldt.debug.core.attach
+Bundle-Vendor: %Bundle-Vendor
