@@ -31,8 +31,8 @@ public class LuaProjectWizard extends GenericDLTKProjectWizard {
 
 	@Override
 	public void addPages() {
-		addPage(firstPage);
-		addPage(new ProjectWizardSecondPage(firstPage));
+		addPage(getFirstPage());
+		addPage(new ProjectWizardSecondPage(getFirstPage()));
 	}
 
 	@Override
@@ -42,7 +42,7 @@ public class LuaProjectWizard extends GenericDLTKProjectWizard {
 
 	@Override
 	protected ProjectCreator createProjectCreator() {
-		return new LuaProjectCreator(this, firstPage);
+		return new LuaProjectCreator(this, getFirstPage());
 	}
 
 	@Override
