@@ -57,16 +57,24 @@ public final class LuaExecutionEnvironmentManager {
 		try {
 			zipFile = new ZipFile(filePath);
 			final Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
-			while (zipEntries.hasMoreElements() && (manifestString == null)) {
+			while (zipEntries.hasMoreElements()) {
 				final ZipEntry zipEntry = zipEntries.nextElement();
-				if (zipEntry.getName().endsWith(LuaExecutionEnvironmentConstants.MANIFEST_EXTENSION)) {
+				if ((!zipEntry.getName().contains("/")) && zipEntry.getName().endsWith(LuaExecutionEnvironmentConstants.MANIFEST_EXTENSION)) { //$NON-NLS-1$
+
+					// check there are only one manifest.
+					if (manifestString != null) {
+						throwException(
+								MessageFormat
+										.format("Invalid Execution Environment : more than one \"{0}\" file.", LuaExecutionEnvironmentConstants.MANIFEST_EXTENSION), null, IStatus.ERROR); //$NON-NLS-1$
+					}
+
+					// read manifest
 					final InputStream input = zipFile.getInputStream(zipEntry);
 					manifestString = IOUtils.toString(input);
-					break;
 				}
 			}
 		} catch (IOException e) {
-			throwException(MessageFormat.format("Unable to extract manifest from zip file {0}", filePath), null, IStatus.ERROR); //$NON-NLS-1$
+			throwException(MessageFormat.format("Unable to extract manifest from zip file {0}", filePath), e, IStatus.ERROR); //$NON-NLS-1$
 		} finally {
 			if (zipFile != null)
 				try {
@@ -78,7 +86,7 @@ public final class LuaExecutionEnvironmentManager {
 
 		// if no manifest extract
 		if (manifestString == null) {
-			throwException(MessageFormat.format("No manifest '{0}' file found", //$NON-NLS-1$
+			throwException(MessageFormat.format("No manifest \"{0}\" file found", //$NON-NLS-1$
 					LuaExecutionEnvironmentConstants.MANIFEST_EXTENSION), null, IStatus.ERROR);
 		}
 
@@ -101,7 +109,7 @@ public final class LuaExecutionEnvironmentManager {
 		});
 
 		// check number of manifest file
-		if (manifests == null || manifests.length > 1) {
+		if (manifests == null || manifests.length != 1) {
 			final String message = MessageFormat.format("0 or more than 1 \"{0}\" file in given file.", //$NON-NLS-1$
 					LuaExecutionEnvironmentConstants.MANIFEST_EXTENSION);
 			throwException(message, null, IStatus.ERROR);
@@ -205,25 +213,26 @@ public final class LuaExecutionEnvironmentManager {
 		// prepare/clean the directory where the Execution environment will be installed
 		final IPath eePath = ee.getPath();
 		if (eePath == null)
-			throwException("The install path should not be null", null, IStatus.ERROR); //$NON-NLS-1$
+			throwException("The install path should not be null.", null, IStatus.ERROR); //$NON-NLS-1$
 
 		final File installDirectory = eePath.toFile();
-		if (!installDirectory.exists()) {
-			if (!installDirectory.mkdirs())
-				throwException(MessageFormat.format("Unable to create installation directory : {0}", eePath.toOSString()), null, IStatus.ERROR); //$NON-NLS-1$
-		} else {
+		// clean install directory if it exists
+		if (installDirectory.exists()) {
 			if (installDirectory.isFile()) {
 				if (!installDirectory.delete())
 					throwException(MessageFormat.format("Unable to clean installation directory : {0}", eePath.toOSString()), null, IStatus.ERROR); //$NON-NLS-1$
 			} else {
 				try {
 					FileUtils.deleteDirectory(installDirectory);
-					if (!installDirectory.mkdir())
-						throwException(MessageFormat.format("Unable to clean installation directory : {0}", eePath.toOSString()), null, IStatus.ERROR); //$NON-NLS-1$
 				} catch (IOException e) {
 					throwException(MessageFormat.format("Unable to clean installation directory : {0}", eePath.toOSString()), e, IStatus.ERROR); //$NON-NLS-1$
 				}
 			}
+		}
+
+		// in all case create the install directory
+		if (!installDirectory.mkdirs()) {
+			throwException(MessageFormat.format("Unable to create installation directory : {0}", eePath.toOSString()), null, IStatus.ERROR); //$NON-NLS-1$
 		}
 
 		// Extract Execution environment from zip
@@ -234,11 +243,6 @@ public final class LuaExecutionEnvironmentManager {
 			// Open given file
 			input = new FileInputStream(zipPath);
 			zipStream = new ZipInputStream(new BufferedInputStream(input));
-
-			// Check if file is valid
-			if (!isExecutionEnvironmentFile(zipPath)) {
-				throwException(MessageFormat.format("{0} is not a valid execution environment file.", zipPath), null, IStatus.ERROR); //$NON-NLS-1$
-			}
 
 			for (ZipEntry entry = zipStream.getNextEntry(); entry != null; entry = zipStream.getNextEntry()) {
 				/*
@@ -294,57 +298,12 @@ public final class LuaExecutionEnvironmentManager {
 				}
 			}
 		}
+
+		// try to get installed Execution Environment to be sure, it is well installed
+		getInstalledExecutionEnvironment(ee.getID(), ee.getVersion());
+
 		refreshDLTKModel(ee);
 		return ee;
-	}
-
-	/**
-	 * Ensure a given file is an archive containing the right files to be an Execution Environment file.
-	 * 
-	 * @param path
-	 *            Path of file to analyze
-	 * @return true if file contains:
-	 *         <ul>
-	 *         <li>{@value #EE_FILE_API_ARCHIVE}</li>
-	 *         <li>ending with {@value LuaExecutionEnvironmentConstants#MANIFEST_EXTENSION}
-	 *         </ul>
-	 *         false else way.
-	 * @throws IOException
-	 */
-	private static boolean isExecutionEnvironmentFile(final String path) throws IOException {
-
-		ZipFile zipFile = null;
-		boolean hasApi = false;
-		boolean hasRockspec = false;
-
-		try {
-			// Open given file
-			zipFile = new ZipFile(path);
-			final Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
-			while (zipEntries.hasMoreElements()) {
-				final ZipEntry zipEntry = zipEntries.nextElement();
-				final String name = zipEntry.getName();
-
-				// Check for "docs" folder
-				if (LuaExecutionEnvironmentConstants.EE_FILE_API_ARCHIVE.equals(name)) {
-					// Check for "api.zip"
-					hasApi = !zipEntry.isDirectory();
-				} else if (name.endsWith(LuaExecutionEnvironmentConstants.MANIFEST_EXTENSION)) {
-					// Finally check for "*.rockspec"
-					if (hasRockspec) {
-						// There was already a rockspec, consider this SDK invalid
-						return false;
-					} else {
-						hasRockspec = true;
-					}
-				}
-			}
-		} finally {
-			if (zipFile != null)
-				zipFile.close();
-		}
-
-		return hasApi && hasRockspec;
 	}
 
 	private static IPath getInstallDirectory() {
@@ -356,7 +315,6 @@ public final class LuaExecutionEnvironmentManager {
 		final ArrayList<LuaExecutionEnvironment> result = new ArrayList<LuaExecutionEnvironment>();
 
 		// search in the install directory
-
 		IPath installDirectoryPath = getInstallDirectory();
 		File installDirectory = installDirectoryPath.toFile();
 		if (installDirectory.exists() && installDirectory.isDirectory()) {
