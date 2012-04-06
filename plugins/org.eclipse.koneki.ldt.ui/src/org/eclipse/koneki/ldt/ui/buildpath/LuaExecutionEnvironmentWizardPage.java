@@ -3,6 +3,7 @@ package org.eclipse.koneki.ldt.ui.buildpath;
 import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.dltk.core.DLTKCore;
 import org.eclipse.dltk.core.IBuildpathEntry;
 import org.eclipse.dltk.internal.ui.wizards.IBuildpathContainerPage;
@@ -14,11 +15,13 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironment;
 import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironmentBuildpathUtil;
 import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironmentConstants;
 import org.eclipse.koneki.ldt.core.buildpath.LuaExecutionEnvironmentManager;
+import org.eclipse.koneki.ldt.ui.SWTUtil;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -30,7 +33,6 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 public class LuaExecutionEnvironmentWizardPage extends NewElementWizardPage implements IBuildpathContainerPage, IBuildpathContainerPageExtension2 {
 
 	private TreeViewer eeTreeViewer;
-	private IBuildpathEntry currentSelection;
 	private Button configureEE;
 
 	public LuaExecutionEnvironmentWizardPage() {
@@ -58,21 +60,20 @@ public class LuaExecutionEnvironmentWizardPage extends NewElementWizardPage impl
 
 		configureEE = new Button(composite, SWT.PUSH);
 		configureEE.setText(Messages.LuaExecutionEnvironmentWizardPageConfigureButtonLabel);
+		final int horizontalHint = SWTUtil.getButtonWidthHint(configureEE);
+		GridDataFactory.swtDefaults().align(SWT.END, SWT.BEGINNING).hint(horizontalHint, SWT.DEFAULT).applyTo(configureEE);
 
-		GridDataFactory.fillDefaults().align(SWT.CENTER, SWT.BEGINNING).applyTo(configureEE);
-
-		// init page
 		init();
 
-		// add listener
 		addListeners();
+
+		setPageComplete(validatePage());
 
 		setControl(composite);
 	}
 
 	private void init() {
 		updateExecutionEnvironmentList();
-		updateSelection();
 	}
 
 	private void addListeners() {
@@ -88,7 +89,7 @@ public class LuaExecutionEnvironmentWizardPage extends NewElementWizardPage impl
 				final String pageId = LuaExecutionEnvironmentConstants.PREFERENCE_PAGE_ID;
 				PreferencesUtil.createPreferenceDialogOn(getShell(), pageId, new String[] { pageId }, null).open();
 				updateExecutionEnvironmentList();
-				updateSelection();
+				setPageComplete(validatePage());
 			}
 		});
 
@@ -96,20 +97,25 @@ public class LuaExecutionEnvironmentWizardPage extends NewElementWizardPage impl
 
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
-				getContainer().updateButtons();
+				setPageComplete(validatePage());
 			}
 		});
 	}
 
 	@Override
 	public IBuildpathEntry[] getNewContainers() {
-		updateSelection();
-		final IBuildpathEntry choosenContainer = getSelection();
-		if (choosenContainer == null) {
-			// No path available or no selection
+		LuaExecutionEnvironment selectedExecutionEnvironment = getSelectedExecutionEnvironment();
+		if (selectedExecutionEnvironment != null) {
+			/*
+			 * Generate BuildPathContainer from selected Execution Environment
+			 */
+			final IPath path = LuaExecutionEnvironmentBuildpathUtil.getLuaExecutionEnvironmentContainerPath(selectedExecutionEnvironment);
+			final IBuildpathEntry buildpathContainerEntry = DLTKCore.newContainerEntry(path);
+			return new IBuildpathEntry[] { buildpathContainerEntry };
+		} else { // No path available or no selection
 			return new IBuildpathEntry[0];
 		}
-		return new IBuildpathEntry[] { getSelection() };
+
 	}
 
 	@Override
@@ -117,41 +123,79 @@ public class LuaExecutionEnvironmentWizardPage extends NewElementWizardPage impl
 		return true;
 	}
 
-	@Override
-	public IBuildpathEntry getSelection() {
-		return currentSelection;
-	}
-
-	@Override
-	public void setSelection(IBuildpathEntry containerEntry) {
-		currentSelection = containerEntry;
-	}
-
 	private void updateExecutionEnvironmentList() {
 		if (eeTreeViewer == null) {
 			return;
 		}
-		final List<LuaExecutionEnvironment> installedExecutionEnvironments = LuaExecutionEnvironmentManager.getInstalledExecutionEnvironments();
-		eeTreeViewer.setInput(installedExecutionEnvironments);
-	}
-
-	private void updateSelection() {
-		if (eeTreeViewer == null) {
-			return;
+		// get old input and old selection
+		List<?> oldInput = null;
+		if (eeTreeViewer.getInput() instanceof List<?>) {
+			oldInput = (List<?>) eeTreeViewer.getInput();
 		}
-		final ISelection selection = eeTreeViewer.getSelection();
-		// Extract Execution Environment from selection
-		if ((selection != null) && !selection.isEmpty() && (selection instanceof IStructuredSelection)) {
-			final LuaExecutionEnvironment ee = (LuaExecutionEnvironment) ((IStructuredSelection) selection).getFirstElement();
-			if (ee != null) {
-				/*
-				 * Generate BuildPathContainer from selected Execution Environment
-				 */
-				final IPath path = LuaExecutionEnvironmentBuildpathUtil.getLuaExecutionEnvironmentContainerPath(ee);
-				final IBuildpathEntry buildpathContainerEntry = DLTKCore.newContainerEntry(path);
-				setSelection(buildpathContainerEntry);
+
+		// get new input
+		final List<LuaExecutionEnvironment> newInput = LuaExecutionEnvironmentManager.getInstalledExecutionEnvironments();
+		eeTreeViewer.setInput(newInput);
+
+		// try to guess the better new selection
+		if (oldInput == null || oldInput.isEmpty()) {
+			// no input before we try to select the first EE
+			if (newInput != null && !newInput.isEmpty()) {
+				eeTreeViewer.setSelection(new StructuredSelection(newInput.get(0)));
+			}
+		} else {
+			if (!oldInput.equals(newInput)) {
+				// select one of the new ExecutionEnvironment.
+				for (LuaExecutionEnvironment ee : newInput) {
+					if (!oldInput.contains(ee)) {
+						eeTreeViewer.setSelection(new StructuredSelection(ee));
+						break;
+					}
+				}
 			}
 		}
 
+	}
+
+	private LuaExecutionEnvironment getSelectedExecutionEnvironment() {
+		if (eeTreeViewer == null) {
+			return null;
+		}
+
+		final ISelection selection = eeTreeViewer.getSelection();
+		if ((selection == null) || selection.isEmpty() || !(selection instanceof IStructuredSelection))
+			return null;
+
+		// Extract Execution Environment from selection
+		return (LuaExecutionEnvironment) ((IStructuredSelection) selection).getFirstElement();
+	}
+
+	private boolean validatePage() {
+		return getSelectedExecutionEnvironment() != null;
+	}
+
+	/**
+	 * @see org.eclipse.dltk.ui.wizards.NewElementWizardPage#updateStatus(org.eclipse.core.runtime.IStatus)
+	 */
+	@Override
+	protected void updateStatus(IStatus status) {
+		// unplugged dltk mechanism
+	}
+
+	/**
+	 * @see org.eclipse.dltk.internal.ui.wizards.IBuildpathContainerPage#getSelection()
+	 */
+	@Override
+	public IBuildpathEntry getSelection() {
+		// not used
+		return null;
+	}
+
+	/**
+	 * @see org.eclipse.dltk.internal.ui.wizards.IBuildpathContainerPage#setSelection(org.eclipse.dltk.core.IBuildpathEntry)
+	 */
+	@Override
+	public void setSelection(IBuildpathEntry containerEntry) {
+		// not used
 	}
 }
