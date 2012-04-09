@@ -11,6 +11,7 @@
 
 package org.eclipse.koneki.ldt.editor.internal.text;
 
+import org.eclipse.dltk.ui.editor.highlighting.SemanticHighlighting;
 import org.eclipse.dltk.ui.text.ScriptSourceViewerConfiguration;
 import org.eclipse.dltk.ui.text.ScriptTextTools;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -38,5 +39,9 @@ public class LuaTextTools extends ScriptTextTools {
 	@Override
 	public IPartitionTokenScanner createPartitionScanner() {
 		return new LuaPartitionScanner();
+	}
+
+	public SemanticHighlighting[] getSemanticHighlightings() {
+		return new LuaSemanticUpdateWorker().getSemanticHighlightings();
 	}
 }
