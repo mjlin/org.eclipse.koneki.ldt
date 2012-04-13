@@ -64,11 +64,9 @@ public class LuaPreferenceInitializer extends AbstractPreferenceInitializer {
 		// Semantic highlighting preferences initialization
 		SemanticHighlightingUtils.initializeDefaultValues(store, Activator.getDefault().getTextTools().getSemanticHighlightings());
 
-		PreferenceConverter.setDefault(store, ILuaColorConstants.LUA_LOCAL_VARIABLE, new RGB(0, 0, 0));
-		PreferenceConverter.setDefault(store, ILuaColorConstants.LUA_GLOBAL_VARIABLE, new RGB(0, 0, 255));
-		store.setDefault(ILuaColorConstants.LUA_GLOBAL_VARIABLE + PreferenceConstants.EDITOR_BOLD_SUFFIX, false);
-		store.setDefault(ILuaColorConstants.LUA_GLOBAL_VARIABLE + PreferenceConstants.EDITOR_ITALIC_SUFFIX, true);
-
+		PreferenceConverter.setDefault(store, ILuaColorConstants.LUA_LOCAL_VARIABLE, new RGB(103, 103, 103));
+		PreferenceConverter.setDefault(store, ILuaColorConstants.LUA_GLOBAL_VARIABLE, new RGB(0, 0, 0));
+		store.setDefault(ILuaColorConstants.LUA_GLOBAL_VARIABLE + PreferenceConstants.EDITOR_BOLD_SUFFIX, true);
 	}
 
 }
