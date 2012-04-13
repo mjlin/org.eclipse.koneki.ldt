@@ -102,6 +102,7 @@ M.prettynametypes = {
 	externaltyperef = function(o) return o.modulename..'#'..o.typename end,
 	file = function(o) return o.name end,
 	item = function( apiobject )
+
 		-- Retrieve referenced type definition
 		local parent = apiobject.parent
 		local global = parent and parent.tag == 'file'
@@ -111,8 +112,14 @@ M.prettynametypes = {
 		if global then
 			definition = parent.types[ apiobject.type.typename ]
 		elseif typefield then
+			-- Get definition container
 			local file = parent.parent
-			definition = file.types[apiobject.type.typename ]
+			if not file then
+				-- This type has no container,
+				-- it may be created from a shorcut notation
+				return '#'..parent.name..'.'..apiobject.name
+			end
+			definition = file.types[ apiobject.type.typename ]
 		end
 
 		-- When type is not available, just provide item name
@@ -123,7 +130,7 @@ M.prettynametypes = {
 			if global then
 				return apiobject.name
 			else
-				return apiobject.type.typename..'.'..apiobject.name
+				return "#"..apiobject.type.typename..'.'..apiobject.name
 			end
 		else
 			--
@@ -222,11 +229,16 @@ local field = function( str )
 		local modulefield = apimodel._item( fieldname )
 		local moduletype = apimodel._recordtypedef(typename)
 		moduletype:addfield( modulefield )
+		local typeref
 		if #mod > 0 then
 			local modulefile = apimodel._file()
 			modulefile:addtype( moduletype )
 			modulefile.name = mod
+			typeref = apimodel._externaltypref(mod, typename)
+		else
+			typeref = apimodel._internaltyperef(typename)
 		end
+		modulefield.type = typeref
 		return modulefield
 	end
 	return nil
