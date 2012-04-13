@@ -230,7 +230,7 @@ local typeparsers = {
 									raiserror(result)
 									return { name = result[1].name}
 								end,
-		'@','type', '#',typenameparser
+		'@','type',typenameparser
 	})
 }
 
