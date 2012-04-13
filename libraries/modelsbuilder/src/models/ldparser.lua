@@ -254,6 +254,9 @@ local moduleparsers = {
 		'@','module'
 	})
 }
+
+------------------------------------------------------
+-- parse a third tag
 local thirdtagsparser = gg.sequence({
 	builder = 	function (result)
 		raiserror(result)
@@ -368,15 +371,17 @@ local function split(stringcomment,commentstart)
 	local result = {}
 
 	-- manage case where the comment start by @
-	local at_startoffset, at_endoffset = stringcomment:find("^%s+@",partstart)
+	-- (we must ignore the inline see tag @{..})
+	local at_startoffset, at_endoffset = stringcomment:find("^%s+@[^{]",partstart)
 	if at_endoffset then
-		partstart = at_endoffset
+		partstart = at_endoffset-1
 	end
 
 	-- split comment
+	-- (we must ignore the inline see tag @{..})
 	repeat
-		at_startoffset, at_endoffset = stringcomment:find("[\n\r]%s?@",partstart)
-		local partend = (at_endoffset or #stringcomment+1) -1
+		at_startoffset, at_endoffset = stringcomment:find("[\n\r]%s+@[^{]",partstart)
+		local partend = (at_endoffset or #stringcomment+1) -2
 		table.insert(result,
 								{ comment = stringcomment:sub (partstart,partend) ,
 									offset = partstart}
@@ -406,9 +411,9 @@ function M.parse(stringcomment)
 	-- retrieve the real start
 	local commentstart = 2 --after the first hyphen
 	-- if the first line is an empty comment line with at least 3 hyphens we ignore it
-	local  _ , endoffset = stringcomment:find("^-+%s*[\n\r]")
+	local  _ , endoffset = stringcomment:find("^-+%s*[\n\r]+")
 	if endoffset then
-		commentstart = endoffset
+		commentstart = endoffset+1
 	end
 
 
@@ -419,9 +424,10 @@ function M.parse(stringcomment)
 	-- Extract descriptions
 	-------------------------------
 	local firstpart = commentparts[1].comment
-	if firstpart:find("^[^@]") then
-		-- if the comment part don't start by @
+	if firstpart:find("^[^@]")  or firstpart:find("^[@{]") then
+		-- if the comment part don't start by @ 
 		-- it's the part which contains descriptions
+		-- (there are an exception for the in-line see tag @{..})
 		local startoffset,endoffset = firstpart:find("[.?][%s\n\r]+")
 		if startoffset then
 			_comment.shortdescription = firstpart:sub(1,startoffset)
