@@ -130,7 +130,7 @@ M.prettynametypes = {
 			if global then
 				return apiobject.name
 			else
-				return "#"..apiobject.type.typename..'.'..apiobject.name
+				return M.prettyname( apiobject.type ) ..'.'..apiobject.name
 			end
 		else
 			--
@@ -155,7 +155,7 @@ M.prettynametypes = {
 			-- ':' if 'self' is first parameter, '.' else way
 			local fname = ''
 			if not global then
-				fname = fname .. parent.name..( hasfirstself and ':' or '.' )
+				fname = fname .. parent.name ..( hasfirstself and ':' or '.' )
 			end
 			-- Append function parameters
 			return fname .. apiobject.name .. '(' .. table.concat( paramlist ) ..')'
