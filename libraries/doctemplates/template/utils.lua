@@ -107,13 +107,25 @@ M.prettynametypes = {
 		local parent = apiobject.parent
 		local global = parent and parent.tag == 'file'
 		local typefield = parent and parent.tag == 'recordtypedef'
-		if not apiobject.type then return apiobject.name end
+		if not apiobject.type then
+
+			-- Current item doesn't have any type reference enabling to math it
+			-- with a type, but we can still prefix it with its parent name
+			local prefix = ( typefield and parent.name ) and parent.name.. '.' or '' 
+			return prefix .. apiobject.name
+
+		end
+
+		--
+		-- Fetch item definition
+		--
+		local file 
 		local definition
 		if global then
 			definition = parent.types[ apiobject.type.typename ]
 		elseif typefield then
 			-- Get definition container
-			local file = parent.parent
+			file = parent.parent
 			if not file then
 				-- This type has no container,
 				-- it may be created from a shorcut notation
@@ -122,15 +134,16 @@ M.prettynametypes = {
 			definition = file.types[ apiobject.type.typename ]
 		end
 
-		-- When type is not available, just provide item name
+		-- When type is not available, just provide item name prefixed with parent
 		if not definition then
-			return apiobject.name
+			local prefix = ( typefield and parent.name ) and parent.name.. '.' or '' 
+			return prefix .. apiobject.name
 		elseif definition.tag == 'recordtypedef' then
 			-- In case of record return item name prefixed with module name if available
 			if global then
 				return apiobject.name
 			else
-				return M.prettyname( apiobject.type ) ..'.'..apiobject.name
+				return parent.name ..'.'..apiobject.name
 			end
 		else
 			--
@@ -232,8 +245,8 @@ local field = function( str )
 		local typeref
 		if #mod > 0 then
 			local modulefile = apimodel._file()
-			modulefile:addtype( moduletype )
 			modulefile.name = mod
+			modulefile:addtype( moduletype )
 			typeref = apimodel._externaltypref(mod, typename)
 		else
 			typeref = apimodel._internaltyperef(typename)
