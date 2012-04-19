@@ -31,16 +31,31 @@ return
 # -- Generating lateral menu
 # --
 	<div id="navigation">
-#	if _page.modules and #_page.modules > 0 then
+#	local index = 'index'
+#	if _page.modules then
 		<h2>Modules</h2>
+#		-- Check if an index is defined
+#		if _page.modules [ index ] then
+#			local module = _page.modules [ index ]
+			<ul><li>
+#			if module ~= _page.currentmodule then
+				<a href="$( linkto(module) )">$(module.name)</a>
+#			else
+				$(module.name)
+#			end
+			</li></ul>
+#		end
+#
 		<ul>
 #		-- Generating links for all modules
-#		for _, module in ipairs( _page.modules ) do
+#		for _, module in sortedpairs( _page.modules ) do
 #			--  Except for current one
-#			if module ~= _page.currentmodule then
-				<li><a href="$( linkto(module) )">$(module.name)</a></li>
-#			else
-				<li>$(module.name)</li>
+#			if module.name ~= index then
+#				if module ~= _page.currentmodule then
+					<li><a href="$( linkto(module) )">$(module.name)</a></li>
+#				else
+					<li>$(module.name)</li>
+#				end
 #			end
 #		end
 		</ul>

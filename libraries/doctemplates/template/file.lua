@@ -43,7 +43,7 @@ return[[#
 # if not isempty(_file.globalvars) then
 	<h2>Global(s)</h2>
 	<table class="function_list">
-#	for _, item in pairs(_file.globalvars) do
+#	for _, item in sortedpairs(_file.globalvars) do
 		<tr>
 		<td class="name" nowrap="nowrap">$( fulllinkto(item) )</a></td>
 		<td class="summary">$( format(item.shortdescription) )</td>
@@ -74,7 +74,7 @@ return[[#
 # -- Show quick description of other types
 # --
 # if _file.types then
-#	for name, type in pairs( _file.types ) do
+#	for name, type in sortedpairs( _file.types ) do
 #		if type ~= currenttype and type.tag == 'recordtypedef' then
 			<a id="$(anchor(type))" />
 			<h2>Type <code>$(name)</code></h2>
@@ -87,7 +87,7 @@ return[[#
 # --
 # if not isempty(_file.globalvars) then
 	<h2>Global(s)</h2>
-#	for name, item in pairs(_file.globalvars)do
+#	for name, item in sortedpairs(_file.globalvars) do
 		$( applytemplate(item) )
 #	end
 # end
@@ -102,7 +102,7 @@ return[[#
 # -- Long description of other types
 # --
 # if not isempty( _file.types ) then
-#	for name, type in pairs( _file.types ) do
+#	for name, type in sortedpairs( _file.types ) do
 #		if type ~= currenttype  and type.tag == 'recordtypedef' then
 			<h2>Type <code>$(name)</code></h2>
 			$( applytemplate(type) )

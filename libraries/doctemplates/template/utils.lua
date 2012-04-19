@@ -297,4 +297,23 @@ function M.getelement( str )
 	end
 	return nil
 end
+
+--------------------------------------------------------------------------------
+-- Iterator that iterates on the table in key ascending order.
+--
+-- @function [parent=#utils.table] sortedPairs
+-- @param t table to iterate.
+-- @return iterator function.
+--
+function M.sortedpairs(t)
+	local a = {}
+	local insert = table.insert
+	for n in pairs(t) do insert(a, n) end
+	table.sort(a)
+	local i = 0
+	return function()
+		i = i + 1
+		return a[i], t[a[i]]
+	end
+end
 return M

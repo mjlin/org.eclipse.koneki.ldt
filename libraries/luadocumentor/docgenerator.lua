@@ -43,7 +43,7 @@ function M.generatedocforfiles(filenames, cssname)
 		
 		-- Handle modules with module name
 		if  apimodule and apimodule.name then
-			table.insert(generatedfiles, apimodule)
+			generatedfiles[ apimodule.name ] = apimodule
 		elseif not apimodule then
 			-- Track faulty files
 			table.insert(wrongfiles, 'Unable to extract comments from "'..filename..'".\n'..err)
@@ -60,7 +60,7 @@ function M.generatedocforfiles(filenames, cssname)
 		name = M.defaultsitemainpagename,
 		tag='index'
 	}
-	table.insert(generatedfiles, index)
+	generatedfiles[ M.defaultsitemainpagename ] = index
 
 	--
 	-- Define page cursor
@@ -75,7 +75,7 @@ function M.generatedocforfiles(filenames, cssname)
 	--
 	-- Iterate over modules, generating complete doc pages
 	--
-	for _, module in ipairs( generatedfiles ) do
+	for _, module in pairs( generatedfiles ) do
 		-- Update current cursor page
 		page.currentmodule = module
 		-- Generate page

@@ -34,7 +34,7 @@ return [[#
 # --
 #if not isempty( _recordtypedef.fields ) then
 	<h3>Field(s)</h3>
-#	for name, item in pairs( _recordtypedef.fields )do
+#	for name, item in sortedpairs( _recordtypedef.fields ) do
 		$( applytemplate(item) )
 #	end
 #end ]]

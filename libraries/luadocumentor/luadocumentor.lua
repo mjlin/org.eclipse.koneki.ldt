@@ -129,11 +129,17 @@ if #unparsed > 0 then
 		print( faultyfile )
 	end
 end
-print (#parsedfiles .. ' file(s) parsed.')
+-- This loop is just for counting parsed files
+-- TODO: Find a more elegant way to do it
+local parsedfilescount = 0
+for _, p in pairs( parsedfiles) do
+	parsedfilescount = parsedfilescount + 1
+end
+print (parsedfilescount .. ' file(s) parsed.')
 
 -- Create html files
 local generated = 0
-for _, apifile in ipairs ( parsedfiles ) do
+for _, apifile in pairs ( parsedfiles ) do
 	local status, err = fs.fill(args.dir..fs.separator..apifile.name..'.html', apifile.body)
 	if status then
 		generated = generated + 1

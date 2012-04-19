@@ -15,7 +15,7 @@ return
 <div id="content">
 <h2>Module$( #_index.modules > 1 and 's' )</h2>
 	<table class="module_list">
-#	for _, module in ipairs( _index.modules ) do
+#	for _, module in sortedpairs( _index.modules ) do
 #		if module.tag ~= 'index' then
 			<tr>
 			<td class="name" nowrap="nowrap">$( fulllinkto(module) )</td>
