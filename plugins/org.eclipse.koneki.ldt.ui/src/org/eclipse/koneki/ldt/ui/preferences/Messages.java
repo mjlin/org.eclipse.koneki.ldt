@@ -28,6 +28,7 @@ public class Messages extends NLS {
 	public static String LuaExecutionEnvironmentPreferencePageUnableToDelete;
 	public static String LuaExecutionEnvironmentPreferencePageUnableToDeleteEE;
 	public static String LuaExecutionEnvironmentPreferencePageUnableToInstallTitle;
+	public static String LuaTodoTaskPreferencePage_description;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

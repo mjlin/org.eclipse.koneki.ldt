@@ -48,7 +48,8 @@ public class LuaEditorColoringConfigurationBlock extends AbstractScriptEditorCol
 			{ PreferencesMessages.DLTKEditorPreferencePage_others, ILuaColorConstants.LUA_DEFAULT, sCoreCategory },
 			{ PreferencesMessages.DLTKEditorPreferencePage_numbers, ILuaColorConstants.LUA_NUMBER, sCoreCategory },
 			{ Messages.LuaEditorColoringConfigurationBlock_localVariable, ILuaColorConstants.LUA_LOCAL_VARIABLE, sCoreCategory },
-			{ Messages.LuaEditorColoringConfigurationBlock_globalVariable, ILuaColorConstants.LUA_GLOBAL_VARIABLE, sCoreCategory }, };
+			{ Messages.LuaEditorColoringConfigurationBlock_globalVariable, ILuaColorConstants.LUA_GLOBAL_VARIABLE, sCoreCategory },
+			{ PreferencesMessages.DLTKEditorPreferencePage_CommentTaskTags, ILuaColorConstants.COMMENT_TASK_TAGS, sCommentsCategory } };
 
 	public LuaEditorColoringConfigurationBlock(OverlayPreferenceStore store) {
 		super(store);

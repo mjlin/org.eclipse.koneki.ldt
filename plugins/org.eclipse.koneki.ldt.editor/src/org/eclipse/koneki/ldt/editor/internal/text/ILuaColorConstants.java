@@ -24,4 +24,5 @@ public interface ILuaColorConstants {
 	public static final String LUA_LOCAL_VARIABLE = "variable.local"; //$NON-NLS-1$
 	public static final String LUA_GLOBAL_VARIABLE = "variable.global"; //$NON-NLS-1$
 
+	public static final String COMMENT_TASK_TAGS = DLTKColorConstants.TASK_TAG;
 }
