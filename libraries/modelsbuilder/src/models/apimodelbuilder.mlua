@@ -145,6 +145,19 @@ local function additemtoparent(_file,_item,scope,sourcerangemin,sourcerangemax)
 	end
 end
 
+-- Function type counter
+local i = 0
+
+-- Reset function type counter
+local function resetfunctiontypeidgenerator()
+	i = 0
+end
+
+-- Provides an unique index for a function type
+local function generatefunctiontypeid()
+	i = i + 1
+	return i
+end
 
 -- generate a function type name 
 local function generatefunctiontypename(_functiontypedef)
@@ -183,6 +196,7 @@ local function generatefunctiontypename(_functiontypedef)
 		end
 	end
 	table.insert(name,"__")
+	table.insert(name, generatefunctiontypeid())
 	return table.concat(name)
 end
 
@@ -191,6 +205,10 @@ end
 ------------------------------------------------------
 -- create the module api
 function M.createmoduleapi(ast)
+
+	-- Initialise function type naming
+	resetfunctiontypeidgenerator()
+
 	local _file = apimodel._file()
 
 	local function handlecomment(comment)
