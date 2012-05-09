@@ -424,7 +424,7 @@ function M.parse(stringcomment)
 	-- Extract descriptions
 	-------------------------------
 	local firstpart = commentparts[1].comment
-	if firstpart:find("^[^@]")  or firstpart:find("^[@{]") then
+	if firstpart:find("^[^@]") or firstpart:find("^@{") then
 		-- if the comment part don't start by @ 
 		-- it's the part which contains descriptions
 		-- (there are an exception for the in-line see tag @{..})
