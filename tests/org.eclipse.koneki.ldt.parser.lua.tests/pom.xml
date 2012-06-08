@@ -18,7 +18,7 @@
     <version>0.0.1-SNAPSHOT</version>
   </parent>
   <groupId>org.eclipse.koneki.ldt</groupId>
-  <artifactId>org.eclipse.koneki.ldt.parser.apimodel.tests</artifactId>
+  <artifactId>org.eclipse.koneki.ldt.parser.lua.tests</artifactId>
   <version>0.1.0</version>
   <packaging>eclipse-test-plugin</packaging>
 </project>
