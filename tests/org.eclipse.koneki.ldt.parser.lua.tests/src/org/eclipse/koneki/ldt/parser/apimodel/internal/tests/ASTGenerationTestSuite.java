@@ -23,7 +23,7 @@ import junit.framework.TestSuite;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.koneki.ldt.parser.apimodel.tests.Activator;
+import org.eclipse.koneki.ldt.parser.lua.tests.Activator;
 import org.osgi.framework.Bundle;
 
 public class ASTGenerationTestSuite extends TestSuite {

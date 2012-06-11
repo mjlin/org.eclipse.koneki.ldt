@@ -11,8 +11,8 @@
 package org.eclipse.koneki.ldt.parser.apimodel.internal.tests;
 
 public interface IASTGenerationConstants {
-	final String LUA_FILES_FOLDER = "/lua/"; //$NON-NLS-1$
-	final String SERIALIZED_FILES_FOLDER = "/serialized/"; //$NON-NLS-1$
+	final String LUA_FILES_FOLDER = "/lua/apimodel/"; //$NON-NLS-1$
+	final String SERIALIZED_FILES_FOLDER = "/serialized/apimodel/"; //$NON-NLS-1$
 	final String LUA_FILES_EXTENSION = ".lua"; //$NON-NLS-1$
 	final String SERIALIZED_FILES_EXTENSION = ".serialized"; //$NON-NLS-1$
 }

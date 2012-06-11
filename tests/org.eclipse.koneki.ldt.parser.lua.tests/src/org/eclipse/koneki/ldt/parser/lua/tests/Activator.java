@@ -1,4 +1,4 @@
-package org.eclipse.koneki.ldt.parser.apimodel.tests;
+package org.eclipse.koneki.ldt.parser.lua.tests;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Plugin;

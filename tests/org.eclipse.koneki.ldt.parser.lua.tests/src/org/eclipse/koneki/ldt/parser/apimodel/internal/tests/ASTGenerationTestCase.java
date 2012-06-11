@@ -27,7 +27,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.koneki.ldt.metalua.MetaluaStateFactory;
 import org.eclipse.koneki.ldt.module.AbstractLuaModule;
 import org.eclipse.koneki.ldt.parser.ModelsBuilderLuaModule;
-import org.eclipse.koneki.ldt.parser.apimodel.tests.Activator;
+import org.eclipse.koneki.ldt.parser.lua.tests.Activator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

@@ -161,7 +161,6 @@ function M.compare(t1, t2)
 	-- Browse recursively for differences
 	local differences = {}
 	for k, v in M.recursivepairs( t2 ) do
-		print( string.format('t1 k %s.', k))
 		local t3valuetype = type( t3[k] )
 		local t2valuetype = type( v )
 

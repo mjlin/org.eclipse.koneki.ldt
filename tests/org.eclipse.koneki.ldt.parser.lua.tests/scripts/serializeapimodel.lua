@@ -3,7 +3,7 @@
 -- Generate serialized lua API models files next to given file.
 --
 require 'errnode'
-require 'serialize'
+local serializer = require 'serpent'
 local apimodelbuilder = require 'models.apimodelbuilder'
 if #arg < 1 then
 	print 'No file to serialize.'
@@ -26,7 +26,7 @@ for k = 1, #arg do
 		local apimodel = apimodelbuilder.createmoduleapi(ast)
 
 		-- Serialize model
-		local serializedcode = serialize( apimodel )
+		local serializedcode = serializer.serialize( apimodel )
 
 		-- Define file name
 		
