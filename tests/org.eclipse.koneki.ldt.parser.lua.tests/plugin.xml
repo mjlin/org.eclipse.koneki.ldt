@@ -6,6 +6,9 @@
       <testSuite
             class="org.eclipse.koneki.ldt.parser.apimodel.internal.tests.ASTGenerationTestSuite">
       </testSuite>
+      <testSuite
+            class="org.eclipse.koneki.ldt.parser.format.internal.tests.FormatterTestSuite">
+      </testSuite>
    </extension>
 
 </plugin>
