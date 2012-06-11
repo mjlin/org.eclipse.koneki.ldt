@@ -12,6 +12,7 @@ package org.eclipse.koneki.ldt.tests;
 
 import junit.framework.TestSuite;
 
+import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.Platform;
@@ -33,32 +34,35 @@ public final class SuiteProvider {
 	public static TestSuite get() {
 
 		// Get plug-in's contributors
-		TestSuite suite = new TestSuite("Lua Development Tools"); //$NON-NLS-1$
-		IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(Activator.EXTENSION_POINT);
+		final TestSuite suite = new TestSuite("Lua Development Tools"); //$NON-NLS-1$
+		final IExtensionPoint extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(Activator.EXTENSION_POINT);
 
 		// Append every TestSuite to the current one
-		for (IExtension ext : extensionPoint.getExtensions()) {
+		for (final IExtension ext : extensionPoint.getExtensions()) {
 
-			// Get the good extension point from schema
-			String className = ext.getConfigurationElements()[Activator.EXTENSION_POINT_ID].getAttribute("class"); //$NON-NLS-1$
+			for (final IConfigurationElement configurationElement : ext.getConfigurationElements()) {
 
-			// Retrieve instance of contributor's plug-in
-			String bundleId = ext.getContributor().getName();
-			Bundle bundle = Platform.getBundle(bundleId);
+				// Get the good extension point from schema
+				final String className = configurationElement.getAttribute("class"); //$NON-NLS-1$
 
-			// Load the TestSuite
-			try {
-				// Retrieve instance of contributor through it's plug-in
-				Object newInstance = bundle.loadClass(className).newInstance();
-				if (newInstance instanceof TestSuite) {
-					suite.addTest((TestSuite) newInstance);
+				// Retrieve instance of contributor's plug-in
+				final String bundleId = ext.getContributor().getName();
+				final Bundle bundle = Platform.getBundle(bundleId);
+
+				// Load the TestSuite
+				try {
+					// Retrieve instance of contributor through it's plug-in
+					final Object newInstance = bundle.loadClass(className).newInstance();
+					if (newInstance instanceof TestSuite) {
+						suite.addTest((TestSuite) newInstance);
+					}
+				} catch (final InstantiationException e) {
+					Activator.logError(e.getMessage(), e);
+				} catch (final IllegalAccessException e) {
+					Activator.logError(e.getMessage(), e);
+				} catch (final ClassNotFoundException e) {
+					Activator.logError(e.getMessage(), e);
 				}
-			} catch (InstantiationException e) {
-				Activator.logError(e.getMessage(), e);
-			} catch (IllegalAccessException e) {
-				Activator.logError(e.getMessage(), e);
-			} catch (ClassNotFoundException e) {
-				Activator.logError(e.getMessage(), e);
 			}
 		}
 		return suite;

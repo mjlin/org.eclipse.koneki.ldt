@@ -33,9 +33,6 @@ public class Activator extends AbstractUIPlugin {
 	/** The Constant EXTENSION_POINT. */
 	public static final String EXTENSION_POINT = Activator.PLUGIN_ID + ".testSuites"; //$NON-NLS-1$
 
-	/** The Constant EXTENSION_POINT_ID. */
-	public static final int EXTENSION_POINT_ID = 0;
-
 	// The shared instance
 	/** The plugin. */
 	private static Activator plugin;
