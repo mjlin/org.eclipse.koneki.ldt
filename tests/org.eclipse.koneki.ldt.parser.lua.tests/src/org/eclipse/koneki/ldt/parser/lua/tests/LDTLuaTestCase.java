@@ -8,7 +8,7 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-package org.eclipse.koneki.ldt.parser.apimodel.internal.tests;
+package org.eclipse.koneki.ldt.parser.lua.tests;
 
 import java.io.File;
 import java.util.List;
@@ -37,10 +37,11 @@ public class LDTLuaTestCase extends TestCase {
 	 * 
 	 * @param modulePath
 	 */
-	public LDTLuaTestCase(final String sourceFilePath, final String referenceFilePath, final List<File> directoryListForLuaPath) {
-		sourceFileAbsolutePath = sourceFilePath;
-		referenceFileAbsolutePath = referenceFilePath;
+	public LDTLuaTestCase(final File sourceFilePath, final File referenceFilePath, final List<File> directoryListForLuaPath) {
+		sourceFileAbsolutePath = sourceFilePath.getAbsolutePath();
+		referenceFileAbsolutePath = referenceFilePath.getAbsolutePath();
 		luaPath = directoryListForLuaPath;
+		setName(sourceFilePath.getName());
 	}
 
 	@Before
