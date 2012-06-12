@@ -1,11 +1,11 @@
 require 'errnode'
 local apimodelbuilder = require 'models.apimodelbuilder'
 local tablecompare = require 'tablecompare'
-local M = {}
-local function f(...) print(...) io.flush() end
-local print = f
+--local function f(...) print(...) io.flush() end
+--local print = f
 
-function M.recut(luasourcepath, serializedreferencepath)
+local M = {}
+function M.test(luasourcepath, serializedreferencepath)
 
 	--
 	-- Load provided source
@@ -37,16 +37,15 @@ function M.recut(luasourcepath, serializedreferencepath)
 	end
 	local referenceapimodel = luareferenceloadingfunction()
 
-	-- Compare  generated API model to reference one
---	local diff = tablecompare.diff(apimodel, referenceapimodel)
---	if #diff > 0 then
---		return nil, table.tostring(diff)
---	end
-	
 	-- Check that they have references at same place
 	local equivalent, message = tablecompare.compare(apimodel, referenceapimodel)
 	if not equivalent then
-		return nil, message
+
+		-- Compute which keys differs
+		local differentkeys = tablecompare.diff(apimodel, referenceapimodel)
+		local differentkeysstring = table.tostring(differentkeys)
+		return nil, string.format('%s\nDifferent keys are:\n%s', message, differentkeysstring)
+
 	end
 	return true
 end

@@ -158,7 +158,7 @@ function M.compare(t1, t2)
 		t3[k] = v
 	end
 
-	-- Browse recursively for differences
+	-- Browse recursively for differences with t2
 	local differences = {}
 	for k, v in M.recursivepairs( t2 ) do
 		local t3valuetype = type( t3[k] )
@@ -174,7 +174,7 @@ function M.compare(t1, t2)
 		t3[k] = nil
 	end
 
-	-- Loacate t2 keys which are not in t1
+	-- Loacate t1 keys which are not in t2
 	for k, v in M.recursivepairs( t3 ) do
 		table.insert(differences, k)
 	end
