@@ -12,7 +12,6 @@ package org.eclipse.koneki.ldt.parser.lua.tests;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.text.MessageFormat;
@@ -27,7 +26,6 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.koneki.ldt.parser.format.internal.tests.IFormatterConstants;
 import org.osgi.framework.Bundle;
 
 /**
@@ -88,11 +86,8 @@ public abstract class LDTLuaAbstractTestSuite extends TestSuite {
 
 				addTest(new LDTLuaTestCase(inputFile, referenceFile, Collections.<File> emptyList()));
 			}
-		} catch (final MalformedURLException e) {
-			final String message = MessageFormat.format("Unable to generate URL corresponding to {0}.", IFormatterConstants.LUA_FILES_FOLDER); //$NON-NLS-1$
-			raiseCoreException(message, e);
 		} catch (final IOException e) {
-			final String message = MessageFormat.format("Unable to locate {0}.", IFormatterConstants.LUA_FILES_FOLDER); //$NON-NLS-1$
+			final String message = MessageFormat.format("Unable to locate {0}.", folderPath); //$NON-NLS-1$
 			raiseCoreException(message, e);
 		}
 	}
