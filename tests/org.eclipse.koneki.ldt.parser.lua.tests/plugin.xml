@@ -6,6 +6,9 @@
       <testSuite
             class="org.eclipse.koneki.ldt.parser.lua.tests.apimodel.APIModelTestSuite">
       </testSuite>
+      <testSuite
+            class="org.eclipse.koneki.ldt.parser.format.internal.tests.FormatterTestSuite">
+      </testSuite>
    </extension>
 
 </plugin>
