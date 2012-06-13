@@ -28,12 +28,6 @@ function M.test(luainputpath, luareferencepath)
 	local referenceCode = referenceFile:read('*a')
 
 	-- Check equality
-	if formattedCode ~= referenceCode then
-		print("--Formatted:")
-		print(formattedCode)
-		print("--Reference:")
-		print(referenceCode)
-	end
 	assert:assertEquals("Formatting Error", referenceCode, formattedCode)
 	return true
 end

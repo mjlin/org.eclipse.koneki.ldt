@@ -21,8 +21,9 @@ public class APIModelTestCase extends LDTLuaTestCase {
 
 	private static ArrayList<String> filesToCompileList = null;
 
-	public APIModelTestCase(final File sourceFilePath, final File referenceFilePath, final List<String> directoryListForLuaPath) {
-		super(sourceFilePath, referenceFilePath, directoryListForLuaPath);
+	public APIModelTestCase(final String testSuiteName, final String testFileName, final File sourceFilePath, final File referenceFilePath,
+			final List<String> directoryListForLuaPath) {
+		super(testSuiteName, testFileName, sourceFilePath, referenceFilePath, directoryListForLuaPath);
 	}
 
 	@Override

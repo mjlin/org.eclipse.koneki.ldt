@@ -93,7 +93,7 @@ public abstract class LDTLuaAbstractTestSuite extends TestSuite {
 				path.add(folderPath);
 
 				// Append test case
-				addTest(createTestCase(inputFile, referenceFile, path));
+				addTest(createTestCase(getTestModuleName(), inputFile, referenceFile, path));
 			}
 		} catch (final IOException e) {
 			final String message = MessageFormat.format("Unable to locate {0}.", folderPath); //$NON-NLS-1$
@@ -158,8 +158,8 @@ public abstract class LDTLuaAbstractTestSuite extends TestSuite {
 	/**
 	 * @return lua file implementing the test
 	 */
-	protected String getTestLuaPath() {
-		return "test.lua"; //$NON-NLS-1$
+	protected String getTestModuleName() {
+		return "test"; //$NON-NLS-1$
 	}
 
 	/**
@@ -177,7 +177,7 @@ public abstract class LDTLuaAbstractTestSuite extends TestSuite {
 		throw new CoreException(status);
 	}
 
-	protected TestCase createTestCase(final File source, final File reference, final List<String> path) {
-		return new LDTLuaTestCase(source, reference, path);
+	protected TestCase createTestCase(final String testModuleName, final File source, final File reference, final List<String> path) {
+		return new LDTLuaTestCase(getName(), testModuleName, source, reference, path);
 	}
 }

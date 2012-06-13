@@ -29,11 +29,13 @@ public class LuaTestModuleRunner extends AbstractLuaModule {
 	final private String sourceFilePath;
 	final private String referenceFilePath;
 	final private List<String> filesToCompile;
+	private String testModule;
 
 	private static String LUA_TEST_FUNCTION = "test"; //$NON-NLS-1$
-	private static String LUA_TEST_MODULE_NAME = "test"; //$NON-NLS-1$
 
-	public LuaTestModuleRunner(final String sourcePath, final String refPath, final List<String> localPath, final List<String> filesPathToCompile) {
+	public LuaTestModuleRunner(final String testModuleName, final String sourcePath, final String refPath, final List<String> localPath,
+			final List<String> filesPathToCompile) {
+		testModule = testModuleName;
 		filesToCompile = filesPathToCompile;
 		sourceFilePath = sourcePath;
 		referenceFilePath = refPath;
@@ -65,7 +67,7 @@ public class LuaTestModuleRunner extends AbstractLuaModule {
 
 	@Override
 	protected String getModuleName() {
-		return LUA_TEST_MODULE_NAME;
+		return testModule;
 	}
 
 	/**

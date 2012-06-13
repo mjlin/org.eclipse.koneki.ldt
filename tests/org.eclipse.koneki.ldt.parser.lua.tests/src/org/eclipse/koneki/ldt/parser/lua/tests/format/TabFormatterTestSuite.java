@@ -8,17 +8,34 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-package org.eclipse.koneki.ldt.parser.format.internal.tests;
+package org.eclipse.koneki.ldt.parser.lua.tests.format;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.koneki.ldt.parser.lua.tests.LDTLuaAbstractTestSuite;
 
-public class FormatterTestSuite extends LDTLuaAbstractTestSuite {
+public class TabFormatterTestSuite extends LDTLuaAbstractTestSuite {
 
 	private static final String FORMATTER_TEST_FOLDER = "tests/formatter"; //$NON-NLS-1$
 
-	public FormatterTestSuite() throws CoreException {
-		super("Formatter", FORMATTER_TEST_FOLDER, "lua"); //$NON-NLS-1$ //$NON-NLS-2$
+	public TabFormatterTestSuite() throws CoreException {
+		super("Formatter tab", FORMATTER_TEST_FOLDER, "lua"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
-	
+
+	/**
+	 * @see org.eclipse.koneki.ldt.parser.lua.tests.LDTLuaAbstractTestSuite#getReferenceFolderPath()
+	 */
+	@Override
+	protected String getReferenceFolderPath() {
+		return new Path("reference").append("tab").toString(); //$NON-NLS-1$//$NON-NLS-2$
+	}
+
+	/**
+	 * @see org.eclipse.koneki.ldt.parser.lua.tests.LDTLuaAbstractTestSuite#getTestModuleName()
+	 */
+	@Override
+	protected String getTestModuleName() {
+		return "test_tab"; //$NON-NLS-1$
+	}
+
 }

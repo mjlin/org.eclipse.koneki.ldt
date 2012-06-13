@@ -27,7 +27,7 @@ public class APIModelTestSuite extends LDTLuaAbstractTestSuite {
 	}
 
 	@Override
-	protected TestCase createTestCase(final File source, final File ref, final List<String> path) {
-		return new APIModelTestCase(source, ref, path);
+	protected TestCase createTestCase(final String testModuleName, final File source, final File ref, final List<String> path) {
+		return new APIModelTestCase(getName(), testModuleName, source, ref, path);
 	}
 }

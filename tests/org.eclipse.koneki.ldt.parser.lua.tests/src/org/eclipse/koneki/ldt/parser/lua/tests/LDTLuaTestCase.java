@@ -11,6 +11,7 @@
 package org.eclipse.koneki.ldt.parser.lua.tests;
 
 import java.io.File;
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import org.junit.Test;
  */
 public class LDTLuaTestCase extends TestCase {
 
+	final private String testModuleName;
 	final private List<String> luaPath;
 	final private String referenceFileAbsolutePath;
 	final private String sourceFileAbsolutePath;
@@ -38,18 +40,25 @@ public class LDTLuaTestCase extends TestCase {
 	/**
 	 * Just locate two files. File to test and a reference representing which AST tested file should produce.
 	 * 
+	 * @param testModuleName
+	 * 
 	 * @param modulePath
 	 */
-	public LDTLuaTestCase(final File sourceFilePath, final File referenceFilePath, final List<String> directoryListForLuaPath) {
+	public LDTLuaTestCase(final String testSuiteName, final String testModuleName, final File sourceFilePath, final File referenceFilePath,
+			final List<String> directoryListForLuaPath) {
+		this.testModuleName = testModuleName;
 		sourceFileAbsolutePath = sourceFilePath.getAbsolutePath();
 		referenceFileAbsolutePath = referenceFilePath.getAbsolutePath();
 		luaPath = directoryListForLuaPath;
-		setName(sourceFilePath.getName());
+
+		// The Module name is
+		String testName = MessageFormat.format("{0}.{1}", testSuiteName, sourceFilePath.getName()); //$NON-NLS-1$
+		setName(testName);
 	}
 
 	@Before
 	public void setUp() {
-		luaRunner = new LuaTestModuleRunner(sourceFileAbsolutePath, referenceFileAbsolutePath, luaPath, filesToCompile());
+		luaRunner = new LuaTestModuleRunner(testModuleName, sourceFileAbsolutePath, referenceFileAbsolutePath, luaPath, filesToCompile());
 	}
 
 	@Test

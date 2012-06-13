@@ -7,7 +7,13 @@
             class="org.eclipse.koneki.ldt.parser.lua.tests.apimodel.APIModelTestSuite">
       </testSuite>
       <testSuite
-            class="org.eclipse.koneki.ldt.parser.format.internal.tests.FormatterTestSuite">
+            class="org.eclipse.koneki.ldt.parser.lua.tests.format.TabFormatterTestSuite">
+      </testSuite>
+      <testSuite
+            class="org.eclipse.koneki.ldt.parser.lua.tests.format.FourSpacesFormatterTestSuite">
+      </testSuite>
+      <testSuite
+            class="org.eclipse.koneki.ldt.parser.lua.tests.format.MixedFormatterTestSuite">
       </testSuite>
    </extension>
 
