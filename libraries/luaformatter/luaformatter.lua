@@ -13,19 +13,21 @@
 -- Uses Metalua capabilities to indent code and provide source code offset
 -- semantic depth
 --
--- @module format
--- @alias M
+-- @module luaformatter
+--
 local M = {}
 require 'metalua.compiler'
 ---
 --  Provide semantic depth of a source code offset
 --
--- @param Source code to analyze
--- @param Source offset of depth to compute
--- @param Flush previously computed AST
--- @param Indicates if code in table definitions should be indented
--- @result Semantic depth of source at given offset
+-- @function [parent=#luaformatter] indentLevel
+-- @param #string source Source code to analyze
+-- @param #number offset Source offset of depth to compute
+-- @param #boolean flush Flush previously computed AST
+-- @param #boolean indenttable Indicates if code in table definitions should be indented
+-- @return #number Semantic depth of source at given offset
 -- @usage local depth = format.indentLevel("local var", 3)
+--
 local parsedSources = {}
 function M.indentLevel(source, offset, flush, indenttable)
 	---
@@ -65,11 +67,11 @@ function M.indentLevel(source, offset, flush, indenttable)
 	--
 	flush = flush or false
 	local walker = {
-	block       = {},
-	expr		= {},
-	depth       = 0,     -- Current depth while walking
-	nodeDepth   = 0,     -- Depth of node at required offset
-	offset      = offset -- Sought offset
+		block       = {},
+		expr		= {},
+		depth       = 0,     -- Current depth while walking
+		nodeDepth   = 0,     -- Depth of node at required offset
+		offset      = offset -- Sought offset
 	}
 	function walker.block.down(node, ...)
 		walker.depth = walker.depth + 1
@@ -158,8 +160,13 @@ end
 -- 3. Indent them when there not empty
 -- There is and exception, start of string is handled as a delimiter to comply
 -- whith algorythm.
--- @usage indentCode('local var', '\n', '\t', 0)
--- @usage indentCode('local var', '\n', --[[indentationSize]]2, --[[tabulationSize]]4, 0)
+-- @function [parent=#luaformatter] indentCode
+-- @param #string source Source code to indent.
+-- @param #string delimiter End of line character.
+-- @param ...
+-- @usage indentCode('local var', '\n', ' ', 0, true)
+-- @usage indentCode('local var', '\n', 2, 4, 0, true)
+--
 function M.indentCode(source, delimiter, ...)
 	--
 	-- Create function which will generate indentation
