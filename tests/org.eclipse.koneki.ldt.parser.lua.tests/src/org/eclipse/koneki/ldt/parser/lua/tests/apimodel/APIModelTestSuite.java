@@ -10,6 +10,11 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.parser.lua.tests.apimodel;
 
+import java.io.File;
+import java.util.List;
+
+import junit.framework.TestCase;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.koneki.ldt.parser.lua.tests.LDTLuaAbstractTestSuite;
 
@@ -21,4 +26,8 @@ public class APIModelTestSuite extends LDTLuaAbstractTestSuite {
 		super("API Model", APIMODEL_TEST_FOLDER, "serialized"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
+	@Override
+	protected TestCase createTestCase(final File source, final File ref, final List<String> path) {
+		return new APIModelTestCase(source, ref, path);
+	}
 }

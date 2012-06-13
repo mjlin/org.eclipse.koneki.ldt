@@ -11,6 +11,7 @@
 package org.eclipse.koneki.ldt.parser.lua.tests;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -48,7 +49,7 @@ public class LDTLuaTestCase extends TestCase {
 
 	@Before
 	public void setUp() {
-		luaRunner = new LuaTestModuleRunner(sourceFileAbsolutePath, referenceFileAbsolutePath, luaPath);
+		luaRunner = new LuaTestModuleRunner(sourceFileAbsolutePath, referenceFileAbsolutePath, luaPath, filesToCompile());
 	}
 
 	@Test
@@ -64,5 +65,9 @@ public class LDTLuaTestCase extends TestCase {
 	@Override
 	public void runTest() {
 		test();
+	}
+
+	protected List<String> filesToCompile() {
+		return Collections.emptyList();
 	}
 }

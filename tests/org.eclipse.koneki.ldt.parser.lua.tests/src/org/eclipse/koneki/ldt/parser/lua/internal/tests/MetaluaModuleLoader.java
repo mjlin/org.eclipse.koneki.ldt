@@ -24,19 +24,17 @@ import com.naef.jnlua.LuaState;
  */
 public class MetaluaModuleLoader extends AbstractMetaLuaModule {
 
-	final private List<String> filesToCompile;
+	final private List<String> filesToCompileList;
 	final private List<String> luaSourcePath;
 
-	public MetaluaModuleLoader() {
+	public MetaluaModuleLoader(final List<String> filesToCompile) {
 
 		// Putting files to compile in lua path
 		luaSourcePath = new ArrayList<String>(1);
 		luaSourcePath.add(ModelsBuilderLuaModule.EXTERNAL_LIB_PATH);
 
 		// Define files to compile at runtime
-		filesToCompile = new ArrayList<String>(2);
-		filesToCompile.add(ModelsBuilderLuaModule.INTERNAL_MODEL_BUILDER_SCRIPT);
-		filesToCompile.add(ModelsBuilderLuaModule.API_MODEL_BUILDER_SCRIPT);
+		filesToCompileList = new ArrayList<String>(filesToCompile);
 	}
 
 	@Override
@@ -46,7 +44,7 @@ public class MetaluaModuleLoader extends AbstractMetaLuaModule {
 
 	@Override
 	protected List<String> getMetaLuaFileToCompile() {
-		return filesToCompile;
+		return filesToCompileList;
 	}
 
 	@Override

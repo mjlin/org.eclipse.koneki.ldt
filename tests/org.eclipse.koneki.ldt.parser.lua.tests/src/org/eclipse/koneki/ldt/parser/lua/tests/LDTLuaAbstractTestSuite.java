@@ -18,6 +18,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import org.eclipse.core.runtime.CoreException;
@@ -92,7 +93,7 @@ public abstract class LDTLuaAbstractTestSuite extends TestSuite {
 				path.add(folderPath);
 
 				// Append test case
-				addTest(new LDTLuaTestCase(inputFile, referenceFile, path));
+				addTest(createTestCase(inputFile, referenceFile, path));
 			}
 		} catch (final IOException e) {
 			final String message = MessageFormat.format("Unable to locate {0}.", folderPath); //$NON-NLS-1$
@@ -174,5 +175,9 @@ public abstract class LDTLuaAbstractTestSuite extends TestSuite {
 	protected final void raiseCoreException(final String message, final Throwable t) throws CoreException {
 		final Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, message, t);
 		throw new CoreException(status);
+	}
+
+	protected TestCase createTestCase(final File source, final File reference, final List<String> path) {
+		return new LDTLuaTestCase(source, reference, path);
 	}
 }

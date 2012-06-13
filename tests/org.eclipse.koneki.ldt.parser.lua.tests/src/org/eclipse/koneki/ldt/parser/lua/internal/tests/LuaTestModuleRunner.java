@@ -28,11 +28,13 @@ public class LuaTestModuleRunner extends AbstractLuaModule {
 	final private List<String> path;
 	final private String sourceFilePath;
 	final private String referenceFilePath;
+	final private List<String> filesToCompile;
 
 	private static String LUA_TEST_FUNCTION = "test"; //$NON-NLS-1$
 	private static String LUA_TEST_MODULE_NAME = "test"; //$NON-NLS-1$
 
-	public LuaTestModuleRunner(final String sourcePath, final String refPath, final List<String> localPath) {
+	public LuaTestModuleRunner(final String sourcePath, final String refPath, final List<String> localPath, final List<String> filesPathToCompile) {
+		filesToCompile = filesPathToCompile;
 		sourceFilePath = sourcePath;
 		referenceFilePath = refPath;
 		path = new ArrayList<String>();
@@ -52,7 +54,7 @@ public class LuaTestModuleRunner extends AbstractLuaModule {
 	/** Create a {@link LuaState} which has Metalua and AST generation capabilities */
 	@Override
 	protected LuaState createLuaState() {
-		final MetaluaModuleLoader metaluaModuleLoader = new MetaluaModuleLoader();
+		final MetaluaModuleLoader metaluaModuleLoader = new MetaluaModuleLoader(filesToCompile);
 		return metaluaModuleLoader.getLuaState();
 	}
 
