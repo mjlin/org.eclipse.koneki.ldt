@@ -188,5 +188,25 @@ function M.compare(t1, t2)
 	end
 	return differences
 end
+---
+-- @function [parent=#tablecompare] stripfunctions
+-- @param #table tab Table to strip
+-- @return #table Table stripped from functions
+--
+function M.stripfunctions(tab, visitedtables)
 
+	-- Avoid infinite self referenced table browsing 
+	visitedtables = visitedtables or {}
+	visitedtables[tab] = true
+
+	for k, v in pairs( tab ) do
+		local typev = type(v)
+		if typev == 'function' then
+			tab[k] = nil
+		elseif typev == 'table' and not visitedtables[v] then
+			M.stripfunctions(v, visitedtables)
+		end
+	end
+	return tab
+end
 return M

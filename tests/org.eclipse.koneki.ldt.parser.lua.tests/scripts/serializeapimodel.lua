@@ -16,6 +16,7 @@
 require 'errnode'
 local serializer = require 'serpent'
 local apimodelbuilder = require 'models.apimodelbuilder'
+local tablecompare  = require 'tablecompare'
 if #arg < 1 then
 	print 'No file to serialize.'
 	return
@@ -36,11 +37,13 @@ for k = 1, #arg do
 		--Generate API model
 		local apimodel = apimodelbuilder.createmoduleapi(ast)
 
+		-- Strip functions
+		 apimodel = tablecompare.stripfunctions( apimodel )
+ 
 		-- Serialize model
 		local serializedcode = serializer.serialize( apimodel )
 
-		-- Define file name
-		
+		-- Define file name		
 		local serializedfilename = filename:gsub('([%w%-_/\]+)%.lua','%1.serialized')
 
 		-- Save serialized model

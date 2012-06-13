@@ -27,6 +27,7 @@ function M.test(luasourcepath, serializedreferencepath)
 	-- Generate API model
 	--
 	local apimodel = apimodelbuilder.createmoduleapi(ast)
+	apimodel = tablecompare.stripfunctions(apimodel)
 
 	--
 	-- Load provided reference
