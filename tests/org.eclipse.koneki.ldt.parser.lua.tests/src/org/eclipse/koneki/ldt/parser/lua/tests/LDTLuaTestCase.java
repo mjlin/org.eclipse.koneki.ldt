@@ -15,29 +15,31 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.eclipse.koneki.ldt.metalua.MetaluaStateFactory;
-import org.eclipse.koneki.ldt.module.AbstractLuaModule;
-import org.junit.After;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.koneki.ldt.parser.lua.internal.tests.LuaTestModuleRunner;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.naef.jnlua.LuaState;
-
+/**
+ * Runs lua test function on a lua file and its reference one.
+ * 
+ * The idea is to call a lua function with the paths of tested lua file and reference one.
+ */
 public class LDTLuaTestCase extends TestCase {
 
-	private LuaState luaState;
+	final private List<String> luaPath;
 	final private String referenceFileAbsolutePath;
 	final private String sourceFileAbsolutePath;
-	final private List<File> luaPath;
-	private static String LUA_TEST_FUNCTION = "test"; //$NON-NLS-1$
-	private static String LUA_TEST_MODULE_NAME = "test"; //$NON-NLS-1$
+
+	/** Actual test is perfomed by this object */
+	private LuaTestModuleRunner luaRunner;
 
 	/**
 	 * Just locate two files. File to test and a reference representing which AST tested file should produce.
 	 * 
 	 * @param modulePath
 	 */
-	public LDTLuaTestCase(final File sourceFilePath, final File referenceFilePath, final List<File> directoryListForLuaPath) {
+	public LDTLuaTestCase(final File sourceFilePath, final File referenceFilePath, final List<String> directoryListForLuaPath) {
 		sourceFileAbsolutePath = sourceFilePath.getAbsolutePath();
 		referenceFileAbsolutePath = referenceFilePath.getAbsolutePath();
 		luaPath = directoryListForLuaPath;
@@ -46,41 +48,17 @@ public class LDTLuaTestCase extends TestCase {
 
 	@Before
 	public void setUp() {
-
-		// Create new Lua instance loaded with Metalua
-		luaState = MetaluaStateFactory.newLuaState();
-
-		// Yes, in all folder we will seek for .lua and .luac
-		AbstractLuaModule.setLuaPath(luaState, luaPath, luaPath);
-
-		// Load utility module
-		luaState.getGlobal("require"); //$NON-NLS-1$
-		luaState.pushString(LUA_TEST_MODULE_NAME);
-		luaState.call(1, 1);
-		luaState.setGlobal(LUA_TEST_MODULE_NAME);
+		luaRunner = new LuaTestModuleRunner(sourceFileAbsolutePath, referenceFileAbsolutePath, luaPath);
 	}
 
 	@Test
 	public void test() {
-		/*
-		 * Call Lua function which will generate api model form given source file and compare it to reference.
-		 */
-		luaState.getGlobal(LUA_TEST_MODULE_NAME);
-		luaState.getField(-1, LUA_TEST_FUNCTION);
-		luaState.pushString(sourceFileAbsolutePath);
-		luaState.pushString(referenceFileAbsolutePath);
-		luaState.call(2, 2);
-		if (luaState.isBoolean(-2)) {
-			assertTrue("Generated API model and reference one differ.", luaState.toBoolean(-2)); //$NON-NLS-1$
-		} else {
-			assertTrue(luaState.isNil(-2));
-			fail(luaState.toString(-1));
+		// Run test on lua side
+		try {
+			luaRunner.run();
+		} catch (final CoreException e) {
+			fail(e.getMessage());
 		}
-	}
-
-	@After
-	public void tearDown() {
-		luaState.close();
 	}
 
 	@Override

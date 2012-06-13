@@ -16,7 +16,6 @@ import java.net.URI;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import junit.framework.TestSuite;
@@ -29,11 +28,14 @@ import org.eclipse.core.runtime.Status;
 import org.osgi.framework.Bundle;
 
 /**
- * Launch a bench of TestCase for each file to test in the given folder
+ * Launch a bench of TestCase for each file to test in the given folder.
  * 
- * @author Marc Aubry
+ * @author Marc Aubry <maubry@sierrawireless.com>
+ * @author Kevin KIN-FOO <kkinfoo@sierrawireless.com>
  */
 public abstract class LDTLuaAbstractTestSuite extends TestSuite {
+
+	private static final String COMMON_LIB_FOLDER = "/lib"; //$NON-NLS-1$
 
 	/**
 	 * 
@@ -69,22 +71,28 @@ public abstract class LDTLuaAbstractTestSuite extends TestSuite {
 			// Retrieve files
 			for (final File inputFile : getRecursiveFileList(inputFolder)) {
 
-				// compute reference file name (with the according extension)
+				// Compute reference file name (with the according extension)
 				final IPath inputFilePath = new Path(inputFile.getAbsolutePath());
 				final String fileName = inputFile.getName();
 				final String fileNameWithoutExt = fileName.substring(0, fileName.length() - inputFilePath.getFileExtension().length() - 1);
 				final String referenceFileNameWithExt = MessageFormat.format("{0}.{1}", fileNameWithoutExt, referenceFileExtension); //$NON-NLS-1$
 
-				// compute reference absolute path
+				// Compute reference absolute path
 				final String folderRelativeFilePath = computeFolderRelativeFilePath(inputFolder.getAbsolutePath(), inputFile.getAbsolutePath());
 				IPath referenceFilePath = new Path(referenceFolder.getAbsolutePath()).append(folderRelativeFilePath);
 				referenceFilePath = referenceFilePath.removeLastSegments(1).append(referenceFileNameWithExt);
 
-				// check reference file
+				// Check reference file
 				final String errorMessage = MessageFormat.format("No reference file found for {0}.", folderRelativeFilePath); //$NON-NLS-1$
 				final File referenceFile = checkFile(referenceFilePath, errorMessage);
 
-				addTest(new LDTLuaTestCase(inputFile, referenceFile, Collections.<File> emptyList()));
+				// Compute path to provide to test case
+				final ArrayList<String> path = new ArrayList<String>();
+				path.add(COMMON_LIB_FOLDER);
+				path.add(folderPath);
+
+				// Append test case
+				addTest(new LDTLuaTestCase(inputFile, referenceFile, path));
 			}
 		} catch (final IOException e) {
 			final String message = MessageFormat.format("Unable to locate {0}.", folderPath); //$NON-NLS-1$
@@ -157,7 +165,9 @@ public abstract class LDTLuaAbstractTestSuite extends TestSuite {
 	 * Raise a core exception for logging
 	 * 
 	 * @param message
+	 *            Message to log
 	 * @param t
+	 *            Related exception
 	 * @throws CoreException
 	 * 
 	 */

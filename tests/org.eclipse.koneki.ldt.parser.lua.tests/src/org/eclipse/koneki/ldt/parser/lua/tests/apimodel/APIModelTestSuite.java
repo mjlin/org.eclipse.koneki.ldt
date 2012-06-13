@@ -8,11 +8,17 @@
  * Contributors:
  *     Sierra Wireless - initial API and implementation
  *******************************************************************************/
-package org.eclipse.koneki.ldt.parser.apimodel.internal.tests;
+package org.eclipse.koneki.ldt.parser.lua.tests.apimodel;
 
-public interface IASTGenerationConstants {
-	final String LUA_FILES_FOLDER = "/lua/apimodel/"; //$NON-NLS-1$
-	final String SERIALIZED_FILES_FOLDER = "/serialized/apimodel/"; //$NON-NLS-1$
-	final String LUA_FILES_EXTENSION = ".lua"; //$NON-NLS-1$
-	final String SERIALIZED_FILES_EXTENSION = ".serialized"; //$NON-NLS-1$
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.koneki.ldt.parser.lua.tests.LDTLuaAbstractTestSuite;
+
+public class APIModelTestSuite extends LDTLuaAbstractTestSuite {
+
+	private static final String APIMODEL_TEST_FOLDER = "tests/apimodel"; //$NON-NLS-1$
+
+	public APIModelTestSuite() throws CoreException {
+		super("API Model", APIMODEL_TEST_FOLDER, "serialized"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+
 }

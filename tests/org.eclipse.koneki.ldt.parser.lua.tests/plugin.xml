@@ -4,7 +4,7 @@
    <extension
          point="org.eclipse.koneki.ldt.tests.testSuites">
       <testSuite
-            class="org.eclipse.koneki.ldt.parser.apimodel.internal.tests.ASTGenerationTestSuite">
+            class="org.eclipse.koneki.ldt.parser.lua.tests.apimodel.APIModelTestSuite">
       </testSuite>
    </extension>
 
