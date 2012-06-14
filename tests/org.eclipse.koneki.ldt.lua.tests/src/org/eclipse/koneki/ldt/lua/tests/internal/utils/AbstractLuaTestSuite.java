@@ -32,7 +32,7 @@ import org.osgi.framework.Bundle;
  * @author Marc Aubry <maubry@sierrawireless.com>
  * @author Kevin KIN-FOO <kkinfoo@sierrawireless.com>
  */
-public abstract class AbstractLuaAbstractTestSuite extends TestSuite {
+public abstract class AbstractLuaTestSuite extends TestSuite {
 
 	private static final String COMMON_LIB_FOLDER = "/lib"; //$NON-NLS-1$
 
@@ -46,7 +46,7 @@ public abstract class AbstractLuaAbstractTestSuite extends TestSuite {
 	 *            Extension of the reference file (e.g. "lua" or "serialized")
 	 * 
 	 */
-	public AbstractLuaAbstractTestSuite(final String name, final String folderPath, final String referenceFileExtension) {
+	public AbstractLuaTestSuite(final String name, final String folderPath, final String referenceFileExtension) {
 		super();
 		setName(name);
 
@@ -70,20 +70,16 @@ public abstract class AbstractLuaAbstractTestSuite extends TestSuite {
 			// Retrieve files
 			for (final File inputFile : getRecursiveFileList(inputFolder)) {
 
-				// Compute reference file name (with the according extension)
+				// Compute reference file path
 				final IPath inputFilePath = new Path(inputFile.getCanonicalPath());
-				final String fileName = inputFile.getName();
-				final String fileNameWithoutExt = fileName.substring(0, fileName.length() - inputFilePath.getFileExtension().length() - 1);
-				final String referenceFileNameWithExt = MessageFormat.format("{0}.{1}", fileNameWithoutExt, referenceFileExtension); //$NON-NLS-1$
-
-				// Compute reference absolute path
-				final String folderRelativeFilePath = computeFolderRelativeFilePath(inputFolder, inputFile);
-				IPath referenceFilePath = new Path(referenceFolder.getCanonicalPath()).append(folderRelativeFilePath);
-				referenceFilePath = referenceFilePath.removeLastSegments(1).append(referenceFileNameWithExt);
+				final IPath relativeToFolderPath = inputFilePath.makeRelativeTo(new Path(inputFolder.getCanonicalPath()));
+				IPath referenceFilePath = new Path(referenceFolder.getCanonicalPath()).append(relativeToFolderPath);
+				referenceFilePath = referenceFilePath.removeFileExtension();
+				referenceFilePath = referenceFilePath.addFileExtension(referenceFileExtension);
 
 				// Check reference file
-				final String errorMessage = MessageFormat.format("No reference file found for {0}.", folderRelativeFilePath); //$NON-NLS-1$
-				final File referenceFile = checkFile(referenceFilePath, errorMessage);
+				final String errorMessage = MessageFormat.format("No reference file found for {0}.", relativeToFolderPath); //$NON-NLS-1$
+				checkFile(referenceFilePath, errorMessage);
 
 				// Compute path to provide to test case
 				final ArrayList<String> path = new ArrayList<String>();
@@ -91,7 +87,7 @@ public abstract class AbstractLuaAbstractTestSuite extends TestSuite {
 				path.add(folderPath);
 
 				// Append test case
-				addTest(createTestCase(inputFile, referenceFile, path));
+				addTest(createTestCase(getTestModuleName(), inputFilePath, referenceFilePath, path));
 			}
 		} catch (final IOException e) {
 			final String message = MessageFormat.format("Unable to locate {0}.", folderPath); //$NON-NLS-1$
@@ -135,10 +131,6 @@ public abstract class AbstractLuaAbstractTestSuite extends TestSuite {
 		return list;
 	}
 
-	private String computeFolderRelativeFilePath(File folder, File file) {
-		return folder.toURI().relativize(file.toURI()).toString();
-	}
-
 	/**
 	 * @return Input file root folder
 	 */
@@ -156,15 +148,15 @@ public abstract class AbstractLuaAbstractTestSuite extends TestSuite {
 	/**
 	 * @return lua file implementing the test
 	 */
-	protected String getTestLuaPath() {
-		return "test.lua"; //$NON-NLS-1$
+	protected String getTestModuleName() {
+		return "test"; //$NON-NLS-1$
 	}
 
 	protected final void raiseRuntimeException(final String message, final Throwable t) {
 		throw new RuntimeException(message, t);
 	}
 
-	protected TestCase createTestCase(final File source, final File reference, final List<String> path) {
-		return new LuaTestCase(source, reference, path);
+	protected TestCase createTestCase(final String testModuleName, final IPath inputFilePath, final IPath referenceFilePath, final List<String> path) {
+		return new LuaTestCase(getName(), testModuleName, inputFilePath, referenceFilePath, path);
 	}
 }

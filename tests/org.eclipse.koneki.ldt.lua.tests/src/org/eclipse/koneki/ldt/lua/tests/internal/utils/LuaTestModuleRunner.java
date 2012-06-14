@@ -26,14 +26,16 @@ import com.naef.jnlua.eclipse.AbstractLuaModule;
 public class LuaTestModuleRunner extends AbstractLuaModule {
 
 	private static final String LUA_TEST_FUNCTION = "test"; //$NON-NLS-1$
-	private static final String LUA_TEST_MODULE_NAME = "test"; //$NON-NLS-1$
 
 	private final List<String> path;
 	private final String sourceFilePath;
 	private final String referenceFilePath;
 	private final List<String> filesToCompile;
+	private final String testModule;
 
-	public LuaTestModuleRunner(final String sourcePath, final String refPath, final List<String> localPath, final List<String> filesPathToCompile) {
+	public LuaTestModuleRunner(final String testModuleName, final String sourcePath, final String refPath, final List<String> localPath,
+			final List<String> filesPathToCompile) {
+		testModule = testModuleName;
 		filesToCompile = filesPathToCompile;
 		sourceFilePath = sourcePath;
 		referenceFilePath = refPath;
@@ -65,7 +67,7 @@ public class LuaTestModuleRunner extends AbstractLuaModule {
 
 	@Override
 	protected String getModuleName() {
-		return LUA_TEST_MODULE_NAME;
+		return testModule;
 	}
 
 	/**

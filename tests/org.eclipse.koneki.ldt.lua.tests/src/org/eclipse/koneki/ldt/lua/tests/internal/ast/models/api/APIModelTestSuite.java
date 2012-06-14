@@ -10,21 +10,21 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.lua.tests.internal.ast.models.api;
 
-import java.io.File;
 import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.eclipse.koneki.ldt.lua.tests.internal.utils.AbstractLuaAbstractTestSuite;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.koneki.ldt.lua.tests.internal.utils.AbstractLuaTestSuite;
 
-public class APIModelTestSuite extends AbstractLuaAbstractTestSuite {
+public class APIModelTestSuite extends AbstractLuaTestSuite {
 
 	public APIModelTestSuite() {
 		super("API Model", "tests/apimodel", "serialized"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	@Override
-	protected TestCase createTestCase(final File source, final File ref, final List<String> path) {
-		return new APIModelTestCase(source, ref, path);
+	protected TestCase createTestCase(final String testModuleName, final IPath source, final IPath ref, final List<String> path) {
+		return new APIModelTestCase(getName(), testModuleName, source, ref, path);
 	}
 }

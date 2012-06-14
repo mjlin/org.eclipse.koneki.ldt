@@ -10,13 +10,14 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.lua.tests.internal.utils;
 
-import java.io.File;
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,28 +28,29 @@ import org.junit.Test;
  */
 public class LuaTestCase extends TestCase {
 
+	private final String testModuleName;
 	private final List<String> luaPath;
 	private final String referenceFileAbsolutePath;
 	private final String sourceFileAbsolutePath;
 
-	/** Actual test is perfomed by this object */
+	/** Actual test is performed by this object */
 	private LuaTestModuleRunner luaRunner;
 
-	/**
-	 * Just locate two files. File to test and a reference representing which AST tested file should produce.
-	 * 
-	 * @param modulePath
-	 */
-	public LuaTestCase(final File sourceFilePath, final File referenceFilePath, final List<String> directoryListForLuaPath) {
-		sourceFileAbsolutePath = sourceFilePath.getAbsolutePath();
-		referenceFileAbsolutePath = referenceFilePath.getAbsolutePath();
+	public LuaTestCase(final String testSuiteName, final String testModuleName, final IPath inputFilePath, final IPath referenceFilePath,
+			final List<String> directoryListForLuaPath) {
+		this.testModuleName = testModuleName;
+		sourceFileAbsolutePath = inputFilePath.toOSString();
+		referenceFileAbsolutePath = referenceFilePath.toOSString();
 		luaPath = directoryListForLuaPath;
-		setName(sourceFilePath.getName());
+
+		// The Module name is
+		String testName = MessageFormat.format("{0}.{1}", testSuiteName, inputFilePath.lastSegment()); //$NON-NLS-1$
+		setName(testName);
 	}
 
 	@Before
 	public void setUp() {
-		luaRunner = new LuaTestModuleRunner(sourceFileAbsolutePath, referenceFileAbsolutePath, luaPath, filesToCompile());
+		luaRunner = new LuaTestModuleRunner(testModuleName, sourceFileAbsolutePath, referenceFileAbsolutePath, luaPath, filesToCompile());
 	}
 
 	@Test

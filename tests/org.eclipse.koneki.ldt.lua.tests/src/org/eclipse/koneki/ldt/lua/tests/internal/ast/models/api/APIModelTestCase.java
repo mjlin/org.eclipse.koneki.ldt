@@ -10,10 +10,10 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.lua.tests.internal.ast.models.api;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.koneki.ldt.core.internal.ast.parser.ModelsBuilderLuaModule;
 import org.eclipse.koneki.ldt.lua.tests.internal.utils.LuaTestCase;
 
@@ -21,8 +21,9 @@ public class APIModelTestCase extends LuaTestCase {
 
 	private static ArrayList<String> filesToCompileList = null;
 
-	public APIModelTestCase(final File sourceFilePath, final File referenceFilePath, final List<String> directoryListForLuaPath) {
-		super(sourceFilePath, referenceFilePath, directoryListForLuaPath);
+	public APIModelTestCase(final String testSuiteName, final String testFileName, final IPath sourceFilePath, final IPath referenceFilePath,
+			final List<String> directoryListForLuaPath) {
+		super(testSuiteName, testFileName, sourceFilePath, referenceFilePath, directoryListForLuaPath);
 	}
 
 	@Override
