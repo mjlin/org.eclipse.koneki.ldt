@@ -27,8 +27,10 @@ function M.test(luainputpath, luareferencepath)
 	end
 	local referenceCode = referenceFile:read('*a')
 
-	-- Check equality
-	assert:assertEquals("Formatting Error", referenceCode, formattedCode)
-	return true
+	-- Check equality by catching assertException from assertEquals
+	local status, errormessage = pcall( function()
+		assert:assertEquals("Formatting Error", referenceCode, formattedCode)
+	end)
+	return status or nil, tostring(errormessage)
 end
 return M
