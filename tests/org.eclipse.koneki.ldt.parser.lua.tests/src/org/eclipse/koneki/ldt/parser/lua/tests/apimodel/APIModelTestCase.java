@@ -10,10 +10,10 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.parser.lua.tests.apimodel;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.koneki.ldt.parser.ModelsBuilderLuaModule;
 import org.eclipse.koneki.ldt.parser.lua.tests.LDTLuaTestCase;
 
@@ -21,7 +21,7 @@ public class APIModelTestCase extends LDTLuaTestCase {
 
 	private static ArrayList<String> filesToCompileList = null;
 
-	public APIModelTestCase(final String testSuiteName, final String testFileName, final File sourceFilePath, final File referenceFilePath,
+	public APIModelTestCase(final String testSuiteName, final String testFileName, final IPath sourceFilePath, final IPath referenceFilePath,
 			final List<String> directoryListForLuaPath) {
 		super(testSuiteName, testFileName, sourceFilePath, referenceFilePath, directoryListForLuaPath);
 	}

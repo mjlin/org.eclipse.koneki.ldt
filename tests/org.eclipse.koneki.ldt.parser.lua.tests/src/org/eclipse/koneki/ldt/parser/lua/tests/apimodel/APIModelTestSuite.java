@@ -10,12 +10,12 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.parser.lua.tests.apimodel;
 
-import java.io.File;
 import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.koneki.ldt.parser.lua.tests.LDTLuaAbstractTestSuite;
 
 public class APIModelTestSuite extends LDTLuaAbstractTestSuite {
@@ -27,7 +27,7 @@ public class APIModelTestSuite extends LDTLuaAbstractTestSuite {
 	}
 
 	@Override
-	protected TestCase createTestCase(final String testModuleName, final File source, final File ref, final List<String> path) {
+	protected TestCase createTestCase(final String testModuleName, final IPath source, final IPath ref, final List<String> path) {
 		return new APIModelTestCase(getName(), testModuleName, source, ref, path);
 	}
 }

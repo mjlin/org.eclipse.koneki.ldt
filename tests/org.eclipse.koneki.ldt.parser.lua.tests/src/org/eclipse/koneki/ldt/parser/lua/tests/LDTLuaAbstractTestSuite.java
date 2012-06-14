@@ -72,20 +72,12 @@ public abstract class LDTLuaAbstractTestSuite extends TestSuite {
 			// Retrieve files
 			for (final File inputFile : getRecursiveFileList(inputFolder)) {
 
-				// Compute reference file name (with the according extension)
-				final IPath inputFilePath = new Path(inputFile.getAbsolutePath());
-				final String fileName = inputFile.getName();
-				final String fileNameWithoutExt = fileName.substring(0, fileName.length() - inputFilePath.getFileExtension().length() - 1);
-				final String referenceFileNameWithExt = MessageFormat.format("{0}.{1}", fileNameWithoutExt, referenceFileExtension); //$NON-NLS-1$
-
-				// Compute reference absolute path
-				final String folderRelativeFilePath = computeFolderRelativeFilePath(inputFolder.getAbsolutePath(), inputFile.getAbsolutePath());
-				IPath referenceFilePath = new Path(referenceFolder.getAbsolutePath()).append(folderRelativeFilePath);
-				referenceFilePath = referenceFilePath.removeLastSegments(1).append(referenceFileNameWithExt);
-
-				// Check reference file
-				final String errorMessage = MessageFormat.format("No reference file found for {0}.", folderRelativeFilePath); //$NON-NLS-1$
-				final File referenceFile = checkFile(referenceFilePath, errorMessage);
+				// Compute reference file path
+				final IPath inputFilePath = new Path(inputFile.getCanonicalPath());
+				final IPath relativeToFolderPath = inputFilePath.makeRelativeTo(new Path(inputFolder.getCanonicalPath()));
+				IPath referenceFilePath = new Path(referenceFolder.getCanonicalPath()).append(relativeToFolderPath);
+				referenceFilePath = referenceFilePath.removeFileExtension();
+				referenceFilePath = referenceFilePath.addFileExtension(referenceFileExtension);
 
 				// Compute path to provide to test case
 				final ArrayList<String> path = new ArrayList<String>();
@@ -93,7 +85,7 @@ public abstract class LDTLuaAbstractTestSuite extends TestSuite {
 				path.add(folderPath);
 
 				// Append test case
-				addTest(createTestCase(getTestModuleName(), inputFile, referenceFile, path));
+				addTest(createTestCase(getTestModuleName(), inputFilePath, referenceFilePath, path));
 			}
 		} catch (final IOException e) {
 			final String message = MessageFormat.format("Unable to locate {0}.", folderPath); //$NON-NLS-1$
@@ -177,7 +169,7 @@ public abstract class LDTLuaAbstractTestSuite extends TestSuite {
 		throw new CoreException(status);
 	}
 
-	protected TestCase createTestCase(final String testModuleName, final File source, final File reference, final List<String> path) {
-		return new LDTLuaTestCase(getName(), testModuleName, source, reference, path);
+	protected TestCase createTestCase(final String testModuleName, final IPath inputFilePath, final IPath referenceFilePath, final List<String> path) {
+		return new LDTLuaTestCase(getName(), testModuleName, inputFilePath, referenceFilePath, path);
 	}
 }

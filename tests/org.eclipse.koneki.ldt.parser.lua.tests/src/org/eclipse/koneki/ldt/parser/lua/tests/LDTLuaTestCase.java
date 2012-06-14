@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.parser.lua.tests;
 
-import java.io.File;
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +17,7 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.koneki.ldt.parser.lua.internal.tests.LuaTestModuleRunner;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,15 +44,15 @@ public class LDTLuaTestCase extends TestCase {
 	 * 
 	 * @param modulePath
 	 */
-	public LDTLuaTestCase(final String testSuiteName, final String testModuleName, final File sourceFilePath, final File referenceFilePath,
+	public LDTLuaTestCase(final String testSuiteName, final String testModuleName, final IPath inputFilePath, final IPath referenceFilePath,
 			final List<String> directoryListForLuaPath) {
 		this.testModuleName = testModuleName;
-		sourceFileAbsolutePath = sourceFilePath.getAbsolutePath();
-		referenceFileAbsolutePath = referenceFilePath.getAbsolutePath();
+		sourceFileAbsolutePath = inputFilePath.toOSString();
+		referenceFileAbsolutePath = referenceFilePath.toOSString();
 		luaPath = directoryListForLuaPath;
 
 		// The Module name is
-		String testName = MessageFormat.format("{0}.{1}", testSuiteName, sourceFilePath.getName()); //$NON-NLS-1$
+		String testName = MessageFormat.format("{0}.{1}", testSuiteName, inputFilePath.lastSegment()); //$NON-NLS-1$
 		setName(testName);
 	}
 
