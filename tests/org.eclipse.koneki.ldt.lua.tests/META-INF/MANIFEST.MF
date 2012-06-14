@@ -18,5 +18,6 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Export-Package: org.eclipse.koneki.ldt.lua.tests,
  org.eclipse.koneki.ldt.lua.tests.internal;x-internal:=true,
  org.eclipse.koneki.ldt.lua.tests.internal.ast.models.api;x-internal:=true,
+ org.eclipse.koneki.ldt.lua.tests.internal.formatter;x-internal:=true,
  org.eclipse.koneki.ldt.lua.tests.internal.utils;x-internal:=true
 Bundle-Vendor: %Bundle-Vendor

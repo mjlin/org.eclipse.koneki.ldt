@@ -28,13 +28,11 @@ import org.osgi.framework.Bundle;
 
 /**
  * Launch a bench of TestCase for each file to test in the given folder.
- * 
- * @author Marc Aubry <maubry@sierrawireless.com>
- * @author Kevin KIN-FOO <kkinfoo@sierrawireless.com>
  */
 public abstract class AbstractLuaTestSuite extends TestSuite {
 
 	private static final String COMMON_LIB_FOLDER = "/lib"; //$NON-NLS-1$
+	private static final String COMMON_EXTERNAL_LIB_FOLDER = "/lib/external"; //$NON-NLS-1$
 
 	/**
 	 * 
@@ -57,15 +55,15 @@ public abstract class AbstractLuaTestSuite extends TestSuite {
 			final Path folderAbsolutePath = new Path(FileLocator.toFileURL(ressource).getPath());
 
 			// check test suite folder
-			checkFolder(folderAbsolutePath, "This is not a directory and cannot contain test suite files and folders"); //$NON-NLS-1$
+			checkFolder(folderAbsolutePath, "This is not a directory and cannot contain test suite files and folders."); //$NON-NLS-1$
 
 			// check input folder
 			final File inputFolder = checkFolder(folderAbsolutePath.append(getInputFolderPath()),
-					"This is not a directory and cannot contain test lua input files"); //$NON-NLS-1$
+					"This is not a directory and cannot contain test lua input files."); //$NON-NLS-1$
 
 			// check reference folder
 			final File referenceFolder = checkFolder(folderAbsolutePath.append(getReferenceFolderPath()),
-					"This is not a directory and cannot contain test reference files"); //$NON-NLS-1$
+					"This is not a directory and cannot contain test reference files."); //$NON-NLS-1$
 
 			// Retrieve files
 			for (final File inputFile : getRecursiveFileList(inputFolder)) {
@@ -84,14 +82,20 @@ public abstract class AbstractLuaTestSuite extends TestSuite {
 				// Compute path to provide to test case
 				final ArrayList<String> path = new ArrayList<String>();
 				path.add(COMMON_LIB_FOLDER);
+				path.add(COMMON_EXTERNAL_LIB_FOLDER);
 				path.add(folderPath);
 
 				// Append test case
 				addTest(createTestCase(getTestModuleName(), inputFilePath, referenceFilePath, path));
 			}
 		} catch (final IOException e) {
-			final String message = MessageFormat.format("Unable to locate {0}.", folderPath); //$NON-NLS-1$
-			raiseRuntimeException(message, e);
+			// When an error occurs when loading files, notify it as a failed test
+			addTest(new TestCase("Warning:") {//$NON-NLS-1$
+				@Override
+				public void runTest() {
+					fail(e.getMessage());
+				}
+			});
 		}
 	}
 

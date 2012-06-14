@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.koneki.ldt.core.internal.ast.parser.ModelsBuilderLuaModule;
 import org.eclipse.koneki.ldt.lua.tests.internal.utils.LuaTestCase;
 
 public class APIModelTestCase extends LuaTestCase {
@@ -30,8 +29,8 @@ public class APIModelTestCase extends LuaTestCase {
 	protected synchronized List<String> filesToCompile() {
 		if (filesToCompileList == null) {
 			filesToCompileList = new ArrayList<String>(2);
-			filesToCompileList.add(ModelsBuilderLuaModule.INTERNAL_MODEL_BUILDER_SCRIPT);
-			filesToCompileList.add(ModelsBuilderLuaModule.API_MODEL_BUILDER_SCRIPT);
+			filesToCompileList.add("models/internalmodelbuilder.mlua");//$NON-NLS-1$
+			filesToCompileList.add("models/apimodelbuilder.mlua"); //$NON-NLS-1$
 		}
 		return filesToCompileList;
 	}

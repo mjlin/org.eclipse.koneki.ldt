@@ -16,7 +16,6 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,11 +55,7 @@ public class LuaTestCase extends TestCase {
 	@Test
 	public void test() {
 		// Run test on lua side
-		try {
-			luaRunner.run();
-		} catch (final CoreException e) {
-			fail(e.getMessage());
-		}
+		luaRunner.run();
 	}
 
 	@Override

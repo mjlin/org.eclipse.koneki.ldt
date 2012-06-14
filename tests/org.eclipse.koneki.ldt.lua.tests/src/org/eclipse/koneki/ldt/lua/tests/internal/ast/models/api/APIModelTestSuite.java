@@ -20,7 +20,7 @@ import org.eclipse.koneki.ldt.lua.tests.internal.utils.AbstractLuaTestSuite;
 public class APIModelTestSuite extends AbstractLuaTestSuite {
 
 	public APIModelTestSuite() {
-		super("API Model", "tests/apimodel", "serialized"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		super("apimodel", "tests/apimodel", "serialized"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	@Override

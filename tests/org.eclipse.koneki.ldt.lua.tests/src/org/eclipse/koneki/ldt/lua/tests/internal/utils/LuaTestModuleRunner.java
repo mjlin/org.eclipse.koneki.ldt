@@ -14,16 +14,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.koneki.ldt.lua.tests.internal.Activator;
+import org.eclipse.koneki.ldt.metalua.AbstractMetaLuaModule;
+import org.junit.Assert;
 
 import com.naef.jnlua.LuaState;
-import com.naef.jnlua.eclipse.AbstractLuaModule;
 
 /**
  * Run lua test function on two files, a source and a reference one.
  */
-public class LuaTestModuleRunner extends AbstractLuaModule {
+public class LuaTestModuleRunner extends AbstractMetaLuaModule {
 
 	private static final String LUA_TEST_FUNCTION = "test"; //$NON-NLS-1$
 
@@ -44,6 +44,11 @@ public class LuaTestModuleRunner extends AbstractLuaModule {
 	}
 
 	@Override
+	protected List<String> getMetaLuaFileToCompile() {
+		return filesToCompile;
+	}
+
+	@Override
 	protected List<String> getLuaSourcePaths() {
 		return path;
 	}
@@ -53,11 +58,9 @@ public class LuaTestModuleRunner extends AbstractLuaModule {
 		return getLuaSourcePaths();
 	}
 
-	/** Create a {@link LuaState} which has Metalua and AST generation capabilities */
 	@Override
-	protected LuaState createLuaState() {
-		final MetaluaModuleLoader metaluaModuleLoader = new MetaluaModuleLoader(filesToCompile);
-		return metaluaModuleLoader.getLuaState();
+	protected List<String> getMetaLuaSourcePaths() {
+		return getLuaSourcePaths();
 	}
 
 	@Override
@@ -76,29 +79,29 @@ public class LuaTestModuleRunner extends AbstractLuaModule {
 	 * @throws CoreException
 	 *             with message error when failure occurs.
 	 */
-	public void run() throws CoreException {
+	public void run() {
 
 		// Run lua test function
 		final LuaState luaState = loadLuaModule();
-		luaState.getGlobal(getModuleName());
-		luaState.getField(-1, LUA_TEST_FUNCTION);
-		luaState.pushString(sourceFilePath);
-		luaState.pushString(referenceFilePath);
-		luaState.call(2, 2);
+		try {
+			luaState.getGlobal(getModuleName());
+			luaState.getField(-1, LUA_TEST_FUNCTION);
+			luaState.pushString(sourceFilePath);
+			luaState.pushString(referenceFilePath);
+			luaState.call(2, 2);
 
-		// Get error message if there is any
-		String errorMessage = null;
-		if ((luaState.isBoolean(-2) && !luaState.toBoolean(-2)) || luaState.isNil(-2)) {
-			errorMessage = luaState.toString(-1);
-		}
+			// Get error message if there is any
+			if ((luaState.isBoolean(-2) && !luaState.toBoolean(-2)) || luaState.isNil(-2)) {
 
-		// Close lua instance
-		luaState.close();
-
-		// Notify error when needed
-		if (errorMessage != null) {
-			final Status status = new Status(Status.ERROR, getPluginID(), errorMessage);
-			throw new CoreException(status);
+				// Notify error when needed
+				final String errorMessage = luaState.toString(-1);
+				if (errorMessage != null) {
+					Assert.fail(errorMessage);
+				}
+			}
+		} finally {
+			// Close lua instance
+			luaState.close();
 		}
 	}
 
