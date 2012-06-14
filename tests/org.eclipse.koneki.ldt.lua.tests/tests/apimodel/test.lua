@@ -38,14 +38,20 @@ function M.test(luasourcepath, serializedreferencepath)
 	end
 	local referenceapimodel = luareferenceloadingfunction()
 
-	-- Check that they have references at same place
-	local equivalent, message = tablecompare.compare(apimodel, referenceapimodel)
-	if not equivalent then
+	-- Check that they are equivalent
+	local equivalent = tablecompare.compare(apimodel, referenceapimodel)
+	if #equivalent > 0 then
 
 		-- Compute which keys differs
 		local differentkeys = tablecompare.diff(apimodel, referenceapimodel)
 		local differentkeysstring = table.tostring(differentkeys)
-		return nil, string.format('%s\nDifferent keys are:\n%s', message, differentkeysstring)
+		
+		-- Formalise first table output
+		local _ = '_'
+		local line = _:rep(80)
+		local firstout   = string.format('%s\nFirst table\n%s\n%s', line, line, table.tostring(apimodel, 1))
+		local secondout  = string.format('%s\nSecond table\n%s\n%s', line, line, table.tostring(referenceapimodel, 1))
+		return nil, string.format('Keys which differ are:\n%s\n%s\n%s', differentkeysstring, firstout, secondout)
 
 	end
 	return true
