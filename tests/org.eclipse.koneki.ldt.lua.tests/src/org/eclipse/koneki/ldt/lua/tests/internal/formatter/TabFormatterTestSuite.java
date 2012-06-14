@@ -15,10 +15,8 @@ import org.eclipse.koneki.ldt.lua.tests.internal.utils.AbstractLuaTestSuite;
 
 public class TabFormatterTestSuite extends AbstractLuaTestSuite {
 
-	private static final String FORMATTER_TEST_FOLDER = "tests/formatter"; //$NON-NLS-1$
-
 	public TabFormatterTestSuite() {
-		super("Formatter tab", FORMATTER_TEST_FOLDER, "lua"); //$NON-NLS-1$ //$NON-NLS-2$
+		super("Formatter tab", "tests/formatter", "lua"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
 	/**
