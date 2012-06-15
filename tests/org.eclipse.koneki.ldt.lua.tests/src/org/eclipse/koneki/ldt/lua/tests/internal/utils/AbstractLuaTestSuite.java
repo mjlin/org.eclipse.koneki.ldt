@@ -75,10 +75,6 @@ public abstract class AbstractLuaTestSuite extends TestSuite {
 				referenceFilePath = referenceFilePath.removeFileExtension();
 				referenceFilePath = referenceFilePath.addFileExtension(referenceFileExtension);
 
-				// Check reference file
-				final String errorMessage = MessageFormat.format("No reference file found for {0}.", relativeToFolderPath); //$NON-NLS-1$
-				checkFile(referenceFilePath, errorMessage);
-
 				// Compute path to provide to test case
 				final ArrayList<String> path = new ArrayList<String>();
 				path.add(COMMON_LIB_FOLDER);
@@ -89,22 +85,9 @@ public abstract class AbstractLuaTestSuite extends TestSuite {
 				addTest(createTestCase(getTestModuleName(), inputFilePath, referenceFilePath, path));
 			}
 		} catch (final IOException e) {
-			// When an error occurs when loading files, notify it as a failed test
-			addTest(new TestCase("Warning:") {//$NON-NLS-1$
-				@Override
-				public void runTest() {
-					fail(e.getMessage());
-				}
-			});
+			final String message = MessageFormat.format("Unable to locate {0}.", folderPath); //$NON-NLS-1$
+			raiseRuntimeException(message, e);
 		}
-	}
-
-	private File checkFile(final IPath referenceFilePath, final String errorMessage) {
-		final File referenceFile = new File(referenceFilePath.toOSString());
-		if (!referenceFile.exists()) {
-			raiseRuntimeException(errorMessage, null);
-		}
-		return referenceFile;
 	}
 
 	private File checkFolder(final IPath folderAbosultePath, final String errorMessage) {

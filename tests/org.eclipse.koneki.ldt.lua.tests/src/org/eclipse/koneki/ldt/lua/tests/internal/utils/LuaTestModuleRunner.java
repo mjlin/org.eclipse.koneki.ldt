@@ -54,11 +54,6 @@ public class LuaTestModuleRunner extends AbstractMetaLuaModule {
 	}
 
 	@Override
-	protected List<String> getLuacSourcePaths() {
-		return getLuaSourcePaths();
-	}
-
-	@Override
 	protected List<String> getMetaLuaSourcePaths() {
 		return getLuaSourcePaths();
 	}
@@ -81,9 +76,11 @@ public class LuaTestModuleRunner extends AbstractMetaLuaModule {
 	 */
 	public void run() {
 
-		// Run lua test function
+		// Load Lua instance with right module
 		final LuaState luaState = loadLuaModule();
+
 		try {
+			// Run lua test function
 			luaState.getGlobal(getModuleName());
 			luaState.getField(-1, LUA_TEST_FUNCTION);
 			luaState.pushString(sourceFilePath);

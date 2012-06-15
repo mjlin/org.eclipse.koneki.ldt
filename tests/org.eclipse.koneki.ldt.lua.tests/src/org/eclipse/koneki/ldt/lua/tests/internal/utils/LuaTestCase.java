@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.koneki.ldt.lua.tests.internal.utils;
 
+import java.io.File;
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
@@ -27,7 +28,7 @@ import org.junit.Test;
  */
 public class LuaTestCase extends TestCase {
 
-	private final String testModuleName;
+	private final String moduleName;
 	private final List<String> luaPath;
 	private final String referenceFileAbsolutePath;
 	private final String sourceFileAbsolutePath;
@@ -37,7 +38,7 @@ public class LuaTestCase extends TestCase {
 
 	public LuaTestCase(final String testSuiteName, final String testModuleName, final IPath inputFilePath, final IPath referenceFilePath,
 			final List<String> directoryListForLuaPath) {
-		this.testModuleName = testModuleName;
+		moduleName = testModuleName;
 		sourceFileAbsolutePath = inputFilePath.toOSString();
 		referenceFileAbsolutePath = referenceFilePath.toOSString();
 		luaPath = directoryListForLuaPath;
@@ -49,7 +50,18 @@ public class LuaTestCase extends TestCase {
 
 	@Before
 	public void setUp() {
-		luaRunner = new LuaTestModuleRunner(testModuleName, sourceFileAbsolutePath, referenceFileAbsolutePath, luaPath, filesToCompile());
+
+		// Check if input file exist
+		if (!new File(sourceFileAbsolutePath).exists()) {
+			final String message = MessageFormat.format("{0} input does not exist.", sourceFileAbsolutePath); //$NON-NLS-1$
+			throw new RuntimeException(message);
+		}
+		// Check if reference file exist
+		if (!new File(referenceFileAbsolutePath).exists()) {
+			final String message = MessageFormat.format("{0} reference does not exist.", referenceFileAbsolutePath); //$NON-NLS-1$
+			throw new RuntimeException(message);
+		}
+		luaRunner = new LuaTestModuleRunner(moduleName, sourceFileAbsolutePath, referenceFileAbsolutePath, luaPath, filesToCompile());
 	}
 
 	@Test
