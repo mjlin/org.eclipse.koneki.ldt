@@ -17,6 +17,7 @@ require 'errnode'
 local serializer = require 'serpent'
 local apimodelbuilder = require 'models.apimodelbuilder'
 local tablecompare  = require 'tablecompare'
+local tabledumpbeautifier = require 'tabledumpbeautifier'
 if #arg < 1 then
 	print 'No file to serialize.'
 	return
@@ -42,13 +43,21 @@ for k = 1, #arg do
  
 		-- Serialize model
 		local serializedcode = serializer.serialize( apimodel )
+		
+		-- Beautify serialized model
+		local beautifulserializedcode, error = tabledumpbeautifier.prettify(serializedcode)
+		if not beautifulserializedcode then
+			print(string.format("Unable to prettify serialized code.\n%s", error))
+			beautifulserializedcode = serializedcode
+		end
+		 
 
 		-- Define file name		
 		local serializedfilename = filename:gsub('([%w%-_/\]+)%.lua','%1.serialized')
 
 		-- Save serialized model
 		local serializefile = io.open(serializedfilename, 'w')
-		serializefile:write( serializedcode )
+		serializefile:write( beautifulserializedcode )
 		serializefile:close()
 
 		-- This a success
