@@ -1,0 +1,779 @@
+	do local _ = {
+		description = "",
+		globalvars = {
+
+		}
+		--[[table: 0x84186e0]],
+		shortdescription = "",
+		name = "func",
+		returns = {
+			{
+				types = {
+					{
+						typename = "func",
+						tag = "internaltyperef"
+					}
+					--[[table: 0x84185a8]]
+				}
+				--[[table: 0x8418670]],
+				description = "",
+				tag = "return"
+			}
+			--[[table: 0x84185d0]]
+		}
+		--[[table: 0x8418708]],
+		types = {
+		["__=[p]__8"] = {
+				shortdescription = "",
+				description = "",
+				name = "__=[p]__8",
+				parent = nil --[[ref]],
+				returns = {
+
+				}
+				--[[table: 0x843c678]],
+				params = {
+					{
+						description = "Parameter description",
+						name = "p",
+						tag = "parameter"
+					}
+					--[[table: 0x843c5d8]]
+				}
+				--[[table: 0x843c650]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x843c5b0]],
+		["__=[p]__6"] = {
+				shortdescription = "",
+				description = "",
+				name = "__=[p]__6",
+				parent = nil --[[ref]],
+				returns = {
+
+				}
+				--[[table: 0x84314d8]],
+				params = {
+					{
+						description = "",
+						name = "p",
+						tag = "parameter"
+					}
+					--[[table: 0x8431438]]
+				}
+				--[[table: 0x84314b0]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x8431410]],
+		["__=#number[p]__9"] = {
+				shortdescription = "",
+				description = "",
+				name = "__=#number[p]__9",
+				parent = nil --[[ref]],
+				returns = {
+
+				}
+				--[[table: 0x8441bd8]],
+				params = {
+					{
+						description = "Parameter description",
+						type = {
+							typename = "number",
+							tag = "primitivetyperef"
+						}
+						--[[table: 0x8441b60]],
+						name = "p",
+						tag = "parameter"
+					}
+					--[[table: 0x8441b38]]
+				}
+				--[[table: 0x8441bb0]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x8441b10]],
+		["__=__15"] = {
+				shortdescription = "",
+				description = "",
+				name = "__=__15",
+				parent = nil --[[ref]],
+				returns = {
+
+				}
+				--[[table: 0x8465ce0]],
+				params = {
+
+				}
+				--[[table: 0x8465cb8]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x8465bf8]],
+		["__=__12"] = {
+				shortdescription = "",
+				description = "",
+				name = "__=__12",
+				parent = nil --[[ref]],
+				returns = {
+					{
+						types = {
+
+						}
+						--[[table: 0x8456160]],
+						description = "",
+						tag = "return"
+					}
+					--[[table: 0x8456138]]
+				}
+				--[[table: 0x84561d8]],
+				params = {
+
+				}
+				--[[table: 0x84561b0]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x8456110]],
+		["__#number=__13"] = {
+				shortdescription = "",
+				description = "",
+				name = "__#number=__13",
+				parent = nil --[[ref]],
+				returns = {
+					{
+						types = {
+							{
+								typename = "number",
+								tag = "primitivetyperef"
+							}
+							--[[table: 0x845b468]]
+						}
+						--[[table: 0x845b440]],
+						description = "",
+						tag = "return"
+					}
+					--[[table: 0x845b418]]
+				}
+				--[[table: 0x845b4b8]],
+				params = {
+
+				}
+				--[[table: 0x845b490]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x845b3f0]],
+			func = {
+				fields = {
+					usagef = {
+						type = {
+							typename = "__=__15",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x8465d58]],
+						description = "",
+						parent = nil --[[ref]],
+						metadata = {
+							usage = {
+								{
+									tagname = "usage",
+									description = "usagef()",
+									lineinfo = {
+										last = {
+											offset = 6,
+											line = 1,
+											source = "Third party tag lexer",
+											column = 6,
+											id = 654
+										}
+										--[[<Third party tag lexer|L1|C6|K6>]],
+										first = {
+											offset = 1,
+											line = 1,
+											source = "Third party tag lexer",
+											facing = {
+												offset = 1,
+												line = 1,
+												source = "Third party tag lexer",
+												facing = nil --[[ref]],
+												column = 1,
+												id = 650
+											}
+											--[[<Third party tag lexer|L1|C1|K1>]],
+											column = 1,
+											id = 651
+										}
+										--[[<Third party tag lexer|L1|C1|K1>]]
+									}
+									--[[<Third party tag lexer|L1|C1-6|K1-6>]],
+									name = "usage"
+								}
+								--[[table: 0x84658b8]]
+							}
+							--[[table: 0x8465ad0]]
+						}
+						--[[table: 0x8465aa8]],
+						shortdescription = "",
+						name = "usagef",
+						sourcerange = {
+							min = 1152,
+							max = 1212
+						}
+						--[[table: 0x8465bb8]],
+						occurrences = {
+
+						}
+						--[[table: 0x8465b90]],
+						tag = "item"
+					}
+					--[[table: 0x8465a80]],
+					dotsasreturn = {
+						type = {
+							typename = "__=__11",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x8450ad0]],
+						description = "",
+						parent = nil --[[ref]],
+						shortdescription = "",
+						name = "dotsasreturn",
+						sourcerange = {
+							min = 875,
+							max = 937
+						}
+						--[[table: 0x84507a0]],
+						occurrences = {
+
+						}
+						--[[table: 0x8450778]],
+						tag = "item"
+					}
+					--[[table: 0x8450668]],
+					longdescriptionlineterminator = {
+						type = {
+							typename = "__=__5",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x842b690]],
+						description = "",
+						parent = nil --[[ref]],
+						shortdescription = " Short desc\010 Very long long long description\010 ",
+						name = "longdescriptionlineterminator",
+						sourcerange = {
+							min = 321,
+							max = 434
+						}
+						--[[table: 0x842b4f0]],
+						occurrences = {
+
+						}
+						--[[table: 0x842b4c8]],
+						tag = "item"
+					}
+					--[[table: 0x842b230]],
+					longdescriptiondot = {
+						type = {
+							typename = "__=__4",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x8427fd8]],
+						description = "Very long long long description.",
+						parent = nil --[[ref]],
+						shortdescription = " Short desc.",
+						name = "longdescriptiondot",
+						sourcerange = {
+							min = 215,
+							max = 319
+						}
+						--[[table: 0x8427e50]],
+						occurrences = {
+
+						}
+						--[[table: 0x8427e28]],
+						tag = "item"
+					}
+					--[[table: 0x8427b90]],
+					parameterwithdesription = {
+						type = {
+							typename = "__=[p]__8",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x84280e8]],
+						description = "",
+						parent = nil --[[ref]],
+						shortdescription = "",
+						name = "parameterwithdesription",
+						sourcerange = {
+							min = 566,
+							max = 658
+						}
+						--[[table: 0x843c530]],
+						occurrences = {
+
+						}
+						--[[table: 0x843c508]],
+						tag = "item"
+					}
+					--[[table: 0x843c3f8]],
+					parameter = {
+						type = {
+							typename = "__=[p]__6",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x84316c8]],
+						description = "",
+						parent = nil --[[ref]],
+						shortdescription = "",
+						name = "parameter",
+						sourcerange = {
+							min = 436,
+							max = 492
+						}
+						--[[table: 0x8431390]],
+						occurrences = {
+
+						}
+						--[[table: 0x8431368]],
+						tag = "item"
+					}
+					--[[table: 0x8431258]],
+					shortdescriptiondot = {
+						type = {
+							typename = "__=__2",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x8421610]],
+						description = "",
+						parent = nil --[[ref]],
+						shortdescription = " Short desc.",
+						name = "shortdescriptiondot",
+						sourcerange = {
+							min = 63,
+							max = 132
+						}
+						--[[table: 0x8421378]],
+						occurrences = {
+
+						}
+						--[[table: 0x8421350]],
+						tag = "item"
+					}
+					--[[table: 0x84210b8]],
+					returnempty = {
+						type = {
+							typename = "__=__12",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x84563c0]],
+						description = "",
+						parent = nil --[[ref]],
+						shortdescription = "",
+						name = "returnempty",
+						sourcerange = {
+							min = 939,
+							max = 996
+						}
+						--[[table: 0x8456090]],
+						occurrences = {
+
+						}
+						--[[table: 0x8456068]],
+						tag = "item"
+					}
+					--[[table: 0x8455f58]],
+					returnseveralvalues = {
+						type = {
+							typename = "__#nil#string=__14",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x8461aa0]],
+						description = "",
+						parent = nil --[[ref]],
+						shortdescription = "",
+						name = "returnseveralvalues",
+						sourcerange = {
+							min = 1071,
+							max = 1150
+						}
+						--[[table: 0x8461648]],
+						occurrences = {
+
+						}
+						--[[table: 0x8461620]],
+						tag = "item"
+					}
+					--[[table: 0x8461510]],
+					dotsasparameter = {
+						type = {
+							typename = "__=[...]#number[p]__10",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x844b0d0]],
+						description = "",
+						parent = nil --[[ref]],
+						shortdescription = "",
+						name = "dotsasparameter",
+						sourcerange = {
+							min = 767,
+							max = 873
+						}
+						--[[table: 0x844ac48]],
+						occurrences = {
+
+						}
+						--[[table: 0x844aa48]],
+						tag = "item"
+					}
+					--[[table: 0x844aa20]],
+					shortdescriptionlineterminator = {
+						type = {
+							typename = "__=__3",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x8424968]],
+						description = "",
+						parent = nil --[[ref]],
+						shortdescription = " Short desc\010 ",
+						name = "shortdescriptionlineterminator",
+						sourcerange = {
+							min = 134,
+							max = 213
+						}
+						--[[table: 0x84247f8]],
+						occurrences = {
+
+						}
+						--[[table: 0x84247d0]],
+						tag = "item"
+					}
+					--[[table: 0x8424538]],
+					typedparameterwithdesription = {
+						type = {
+							typename = "__=#number[p]__9",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x8441eb8]],
+						description = "",
+						parent = nil --[[ref]],
+						shortdescription = "",
+						name = "typedparameterwithdesription",
+						sourcerange = {
+							min = 660,
+							max = 765
+						}
+						--[[table: 0x8441aa8]],
+						occurrences = {
+
+						}
+						--[[table: 0x84418b0]],
+						tag = "item"
+					}
+					--[[table: 0x8441888]],
+					empty = {
+						type = {
+							typename = "__=__1",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x841e070]],
+						description = "",
+						parent = nil --[[ref]],
+						shortdescription = "",
+						name = "empty",
+						sourcerange = {
+							min = 21,
+							max = 61
+						}
+						--[[table: 0x841def8]],
+						occurrences = {
+
+						}
+						--[[table: 0x841ded0]],
+						tag = "item"
+					}
+					--[[table: 0x841dc38]],
+					typed = {
+						type = {
+							typename = "__=#string[p]__7",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x8436b20]],
+						description = "",
+						parent = nil --[[ref]],
+						shortdescription = "",
+						name = "typed",
+						sourcerange = {
+							min = 494,
+							max = 564
+						}
+						--[[table: 0x8436508]],
+						occurrences = {
+
+						}
+						--[[table: 0x84364e0]],
+						tag = "item"
+					}
+					--[[table: 0x8434730]],
+					returnsinglevalue = {
+						type = {
+							typename = "__#number=__13",
+							tag = "internaltyperef"
+						}
+						--[[table: 0x845b770]],
+						description = "",
+						parent = nil --[[ref]],
+						shortdescription = "",
+						name = "returnsinglevalue",
+						sourcerange = {
+							min = 998,
+							max = 1069
+						}
+						--[[table: 0x845b370]],
+						occurrences = {
+
+						}
+						--[[table: 0x845b348]],
+						tag = "item"
+					}
+					--[[table: 0x845b238]]
+				}
+				--[[table: 0x841a3a0]],
+				name = "func",
+				parent = nil --[[ref]],
+				sourcerange = {
+					min = 0,
+					max = 19
+				}
+				--[[table: 0x841a3c8]],
+				tag = "recordtypedef"
+			}
+			--[[table: 0x841a290]],
+		["__=__4"] = {
+				shortdescription = " Short desc.",
+				description = "Very long long long description.",
+				name = "__=__4",
+				parent = nil --[[ref]],
+				returns = {
+
+				}
+				--[[table: 0x8427f60]],
+				params = {
+
+				}
+				--[[table: 0x8427f38]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x8427e78]],
+		["__#nil#string=__14"] = {
+				shortdescription = "",
+				description = "",
+				name = "__#nil#string=__14",
+				parent = nil --[[ref]],
+				returns = {
+					{
+						types = {
+							{
+								typename = "nil",
+								tag = "primitivetyperef"
+							}
+							--[[table: 0x8461740]],
+							{
+								typename = "string",
+								tag = "primitivetyperef"
+							}
+							--[[table: 0x8461968]]
+						}
+						--[[table: 0x8461718]],
+						description = "",
+						tag = "return"
+					}
+					--[[table: 0x84616f0]]
+				}
+				--[[table: 0x8461790]],
+				params = {
+
+				}
+				--[[table: 0x8461768]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x84616c8]],
+		["__=__1"] = {
+				shortdescription = "",
+				description = "",
+				name = "__=__1",
+				parent = nil --[[ref]],
+				returns = {
+
+				}
+				--[[table: 0x841e008]],
+				params = {
+
+				}
+				--[[table: 0x841dfe0]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x841df20]],
+		["__=__11"] = {
+				shortdescription = "",
+				description = "",
+				name = "__=__11",
+				parent = nil --[[ref]],
+				returns = {
+					{
+						types = {
+
+						}
+						--[[table: 0x8450870]],
+						description = "...",
+						tag = "return"
+					}
+					--[[table: 0x8450848]]
+				}
+				--[[table: 0x84508e8]],
+				params = {
+
+				}
+				--[[table: 0x84508c0]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x8450820]],
+		["__=[...]#number[p]__10"] = {
+				shortdescription = "",
+				description = "",
+				name = "__=[...]#number[p]__10",
+				parent = nil --[[ref]],
+				returns = {
+
+				}
+				--[[table: 0x844ad58]],
+				params = {
+					{
+						description = "",
+						name = "...",
+						tag = "parameter"
+					}
+					--[[table: 0x844acb8]],
+					{
+						description = "Parameter description",
+						type = {
+							typename = "number",
+							tag = "primitivetyperef"
+						}
+						--[[table: 0x844ad08]],
+						name = "p",
+						tag = "parameter"
+					}
+					--[[table: 0x844ace0]]
+				}
+				--[[table: 0x844ad30]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x844ac70]],
+		["__=__3"] = {
+				shortdescription = " Short desc\010 ",
+				description = "",
+				name = "__=__3",
+				parent = nil --[[ref]],
+				returns = {
+
+				}
+				--[[table: 0x8424908]],
+				params = {
+
+				}
+				--[[table: 0x84248e0]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x8424820]],
+		["__=#string[p]__7"] = {
+				shortdescription = "",
+				description = "",
+				name = "__=#string[p]__7",
+				parent = nil --[[ref]],
+				returns = {
+
+				}
+				--[[table: 0x8436840]],
+				params = {
+					{
+						description = "",
+						type = {
+							typename = "string",
+							tag = "primitivetyperef"
+						}
+						--[[table: 0x84367c8]],
+						name = "p",
+						tag = "parameter"
+					}
+					--[[table: 0x84367a0]]
+				}
+				--[[table: 0x8436818]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x8436758]],
+		["__=__5"] = {
+				shortdescription = " Short desc\010 Very long long long description\010 ",
+				description = "",
+				name = "__=__5",
+				parent = nil --[[ref]],
+				returns = {
+
+				}
+				--[[table: 0x842b618]],
+				params = {
+
+				}
+				--[[table: 0x842b5f0]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x842b530]],
+		["__=__2"] = {
+				shortdescription = " Short desc.",
+				description = "",
+				name = "__=__2",
+				parent = nil --[[ref]],
+				returns = {
+
+				}
+				--[[table: 0x8421488]],
+				params = {
+
+				}
+				--[[table: 0x8421460]],
+				tag = "functiontypedef"
+			}
+			--[[table: 0x84213a0]]
+		}
+		--[[table: 0x84186b8]],
+		tag = "file"
+	}
+	--[[table: 0x8418580]];
+	_.types["__=[p]__8"].parent = _;
+	_.types["__=[p]__6"].parent = _;
+	_.types["__=#number[p]__9"].parent = _;
+	_.types["__=__15"].parent = _;
+	_.types["__=__12"].parent = _;
+	_.types["__#number=__13"].parent = _;
+	_.types.func.fields.usagef.parent = _.types.func;
+	_.types.func.fields.usagef.metadata.usage[1].lineinfo.first.facing.facing = _.types.func.fields.usagef.metadata.usage[1].lineinfo.first;
+	_.types.func.fields.dotsasreturn.parent = _.types.func;
+	_.types.func.fields.longdescriptionlineterminator.parent = _.types.func;
+	_.types.func.fields.longdescriptiondot.parent = _.types.func;
+	_.types.func.fields.parameterwithdesription.parent = _.types.func;
+	_.types.func.fields.parameter.parent = _.types.func;
+	_.types.func.fields.shortdescriptiondot.parent = _.types.func;
+	_.types.func.fields.returnempty.parent = _.types.func;
+	_.types.func.fields.returnseveralvalues.parent = _.types.func;
+	_.types.func.fields.dotsasparameter.parent = _.types.func;
+	_.types.func.fields.shortdescriptionlineterminator.parent = _.types.func;
+	_.types.func.fields.typedparameterwithdesription.parent = _.types.func;
+	_.types.func.fields.empty.parent = _.types.func;
+	_.types.func.fields.typed.parent = _.types.func;
+	_.types.func.fields.returnsinglevalue.parent = _.types.func;
+	_.types.func.parent = _;
+	_.types["__=__4"].parent = _;
+	_.types["__#nil#string=__14"].parent = _;
+	_.types["__=__1"].parent = _;
+	_.types["__=__11"].parent = _;
+	_.types["__=[...]#number[p]__10"].parent = _;
+	_.types["__=__3"].parent = _;
+	_.types["__=#string[p]__7"].parent = _;
+	_.types["__=__5"].parent = _;
+	_.types["__=__2"].parent = _;
+	return _;
+	end

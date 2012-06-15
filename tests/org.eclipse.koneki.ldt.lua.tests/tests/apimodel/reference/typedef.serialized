@@ -24,8 +24,8 @@ do
 				shortdescription = " Type description.",
 				parent = nil --[[ref]],
 				sourcerange = {
-					min = 23,
-					max = 97
+					min = 163,
+					max = 237
 				} --[[table: 0x92a5930]],
 				tag = "recordtypedef"
 			} --[[table: 0x92a57d8]],
@@ -34,8 +34,8 @@ do
 				name = "mod",
 				parent = nil --[[ref]],
 				sourcerange = {
-					min = 0,
-					max = 21
+					min = 140,
+					max = 161
 				} --[[table: 0x9288978]],
 				tag = "recordtypedef"
 			} --[[table: 0x9288840]]
