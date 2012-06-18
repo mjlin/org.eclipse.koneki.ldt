@@ -53,7 +53,7 @@ for k = 1, #arg do
 		 
 
 		-- Define file name		
-		local serializedfilename = filename:gsub('([%w%-_/\]+)%.lua','%1.serialized')
+		local serializedfilename = filename:gsub('([%w%-_/\]+)%.lua','%1.serialized.lua')
 
 		-- Save serialized model
 		local serializefile = io.open(serializedfilename, 'w')
