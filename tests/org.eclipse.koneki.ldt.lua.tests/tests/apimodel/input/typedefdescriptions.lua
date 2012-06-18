@@ -12,4 +12,10 @@
 -- Type detailed description.
 -- @type subtype
 --
+
+---
+-- Type description
+-- Type detailed description.
+-- @type nodot
+--
 return nil
