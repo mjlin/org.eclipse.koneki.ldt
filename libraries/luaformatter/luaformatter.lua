@@ -254,16 +254,16 @@ function M.indentCode(source, delimiter, ...)
 	return table.concat(indented)
 end
 -- Just allow to play with current library from commend line
-if arg then
-	for k=2,#arg,2 do
-		local argument = arg[k]
-		local offset = arg[k+1]
-		print(argument)
-		print(string.rep(' ', tonumber(offset)-1)..'^')
-		table.print(ast, 'nohash', 1)
-		print ('Offset '..offset..' has depth '..tostring(indentLevel(argument, tonumber(offset))))
-		print ('Indented code:')
-		print (indentCode(argument, "\n", "    ", 0))
-	end
-end
+--if arg then
+--	for k=2,#arg,2 do
+--		local argument = arg[k]
+--		local offset = arg[k+1]
+--		print(argument)
+--		print(string.rep(' ', tonumber(offset)-1)..'^')
+--		table.print(ast, 'nohash', 1)
+--		print ('Offset '..offset..' has depth '..tostring(indentLevel(argument, tonumber(offset))))
+--		print ('Indented code:')
+--		print (indentCode(argument, "\n", "    ", 0))
+--	end
+--end
 return M

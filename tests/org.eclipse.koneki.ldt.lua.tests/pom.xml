@@ -19,6 +19,44 @@
   </parent>
   <groupId>org.eclipse.koneki.ldt</groupId>
   <artifactId>org.eclipse.koneki.ldt.lua.tests</artifactId>
-  <version>0.8.0-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
   <packaging>eclipse-test-plugin</packaging>
+  
+  <build>
+  	<plugins>
+    	<plugin>
+	      <groupId>org.eclipse.tycho</groupId>
+	      <artifactId>tycho-surefire-plugin</artifactId>
+	      <version>${tycho-version}</version>
+	      <configuration>
+	     	<includes>
+	     		<include>**/AllLuaTests.*</include>
+	     	</includes>
+	     	<dependencies>
+				<dependency>
+					<type>p2-installable-unit</type>
+					<artifactId>org.eclipse.koneki.ldt.feature.group</artifactId>
+				</dependency>
+			</dependencies>
+	      </configuration>
+    	</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.6</version>
+				<executions>
+					<execution>
+						<phase>compile</phase>
+						<configuration>
+							<target>
+								<ant antfile="build.xml" inheritall="false" />
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>
