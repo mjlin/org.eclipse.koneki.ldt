@@ -9,7 +9,7 @@
 --     Sierra Wireless - initial API and implementation
 -------------------------------------------------------------------------------
 require 'errnode'
-local apimodelbuilder = require 'models.apimodelbuilder'
+local internalmodelbuilder = require 'models.internalmodelbuilder'
 local tablecompare = require 'tablecompare'
 --local function f(...) print(...) io.flush() end
 --local print = f
@@ -36,8 +36,8 @@ function M.test(luasourcepath, serializedreferencepath)
 	--
 	-- Generate API model
 	--
-	local apimodel = apimodelbuilder.createmoduleapi(ast)
-	apimodel = tablecompare.stripfunctions(apimodel)
+	local internalmodel = internalmodelbuilder.createinternalcontent(ast)
+	internalmodel = tablecompare.stripfunctions(internalmodel)
 
 	--
 	-- Load provided reference
@@ -49,17 +49,17 @@ function M.test(luasourcepath, serializedreferencepath)
 	local referenceapimodel = luareferenceloadingfunction()
 
 	-- Check that they are equivalent
-	local equivalent = tablecompare.compare(apimodel, referenceapimodel)
+	local equivalent = tablecompare.compare(internalmodel, referenceapimodel)
 	if #equivalent > 0 then
 
 		-- Compute which keys differs
-		local differentkeys = tablecompare.diff(apimodel, referenceapimodel)
+		local differentkeys = tablecompare.diff(internalmodel, referenceapimodel)
 		local differentkeysstring = table.tostring(differentkeys)
 		
 		-- Formalise first table output
 		local _ = '_'
 		local line = _:rep(80)
-		local firstout   = string.format('%s\nFirst table\n%s\n%s', line, line, table.tostring(apimodel, 1))
+		local firstout   = string.format('%s\nFirst table\n%s\n%s', line, line, table.tostring(internalmodel, 1))
 		local secondout  = string.format('%s\nSecond table\n%s\n%s', line, line, table.tostring(referenceapimodel, 1))
 		return nil, string.format('Keys which differ are:\n%s\n%s\n%s', differentkeysstring, firstout, secondout)
 
